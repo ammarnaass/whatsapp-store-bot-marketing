@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Copy,
   ExternalLink,
+  AlertTriangle,
 } from 'lucide-react';
 import { formatQrCodeDataUrl, getMockWhatsAppQrDataUrl } from '../../../utils/qr.utils';
 
@@ -68,6 +69,17 @@ export const OpenWAQrModal: React.FC<OpenWAQrModalProps> = ({
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             اربط رقم متجرك مباشرة عبر بروتوكول Multi-Device الذاتي التكلفة
           </p>
+        </div>
+
+        {/* FR-77 / FR-80: Security Disclaimer & Dedicated Number Recommendation */}
+        <div className="mb-3.5 p-3 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/25 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+          <div className="flex-1">
+            <span className="font-bold block mb-0.5">توصية أمان الحساب (FR-77 & FR-80):</span>
+            <span className="text-[11px] leading-relaxed block text-amber-800 dark:text-amber-300">
+              يُوصى باستخدام رقم مخصص للتطبيق لتجنب قيود واتساب. الاتصال يتم عبر بوابة OpenWA المحلية غير الرسمية مع تفعيل التباطؤ والتدفئة لحماية الرقم.
+            </span>
+          </div>
         </div>
 
         {/* Sandbox Offline Banner if applicable */}

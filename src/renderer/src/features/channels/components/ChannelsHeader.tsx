@@ -17,16 +17,15 @@ export const ChannelsHeader: React.FC<ChannelsHeaderProps> = ({
   return (
     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-[#111827] p-6 rounded-2xl border border-slate-200 dark:border-[#1F293D] elevation-1">
       <div className="flex flex-col gap-1.5 max-w-3xl">
-        <div className="flex items-center gap-2 text-xs font-bold text-[#7C3AED] dark:text-violet-400">
-          <Radio className="w-4 h-4 animate-pulse text-[#7C3AED]" />
-          <span>البنية التحتية والمزامنة السحابية / META GRAPH API v19.0</span>
+        <div className="flex items-center gap-2 text-xs font-bold text-[#128C7E] dark:text-emerald-400">
+          <Radio className="w-4 h-4 animate-pulse text-[#128C7E]" />
+          <span>بوابة واتساب المدمجة / OPENWA ENGINE v0.27 (REST & WEBHOOKS)</span>
         </div>
         <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-          القنوات والربط الفني لواتساب (WhatsApp Cloud API & Meta Infrastructure)
+          قنوات واتساب وبوابة الربط الفني (WhatsApp Channels & Gateway)
         </h1>
         <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400">
-          إدارة البنية التحتية لحساب Meta Business، خطافات الويب (Webhooks)، مفاتيح التوثيق، جودة
-          الرقم، وقوالب الرسائل المعتمدة (HSM).
+          إدارة الاتصال المحلي المباشر عبر OpenWA كقناة أساسية معتمدة لـ v1، ومراقبة الجلسات الحية وخطافات الويب (Webhooks) وتبسيط أمان الإرسال.
         </p>
       </div>
 

@@ -129,11 +129,20 @@ export const OpenWACard: React.FC<OpenWACardProps> = ({
           </div>
         </div>
 
-        {/* 3. Anti-ban Notice */}
+        {/* 3. Session Status Warning Banner (FR-79) & Anti-ban Notice */}
+        {!isConnected && (
+          <div className="flex items-center gap-2.5 p-3 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/25 mb-3 text-xs text-amber-900 dark:text-amber-200">
+            <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span className="font-semibold">
+              تنبيه الجلسة (FR-79): رقم المتجر غير مقترن حالياً أو بانتظار مسح الرمز. انقر أدناه لمسح QR وتفعيل الردود.
+            </span>
+          </div>
+        )}
+
         <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/15 mb-6 text-xs text-slate-600 dark:text-slate-300">
           <ShieldCheck className="w-4 h-4 text-[#128C7E] shrink-0" />
           <span>
-            بروتوكول تفادي الحظر الذكي نشط: تجميع الرسائل (Debounce 3.5s) ومؤشر الكتابة البشري مفعل تلقائياً.
+            بروتوكول تفادي الحظر الذكي نشط (FR-78): تجميع الرسائل (Debounce 3.5s) وتباطؤ الإرسال والتدفئة مفعلة افتراضياً.
           </span>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, QrCode, WifiOff, AlertTriangle } from 'lucide-react';
 import { useChannels } from '../hooks/useChannels';
 import { useOpenWA } from '../hooks/useOpenWA';
 import { ChannelsHeader } from '../components/ChannelsHeader';
@@ -82,6 +82,63 @@ export const ChannelsPage: React.FC = () => {
         onTokenRegenerate={handleTokenRegenerate}
         onSaveSettings={handleSaveSettings}
       />
+
+      {/* FR-79: Session Status Live Indicator & Disconnect/Scan Warning Banner */}
+      {(!openwaSession || (openwaSession.status !== 'CONNECTED' && openwaSession.status !== 'WORKING')) && (
+        <div
+          className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-in fade-in duration-200 ${
+            openwaSession?.status === 'QR_READY' || openwaSession?.status === 'SCAN_QR'
+              ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200'
+              : 'bg-rose-50 dark:bg-rose-950/30 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200'
+          }`}
+        >
+          <div className="flex items-start sm:items-center gap-3">
+            <div
+              className={`p-2.5 rounded-xl shrink-0 ${
+                openwaSession?.status === 'QR_READY' || openwaSession?.status === 'SCAN_QR'
+                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                  : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+              }`}
+            >
+              {openwaSession?.status === 'QR_READY' || openwaSession?.status === 'SCAN_QR' ? (
+                <QrCode className="w-5 h-5 animate-pulse" />
+              ) : (
+                <WifiOff className="w-5 h-5" />
+              )}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-sm">
+                  {openwaSession?.status === 'QR_READY' || openwaSession?.status === 'SCAN_QR'
+                    ? 'تنبيه الجلسة (FR-79): مطلوب مسح رمز QR لربط واتساب'
+                    : 'تنبيه انقطاع الاتصال (FR-79): جلسة واتساب غير متصلة حالياً'}
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/80 dark:bg-black/30 border border-current">
+                  الحالة: {openwaSession?.status || 'DISCONNECTED'}
+                </span>
+              </div>
+              <p className="text-xs opacity-90 mt-0.5">
+                {openwaSession?.status === 'QR_READY' || openwaSession?.status === 'SCAN_QR'
+                  ? 'قم بمسح رمز الاستجابة السريعة لمزامنة جلسة المتجر وتفعيل استقبال رسائل العملاء وردود الوكيل الذكي.'
+                  : 'توقف إرسال واستقبال الرسائل التلقائية لمتجرك حتى تتم إعادة تشغيل الجلسة بنجاح.'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleOpenwaStartSession}
+            className="h-[38px] px-4 rounded-xl text-xs font-bold bg-[#128C7E] hover:bg-[#0e7064] text-white flex items-center gap-2 shrink-0 transition-all shadow-sm cursor-pointer"
+          >
+            <QrCode className="w-4 h-4" />
+            <span>
+              {openwaSession?.status === 'QR_READY' || openwaSession?.status === 'SCAN_QR'
+                ? 'عرض رمز QR للمسح'
+                : 'إعادة الاتصال / مسح QR'}
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* 2. Sub-Navigation Tabs */}
       <ChannelsSubTabs activeSubtab={activeSubtab} onSubtabChange={setActiveSubtab} />

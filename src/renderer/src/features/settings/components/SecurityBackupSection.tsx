@@ -95,6 +95,26 @@ export const SecurityBackupSection: React.FC<SecurityBackupSectionProps> = ({
               </p>
             </div>
           </div>
+
+          {/* FR-80: Unofficial Gateway Legal & Technical Disclosure */}
+          <div className="p-3.5 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/25 flex items-start gap-3">
+            <div className="w-9 h-9 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+              <ShieldAlert className="w-4 h-4" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <h4 className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                  إفصاح تقني وقانوني هام (FR-80)
+                </h4>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-200/50 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 font-bold">
+                  بوابة غير رسمية
+                </span>
+              </div>
+              <p className="text-[11px] text-amber-800/90 dark:text-amber-300/90 leading-relaxed">
+                يعمل اتصال واتساب الحالي محلياً عبر بوابة OpenWA مفتوحة المصدر (المستندة لبروتوكول واتساب ويب) وليس عبر سحابة Meta Cloud API الرسمية (المؤجلة لما بعد v1). التطبيق غير معتمد رسمياً من شركة Meta. ينبغي احترام سياسات المراسلة الآمنة واستخدام رقم مخصص لتجنب أي تقييد للحساب.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
