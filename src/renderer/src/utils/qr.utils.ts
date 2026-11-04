@@ -53,3 +53,4 @@ export function getMockWhatsAppQrDataUrl(sessionId: string = 'wasell_main_store'
   const mockPayload = `2@wasell:${sessionId}:${timestamp}:mock-whatsapp-handshake-multi-device`;
   return formatQrCodeDataUrl(mockPayload);
 }
+
