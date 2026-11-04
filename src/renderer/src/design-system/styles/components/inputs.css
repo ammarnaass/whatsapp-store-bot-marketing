@@ -1,0 +1,57 @@
+/* حقول الإدخال والقوائم الموحدة (Standard Inputs & Selects) */
+.wasell-input {
+  height: 38px;
+  padding: 0 12px;
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+  outline: none;
+  transition: all 0.18s ease;
+}
+
+.wasell-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-primary) 18%, transparent);
+}
+
+.wasell-select {
+  height: 38px;
+  padding: 0 12px;
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+  outline: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.wasell-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-primary) 18%, transparent);
+}
+
+.wasell-textarea {
+  padding: 10px 12px;
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  transition: all 0.18s ease;
+}
+
+.wasell-textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-primary) 18%, transparent);
+}
+

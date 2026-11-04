@@ -1,11 +1,32 @@
 export interface StoreIdentity {
   storeNameAr: string;
   storeNameEn: string;
+  storeSlogan?: string;
+  storeDescription?: string;
+  logoUrl: string;
+
+  commercialRegistration?: string;
+  taxNumber?: string;
+  sbcLicense?: string;
+  showTaxOnInvoice: boolean;
+
+  supportPhone?: string;
+  supportEmail?: string;
+  country: string;
+  city: string;
+  address?: string;
   storeUrl: string;
+
   currency: string;
   timezone: string;
   aiDialect: string;
-  logoUrl: string;
+
+  socialLinks?: {
+    instagram?: string;
+    twitter?: string;
+    tiktok?: string;
+    snapchat?: string;
+  };
 }
 
 export interface WhatsAppBehavior {
@@ -34,10 +55,38 @@ export interface ShippingSettings {
 }
 
 export interface AdminAlertSettings {
-  vipOrdersAlert: boolean;
-  humanEscalationAlert: boolean;
-  morningDigestAlert: boolean;
   adminWhatsAppNumber: string;
+  backupWhatsAppNumber?: string;
+  adminEmail?: string;
+  enableDesktopPush: boolean;
+  enableNotificationSound: boolean;
+
+  vipOrdersAlert: boolean;
+  vipOrderThreshold: number;
+  abandonedCartAlert: boolean;
+  lowStockAlert: boolean;
+  lowStockThreshold: number;
+  newOrderAlert: boolean;
+
+  humanEscalationAlert: boolean;
+  channelDisconnectAlert: boolean;
+
+  quietHoursEnabled: boolean;
+  quietHoursStart: string;
+  quietHoursEnd: string;
+  bypassQuietForCritical: boolean;
+  morningDigestAlert: boolean;
+  morningDigestTime: string;
+  eveningDigestAlert: boolean;
+}
+
+export interface BackupRecord {
+  id: string;
+  filename: string;
+  sizeBytes: number;
+  sizeFormatted: string;
+  createdAt: string;
+  type: 'manual' | 'scheduled';
 }
 
 export interface SecuritySettings {
@@ -45,6 +94,11 @@ export interface SecuritySettings {
   localHostingPdpl: boolean;
   lastBackupDate: string;
   backupSizeBytes: string;
+  autoBackupEnabled: boolean;
+  autoBackupSchedule: 'daily' | 'weekly';
+  autoBackupRetentionCopies: number;
+  sessionTimeoutMinutes: number;
+  bruteForceProtection: boolean;
 }
 
 export interface StoreSettingsState {
@@ -57,10 +111,9 @@ export interface StoreSettingsState {
 }
 
 export type SettingsTabId =
-  | 'tab-all'
+  | 'tab-account'
+  | 'tab-appearance'
   | 'tab-identity'
   | 'tab-commerce'
-  | 'tab-payments'
-  | 'tab-shipping'
   | 'tab-alerts'
   | 'tab-security';

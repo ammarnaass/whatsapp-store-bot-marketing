@@ -48,23 +48,39 @@ export const useOpenWA = (onToast?: (msg: string) => void) => {
     };
   }, [isQrModalOpen, session.status]);
 
-  // الاشتراك في أحداث الـ IPC للجلسة
+  // الاشتراك في أحداث الـ IPC للجلسة واستطلاع الحالة اللحظية
   useEffect(() => {
-    // جلب الحالة الابتدائية
-    if (window.api?.session?.getStatus) {
-      window.api.session.getStatus().then((res: any) => {
-        if (res && res.status) {
-          setSession((prev) => ({
-            ...prev,
-            status: res.status,
-            phone: res.phone || prev.phone,
-          }));
+    const sessionApi = (window as any).api?.session || (window as any).electronAPI?.session;
+
+    const fetchStatus = async () => {
+      try {
+        if (sessionApi?.getStatus) {
+          const res: any = await sessionApi.getStatus();
+          if (res) {
+            const computedStatus: SessionStatus =
+              res.status || (res.isConnected ? 'CONNECTED' : 'DISCONNECTED');
+            setSession((prev) => ({
+              ...prev,
+              status: computedStatus,
+              phone: res.phone || prev.phone,
+              latencyMs: res.latencyMs !== undefined ? res.latencyMs : prev.latencyMs,
+              uptimeSeconds: res.uptimeSeconds !== undefined ? res.uptimeSeconds : prev.uptimeSeconds,
+            }));
+          }
         }
-      }).catch(() => {});
-    }
+      } catch (err) {
+        console.warn('[useOpenWA] getStatus error:', err);
+      }
+    };
+
+    // جلب فوري للحالة عند التحميل
+    fetchStatus();
+
+    // استطلاع دوري خفيف كل 4 ثوانٍ لضمان التزامن اللحظي للواجهة
+    const pollTimer = setInterval(fetchStatus, 4000);
 
     // الاستماع لرمز الـ QR
-    const unsubQr = window.api?.session?.onQrCode?.((data: any) => {
+    const unsubQr = sessionApi?.onQrCode?.((data: any) => {
       if (data?.qrCodeDataUrl) {
         const formatted = formatQrCodeDataUrl(data.qrCodeDataUrl);
         setQrCodeData(formatted);
@@ -75,7 +91,7 @@ export const useOpenWA = (onToast?: (msg: string) => void) => {
     });
 
     // الاستماع لتغير حالة الجلسة
-    const unsubStatus = window.api?.session?.onStatusChanged?.((data: any) => {
+    const unsubStatus = sessionApi?.onStatusChanged?.((data: any) => {
       if (data?.status) {
         setSession((prev) => ({
           ...prev,
@@ -90,6 +106,7 @@ export const useOpenWA = (onToast?: (msg: string) => void) => {
     });
 
     return () => {
+      clearInterval(pollTimer);
       if (unsubQr) unsubQr();
       if (unsubStatus) unsubStatus();
     };
@@ -98,11 +115,17 @@ export const useOpenWA = (onToast?: (msg: string) => void) => {
   // بدء الجلسة وطلب رمز الـ QR
   const handleStartSession = useCallback(async () => {
     setIsStarting(true);
+    const sessionApi = (window as any).api?.session || (window as any).electronAPI?.session;
     try {
       let qr = '';
       let isDemo = false;
-      if (window.api?.session?.start) {
-        const res = await window.api.session.start(session.sessionId);
+      if (sessionApi?.start) {
+        const res = await sessionApi.start(session.sessionId);
+        if (res?.message?.includes('متصل') || res?.message?.includes('مقترن')) {
+          onToast?.(res.message);
+          setIsQrModalOpen(false);
+          return;
+        }
         if (res?.qr) {
           qr = formatQrCodeDataUrl(res.qr);
           isDemo = Boolean(res.isOfflineDemo);
@@ -132,9 +155,10 @@ export const useOpenWA = (onToast?: (msg: string) => void) => {
 
   // تحديث رمز الـ QR يدوياً أو آلياً
   const handleRefreshQr = useCallback(async () => {
+    const sessionApi = (window as any).api?.session || (window as any).electronAPI?.session;
     try {
-      if (window.api?.session?.start) {
-        const res = await window.api.session.start(session.sessionId);
+      if (sessionApi?.start) {
+        const res = await sessionApi.start(session.sessionId);
         if (res?.qr) {
           const formatted = formatQrCodeDataUrl(res.qr);
           setQrCodeData(formatted);
@@ -149,10 +173,11 @@ export const useOpenWA = (onToast?: (msg: string) => void) => {
 
   // محاكاة مسح الرمز والاقتران
   const handleSimulatePair = useCallback(async () => {
+    const sessionApi = (window as any).api?.session || (window as any).electronAPI?.session;
     try {
       const phone = '966501234567';
-      if ((window.api?.session as any)?.simulatePair) {
-        await (window.api.session as any).simulatePair(phone);
+      if (sessionApi?.simulatePair) {
+        await sessionApi.simulatePair(phone);
       }
       setSession((prev) => ({
         ...prev,
@@ -168,9 +193,10 @@ export const useOpenWA = (onToast?: (msg: string) => void) => {
 
   // تسجيل الخروج وإلغاء الاقتران
   const handleLogout = useCallback(async () => {
+    const sessionApi = (window as any).api?.session || (window as any).electronAPI?.session;
     try {
-      if (window.api?.session?.logout) {
-        await window.api.session.logout();
+      if (sessionApi?.logout) {
+        await sessionApi.logout();
       }
       setSession((prev) => ({
         ...prev,
@@ -188,10 +214,11 @@ export const useOpenWA = (onToast?: (msg: string) => void) => {
   // فحص الاتصال وسرعة الاستجابة
   const handlePingGateway = useCallback(async () => {
     setIsPinging(true);
+    const sessionApi = (window as any).api?.session || (window as any).electronAPI?.session;
     const start = Date.now();
     try {
-      if (window.api?.session?.getStatus) {
-        await window.api.session.getStatus();
+      if (sessionApi?.getStatus) {
+        await sessionApi.getStatus();
       }
       const lat = Date.now() - start;
       setSession((prev) => ({ ...prev, latencyMs: Math.max(lat, 24) }));

@@ -1,5 +1,13 @@
 import React from 'react';
-import { Network, Zap, FileCheck, ShieldCheck, Server, Smartphone } from 'lucide-react';
+import {
+  Network,
+  Zap,
+  FileCheck,
+  ShieldCheck,
+  Server,
+  Smartphone,
+  FileCode2,
+} from 'lucide-react';
 import { ChannelSubTab } from '../types/channels.types';
 
 interface ChannelsSubTabsProps {
@@ -9,14 +17,14 @@ interface ChannelsSubTabsProps {
 
 export const ChannelsSubTabs: React.FC<ChannelsSubTabsProps> = ({
   activeSubtab,
-  onSubtabChange
+  onSubtabChange,
 }) => {
   return (
-    <div className="flex items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/60 rounded-xl overflow-x-auto border border-slate-200/60 dark:border-slate-700/60">
+    <div className="flex items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/60 rounded-xl overflow-x-auto border border-slate-200/60 dark:border-slate-700/60 scrollbar-none">
       <button
         onClick={() => onSubtabChange('api')}
         type="button"
-        className={`h-[38px] flex items-center gap-2 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+        className={`h-[38px] flex items-center gap-2 px-3.5 sm:px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
           activeSubtab === 'api'
             ? 'bg-white dark:bg-[#111827] text-[#128C7E] elevation-1'
             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -30,7 +38,7 @@ export const ChannelsSubTabs: React.FC<ChannelsSubTabsProps> = ({
       <button
         onClick={() => onSubtabChange('openwa')}
         type="button"
-        className={`h-[38px] flex items-center gap-2 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+        className={`h-[38px] flex items-center gap-2 px-3.5 sm:px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
           activeSubtab === 'openwa'
             ? 'bg-white dark:bg-[#111827] text-[#128C7E] elevation-1'
             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -44,9 +52,25 @@ export const ChannelsSubTabs: React.FC<ChannelsSubTabsProps> = ({
       </button>
 
       <button
+        onClick={() => onSubtabChange('swagger_docs')}
+        type="button"
+        className={`h-[38px] flex items-center gap-2 px-3.5 sm:px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+          activeSubtab === 'swagger_docs'
+            ? 'bg-white dark:bg-[#111827] text-[#128C7E] elevation-1'
+            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+        }`}
+      >
+        <FileCode2 className="w-4 h-4 text-[#128C7E]" />
+        <span>توثيق Swagger API (Port 2785)</span>
+        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">
+          163 مسار
+        </span>
+      </button>
+
+      <button
         onClick={() => onSubtabChange('ai_engine')}
         type="button"
-        className={`h-[38px] flex items-center gap-2 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+        className={`h-[38px] flex items-center gap-2 px-3.5 sm:px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
           activeSubtab === 'ai_engine'
             ? 'bg-white dark:bg-[#111827] text-[#7C3AED] elevation-1'
             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -59,7 +83,7 @@ export const ChannelsSubTabs: React.FC<ChannelsSubTabsProps> = ({
       <button
         onClick={() => onSubtabChange('templates')}
         type="button"
-        className={`h-[38px] flex items-center gap-2 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+        className={`h-[38px] flex items-center gap-2 px-3.5 sm:px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
           activeSubtab === 'templates'
             ? 'bg-white dark:bg-[#111827] text-[#128C7E] elevation-1'
             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -72,7 +96,7 @@ export const ChannelsSubTabs: React.FC<ChannelsSubTabsProps> = ({
       <button
         onClick={() => onSubtabChange('compliance')}
         type="button"
-        className={`h-[38px] flex items-center gap-2 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+        className={`h-[38px] flex items-center gap-2 px-3.5 sm:px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
           activeSubtab === 'compliance'
             ? 'bg-white dark:bg-[#111827] text-[#128C7E] elevation-1'
             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -85,7 +109,7 @@ export const ChannelsSubTabs: React.FC<ChannelsSubTabsProps> = ({
       <button
         onClick={() => onSubtabChange('logs')}
         type="button"
-        className={`h-[38px] flex items-center gap-2 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+        className={`h-[38px] flex items-center gap-2 px-3.5 sm:px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
           activeSubtab === 'logs'
             ? 'bg-white dark:bg-[#111827] text-[#128C7E] elevation-1'
             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'

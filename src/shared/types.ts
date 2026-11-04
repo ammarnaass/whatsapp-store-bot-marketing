@@ -87,6 +87,26 @@ export interface Product {
   media: string[]; // Array of image URLs/paths
   category?: string;
   active: boolean;
+  cost_price?: number;
+  compare_at_price?: number;
+  barcode?: string;
+  sku?: string;
+  brand?: string;
+  weight?: number;
+  length?: number;
+  width?: number;
+  height?: number;
+  shipping_type?: 'default' | 'free' | 'fixed';
+  shipping_fee?: number;
+  low_stock_threshold?: number;
+  tax_rate?: number;
+  is_tax_inclusive?: boolean;
+  tags?: string[];
+  whatsapp_short_desc?: string;
+  is_featured?: boolean;
+  allow_backorders?: boolean;
+  price?: number;
+  stock?: number;
   variants?: ProductVariant[];
   created_at: string;
 }
@@ -231,20 +251,47 @@ export interface Campaign {
   min_delay_sec: number;
   max_delay_sec: number;
   daily_limit: number;
+  audience_filter?: string;
   recipients_count?: number;
   sent_count?: number;
   delivered_count?: number;
+  failed_count?: number;
   created_at: string;
 }
 
-// 14. قائمة الحظر والانسحاب
+export interface CampaignRecipient {
+  id: string;
+  campaign_id: string;
+  contact_id?: string;
+  phone: string;
+  name: string;
+  status: 'PENDING' | 'SENDING' | 'SENT' | 'DELIVERED' | 'FAILED' | 'OPTED_OUT';
+  sent_at?: string;
+  error_message?: string;
+}
+
+// 14. الكوبونات وقسائم الخصم
+export interface Coupon {
+  id: string;
+  code: string;
+  discount_type: 'PERCENTAGE' | 'FIXED';
+  discount_value: number;
+  min_order_amount: number;
+  expires_at?: string;
+  max_uses: number;
+  times_used: number;
+  is_active: number | boolean;
+  created_at?: string;
+}
+
+// 15. قائمة الحظر والانسحاب
 export interface BlocklistEntry {
   phone: string;
   reason: string;
   added_at: string;
 }
 
-// 15. مؤشرات لوحة التحكم (Analytics KPI Summary)
+// 16. مؤشرات لوحة التحكم (Analytics KPI Summary)
 export interface DashboardKPIs {
   totalRevenue: number;
   totalOrders: number;

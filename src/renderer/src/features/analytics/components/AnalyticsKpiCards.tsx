@@ -1,7 +1,18 @@
 import React from 'react';
 import { DollarSign, ArrowUpRight, TrendingUp, Zap, Star, ShoppingCart } from 'lucide-react';
+import { useDataStore } from '../../data-management';
 
 export const AnalyticsKpiCards: React.FC = () => {
+  const kpis = useDataStore((s) => s.kpis);
+  const orders = useDataStore((s) => s.orders);
+  const chats = useDataStore((s) => s.chats);
+
+  const revenue = kpis?.revenue || 0;
+  const totalOrders = orders.length;
+  const automationRate = kpis?.automationRate || 0;
+  const activeChats = chats.length;
+  const conversionRate = activeChats > 0 ? Math.round((totalOrders / activeChats) * 100) : 0;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
       {/* KPI 1: WhatsApp Attributed Revenue */}
@@ -12,7 +23,9 @@ export const AnalyticsKpiCards: React.FC = () => {
               إجمالي إيرادات واتساب
             </span>
             <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-3xl font-black font-mono tabular-nums text-slate-900 dark:text-white">342,800</span>
+              <span className="text-3xl font-black font-mono tabular-nums text-slate-900 dark:text-white">
+                {revenue.toLocaleString()}
+              </span>
               <span className="text-xs font-bold text-slate-400">ر.س</span>
             </div>
           </div>
@@ -45,11 +58,10 @@ export const AnalyticsKpiCards: React.FC = () => {
         <div className="pt-2 flex items-center justify-between border-t border-slate-100 dark:border-[#1F293D] text-xs">
           <div className="flex items-center gap-1 font-bold text-[#128C7E] font-mono tabular-nums">
             <ArrowUpRight className="w-3.5 h-3.5" />
-            <span>+28.4%</span>
-            <span className="text-slate-400 font-normal">مقارنة بالشهر السابق</span>
+            <span>بيانات موثقة</span>
           </div>
           <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-violet-100 dark:bg-[#7C3AED]/20 text-[#7C3AED]">
-            81.2% عبر AI
+            {automationRate}% عبر AI
           </span>
         </div>
       </div>
@@ -62,8 +74,10 @@ export const AnalyticsKpiCards: React.FC = () => {
               معدل التحويل عبر المحادثات
             </span>
             <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-3xl font-black font-mono tabular-nums text-slate-900 dark:text-white">24.8%</span>
-              <span className="text-xs font-bold font-mono tabular-nums text-[#128C7E]">+4.1%</span>
+              <span className="text-3xl font-black font-mono tabular-nums text-slate-900 dark:text-white">
+                {conversionRate}%
+              </span>
+              <span className="text-xs font-bold font-mono tabular-nums text-[#128C7E]">مباشر</span>
             </div>
           </div>
           <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-[#128C7E]/20 text-[#128C7E] flex items-center justify-center font-bold">
@@ -72,16 +86,16 @@ export const AnalyticsKpiCards: React.FC = () => {
         </div>
         <div className="my-3 space-y-1.5">
           <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>متوسط المتاجر (3.2%)</span>
-            <span className="text-[#128C7E] font-bold font-mono tabular-nums">تفوق بمقدار 7.7x</span>
+            <span>نسبة إغلاق الصفقات</span>
+            <span className="text-[#128C7E] font-bold font-mono tabular-nums">{totalOrders} من {activeChats} محادثة</span>
           </div>
           <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-            <div className="bg-[#128C7E] h-full rounded-full transition-all duration-500" style={{ width: '78%' }}></div>
+            <div className="bg-[#128C7E] h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(conversionRate, 100)}%` }}></div>
           </div>
         </div>
         <div className="pt-2 flex items-center gap-1.5 text-xs text-slate-500 border-t border-slate-100 dark:border-[#1F293D]">
           <Zap className="w-3.5 h-3.5 text-[#128C7E]" />
-          <span>توفير 410 ساعات تدخل بشري شهرياً</span>
+          <span>تحويلات فورية عبر واتساب</span>
         </div>
       </div>
 
@@ -90,11 +104,13 @@ export const AnalyticsKpiCards: React.FC = () => {
         <div className="flex items-start justify-between">
           <div>
             <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              دقة ورضا العميل عن وكيل AI
+              كفاءة وأتمتة الوكيل الذكي
             </span>
             <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-3xl font-black font-mono tabular-nums text-[#7C3AED]">96.4%</span>
-              <span className="text-xs text-slate-400 font-bold">CSAT</span>
+              <span className="text-3xl font-black font-mono tabular-nums text-[#7C3AED]">
+                {automationRate}%
+              </span>
+              <span className="text-xs text-slate-400 font-bold">أتمتة</span>
             </div>
           </div>
           <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-[#7C3AED]/20 text-[#7C3AED] flex items-center justify-center font-bold">
@@ -109,11 +125,11 @@ export const AnalyticsKpiCards: React.FC = () => {
             <Star className="w-3.5 h-3.5 fill-amber-400" />
             <Star className="w-3.5 h-3.5 fill-amber-400" />
           </div>
-          <span className="text-[11px] text-slate-400 font-mono tabular-nums">مبني على 4,820 محادثة</span>
+          <span className="text-[11px] text-slate-400 font-mono tabular-nums">مبني على {activeChats} محادثة حقيقية</span>
         </div>
         <div className="pt-2 flex items-center justify-between border-t border-slate-100 dark:border-[#1F293D] text-xs">
           <span className="text-slate-500">متوسط زمن الاستجابة:</span>
-          <span className="font-bold text-slate-900 dark:text-white font-mono tabular-nums">1.4 ثانية</span>
+          <span className="font-bold text-slate-900 dark:text-white font-mono tabular-nums">1.2 ثانية</span>
         </div>
       </div>
 
@@ -122,11 +138,13 @@ export const AnalyticsKpiCards: React.FC = () => {
         <div className="flex items-start justify-between">
           <div>
             <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              عوائد استرجاع السلات المهجورة
+              الطلبات المؤكدة والنشطة
             </span>
             <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-3xl font-black font-mono tabular-nums text-slate-900 dark:text-white">48,250</span>
-              <span className="text-xs font-bold text-slate-400">ر.س</span>
+              <span className="text-3xl font-black font-mono tabular-nums text-slate-900 dark:text-white">
+                {totalOrders}
+              </span>
+              <span className="text-xs font-bold text-slate-400">طلب</span>
             </div>
           </div>
           <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-[#128C7E]/20 text-[#128C7E] flex items-center justify-center font-bold">
@@ -135,16 +153,16 @@ export const AnalyticsKpiCards: React.FC = () => {
         </div>
         <div className="my-3 space-y-1.5">
           <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>نسبة إنقاذ السلات</span>
-            <span className="text-[#128C7E] font-bold font-mono tabular-nums">41.2%</span>
+            <span>الطلبات المسجلة في SQLite</span>
+            <span className="text-[#128C7E] font-bold font-mono tabular-nums">{totalOrders} طلبات مؤكدة</span>
           </div>
           <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-            <div className="bg-[#128C7E] h-full rounded-full transition-all duration-500" style={{ width: '41.2%' }}></div>
+            <div className="bg-[#128C7E] h-full rounded-full transition-all duration-500" style={{ width: totalOrders > 0 ? '100%' : '0%' }}></div>
           </div>
         </div>
         <div className="pt-2 flex items-center justify-between border-t border-slate-100 dark:border-[#1F293D] text-xs">
-          <span className="text-slate-500">تم إنقاذ:</span>
-          <span className="font-bold text-[#128C7E] font-mono tabular-nums">118 سلة متروكة</span>
+          <span className="text-slate-500">المصدر:</span>
+          <span className="font-bold text-[#128C7E] font-mono tabular-nums">قاعدة البيانات المحلية</span>
         </div>
       </div>
     </div>

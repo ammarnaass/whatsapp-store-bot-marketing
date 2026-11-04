@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { app } from 'electron';
+import { hashPassword } from '../auth/auth-crypto';
 
 export class AppDatabase {
   private static instance: AppDatabase;
@@ -55,6 +56,209 @@ export class AppDatabase {
       console.warn('[Database] Schema file not found, applying built-in DDL fallback.');
       this.applyInlineSchema();
     }
+
+    this.runMigrations();
+  }
+
+  private runMigrations() {
+    try {
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS store_settings (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS users (
+          id TEXT PRIMARY KEY,
+          email TEXT UNIQUE NOT NULL,
+          name TEXT NOT NULL,
+          password_hash TEXT NOT NULL,
+          salt TEXT NOT NULL,
+          role TEXT NOT NULL DEFAULT 'owner',
+          phone TEXT,
+          avatar TEXT,
+          status TEXT NOT NULL DEFAULT 'active',
+          last_login_at DATETIME,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS inventory_logs (
+          id TEXT PRIMARY KEY,
+          variant_id TEXT REFERENCES variants(id) ON DELETE CASCADE,
+          change_qty INTEGER NOT NULL,
+          quantity_before INTEGER NOT NULL,
+          quantity_after INTEGER NOT NULL,
+          reason TEXT NOT NULL,
+          order_id TEXT,
+          created_by TEXT DEFAULT 'system',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_inventory_logs_variant ON inventory_logs(variant_id, created_at DESC);
+      `);
+
+      const userCount = (this.db.prepare('SELECT count(*) as count FROM users').get() as any)?.count || 0;
+      if (userCount === 0) {
+        const { hash, salt } = hashPassword('admin123');
+        this.db.prepare(`
+          INSERT INTO users (id, email, name, password_hash, salt, role, phone, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
+        `).run(
+          'usr_default_owner',
+          'admin@wasell.store',
+          'عبدالعزيز التميمي (مدير المتجر)',
+          hash,
+          salt,
+          'owner',
+          '+213555220620'
+        );
+        console.log('[Database] Seeded initial admin owner user: admin@wasell.store');
+      }
+
+      const info = this.db.prepare('PRAGMA table_info(contacts)').all() as any[];
+      const cols = new Set(info.map((c) => c.name));
+      if (!cols.has('avatar')) {
+        this.db.exec('ALTER TABLE contacts ADD COLUMN avatar TEXT');
+        console.log('[Database] Migrated: added contacts.avatar');
+      }
+      if (!cols.has('notes')) {
+        this.db.exec('ALTER TABLE contacts ADD COLUMN notes TEXT');
+        console.log('[Database] Migrated: added contacts.notes');
+      }
+
+      // ترقية جدول المنتجات بكافة حقول الربحية والشحن والتصنيف والمخزون
+      const prodInfo = this.db.prepare('PRAGMA table_info(products)').all() as any[];
+      const prodCols = new Set(prodInfo.map((c) => c.name));
+      const newProdCols: [string, string][] = [
+        ['cost_price', 'REAL DEFAULT 0'],
+        ['compare_at_price', 'REAL DEFAULT 0'],
+        ['barcode', 'TEXT'],
+        ['sku', 'TEXT'],
+        ['brand', 'TEXT'],
+        ['weight', 'REAL DEFAULT 0'],
+        ['length', 'REAL DEFAULT 0'],
+        ['width', 'REAL DEFAULT 0'],
+        ['height', 'REAL DEFAULT 0'],
+        ['shipping_type', "TEXT DEFAULT 'default'"],
+        ['shipping_fee', 'REAL DEFAULT 0'],
+        ['low_stock_threshold', 'INTEGER DEFAULT 5'],
+        ['tax_rate', 'REAL DEFAULT 15'],
+        ['is_tax_inclusive', 'INTEGER DEFAULT 1'],
+        ['tags', "TEXT DEFAULT '[]'"],
+        ['whatsapp_short_desc', 'TEXT'],
+        ['is_featured', 'INTEGER DEFAULT 0'],
+        ['allow_backorders', 'INTEGER DEFAULT 0'],
+      ];
+
+      for (const [colName, colDef] of newProdCols) {
+        if (!prodCols.has(colName)) {
+          this.db.exec(`ALTER TABLE products ADD COLUMN ${colName} ${colDef}`);
+          console.log(`[Database] Migrated: added products.${colName}`);
+        }
+      }
+
+      // تهيئة مناطق الشحن الافتراضية إذا كان الجدول فارغاً
+      const zonesCount = (this.db.prepare('SELECT count(*) as count FROM shipping_zones').get() as any)?.count || 0;
+      if (zonesCount === 0) {
+        const insertZone = this.db.prepare('INSERT INTO shipping_zones (id, name, cities_json, fee, free_over) VALUES (?, ?, ?, ?, ?)');
+        insertZone.run('zone_central', 'المنطقة الوسطى (الرياض، القصيم، الخرج)', JSON.stringify(['الرياض', 'الخرج', 'بريدة', 'عنيزة']), 25, 200);
+        insertZone.run('zone_western', 'المنطقة الغربية (جدة، مكة، المدينة)', JSON.stringify(['جدة', 'مكة المكرمة', 'المدينة المنورة', 'ينبع', 'الطائف']), 28, 250);
+        insertZone.run('zone_eastern', 'المنطقة الشرقية (الدمام، الخبر، الأحساء)', JSON.stringify(['الدمام', 'الخبر', 'الأحساء', 'الجبيل']), 28, 250);
+        insertZone.run('zone_other', 'سائر مناطق المملكة (الجنوبية والشمالية)', JSON.stringify(['أبها', 'خميس مشيط', 'تبوك', 'حائل', 'جازان', 'نجران']), 35, 300);
+        console.log('[Database] Seeded initial shipping zones.');
+      }
+
+      // تهيئة وتأكيد جداول التسويق والكوبونات
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS coupons (
+          id TEXT PRIMARY KEY,
+          code TEXT UNIQUE NOT NULL,
+          discount_type TEXT NOT NULL DEFAULT 'PERCENTAGE',
+          discount_value REAL NOT NULL,
+          min_order_amount REAL DEFAULT 0,
+          expires_at DATETIME,
+          max_uses INTEGER DEFAULT 100,
+          times_used INTEGER DEFAULT 0,
+          is_active INTEGER DEFAULT 1,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS campaigns (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          template TEXT NOT NULL,
+          media_path TEXT,
+          status TEXT DEFAULT 'DRAFT',
+          scheduled_at DATETIME,
+          min_delay_sec INTEGER DEFAULT 20,
+          max_delay_sec INTEGER DEFAULT 45,
+          daily_limit INTEGER DEFAULT 200,
+          audience_filter TEXT DEFAULT '{}',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS campaign_recipients (
+          id TEXT PRIMARY KEY,
+          campaign_id TEXT REFERENCES campaigns(id) ON DELETE CASCADE,
+          contact_id TEXT REFERENCES contacts(id),
+          phone TEXT,
+          name TEXT,
+          status TEXT DEFAULT 'PENDING',
+          sent_at DATETIME,
+          error_message TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS blocklist (
+          phone TEXT PRIMARY KEY,
+          reason TEXT DEFAULT 'OPT_OUT',
+          added_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      // ترحيل أعمدة إضافية في جداول التسويق
+      const campInfo = this.db.prepare('PRAGMA table_info(campaigns)').all() as any[];
+      const campCols = new Set(campInfo.map((c) => c.name));
+      if (!campCols.has('audience_filter')) {
+        this.db.exec("ALTER TABLE campaigns ADD COLUMN audience_filter TEXT DEFAULT '{}'");
+      }
+
+      const coupInfo = this.db.prepare('PRAGMA table_info(coupons)').all() as any[];
+      const coupCols = new Set(coupInfo.map((c) => c.name));
+      if (!coupCols.has('min_order_amount')) {
+        this.db.exec('ALTER TABLE coupons ADD COLUMN min_order_amount REAL DEFAULT 0');
+      }
+      if (!coupCols.has('is_active')) {
+        this.db.exec('ALTER TABLE coupons ADD COLUMN is_active INTEGER DEFAULT 1');
+      }
+      if (!coupCols.has('created_at')) {
+        this.db.exec('ALTER TABLE coupons ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP');
+      }
+
+      const recInfo = this.db.prepare('PRAGMA table_info(campaign_recipients)').all() as any[];
+      const recCols = new Set(recInfo.map((c) => c.name));
+      if (!recCols.has('phone')) {
+        this.db.exec('ALTER TABLE campaign_recipients ADD COLUMN phone TEXT');
+      }
+      if (!recCols.has('name')) {
+        this.db.exec('ALTER TABLE campaign_recipients ADD COLUMN name TEXT');
+      }
+
+      // إضافة كوبونات أولية إذا كان الجدول فارغاً
+      const couponCount = (this.db.prepare('SELECT count(*) as count FROM coupons').get() as any)?.count || 0;
+      if (couponCount === 0) {
+        const insCoupon = this.db.prepare(`
+          INSERT INTO coupons (id, code, discount_type, discount_value, min_order_amount, expires_at, max_uses, times_used, is_active)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        insCoupon.run('coup_welcome10', 'WELCOME10', 'PERCENTAGE', 10, 50, '2027-12-31', 500, 14, 1);
+        insCoupon.run('coup_freeship', 'FREESHIP', 'FIXED', 25, 150, '2027-12-31', 200, 32, 1);
+        insCoupon.run('coup_vip20', 'VIP20', 'PERCENTAGE', 20, 200, '2027-12-31', 50, 8, 1);
+        console.log('[Database] Seeded initial marketing coupons: WELCOME10, FREESHIP, VIP20');
+      }
+    } catch (err: any) {
+      console.warn('[Database] Migration note:', err.message);
+    }
   }
 
   private applyInlineSchema() {
@@ -65,7 +269,7 @@ export class AppDatabase {
         phone TEXT,
         status TEXT NOT NULL DEFAULT 'DISCONNECTED',
         proxy TEXT,
-        agent_mode TEXT DEFAULT 'AUTONOMOUS',
+        agent_mode TEXT DEFAULT 'DISABLED',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
 
@@ -73,6 +277,8 @@ export class AppDatabase {
         id TEXT PRIMARY KEY,
         phone TEXT UNIQUE NOT NULL,
         name TEXT,
+        avatar TEXT,
+        notes TEXT,
         tags TEXT DEFAULT '[]',
         opted_out INTEGER DEFAULT 0,
         address_json TEXT,

@@ -17,7 +17,7 @@ export const CustomersTable: React.FC<CustomersTableProps> = ({
   return (
     <div className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200 dark:border-[#1F293D] elevation-1 overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-right border-collapse text-xs">
+        <table className="w-full min-w-[700px] text-right border-collapse text-xs">
           <thead>
             <tr className="border-b border-slate-100 dark:border-[#1F293D] bg-slate-50/75 dark:bg-slate-800/50 text-slate-500 font-bold">
               <th className="py-3.5 px-4">العميل</th>
@@ -50,11 +50,17 @@ export const CustomersTable: React.FC<CustomersTableProps> = ({
                 >
                   <td className="py-3.5 px-4">
                     <div className="flex items-center gap-3">
-                      <img
-                        src={c.avatar}
-                        alt={c.name}
-                        className="w-10 h-10 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700"
-                      />
+                      {c.avatar ? (
+                        <img
+                          src={c.avatar}
+                          alt={c.name}
+                          className="w-10 h-10 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 flex items-center justify-center text-sm font-bold shrink-0">
+                          {(c.name || 'ع')[0]}
+                        </div>
+                      )}
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-900 dark:text-white">{c.name}</span>
                         <span className="text-[11px] text-slate-400 flex items-center gap-1">

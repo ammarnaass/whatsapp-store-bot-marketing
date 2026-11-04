@@ -3,6 +3,7 @@ import { AppDatabase } from '../database/db';
 import { agentToolsDefinitions } from './tools/definitions';
 import { AgentToolExecutor } from './tools/executor';
 import { AgentGuardrails } from './guardrails/guardrails';
+import { AIProviderFactory } from './providers/provider-factory';
 
 export interface AgentProcessInput {
   conversationId: string;
@@ -120,7 +121,35 @@ ${contactInfo}
       };
     }
 
-    // 4. إعداد عميل Google GenAI الحديث
+    // 4. دعم المزودات المتعددة (DeepSeek, Claude, OpenAI)
+    if (config.provider && config.provider !== 'gemini') {
+      try {
+        const provider = AIProviderFactory.getProvider(config.provider);
+        const res = await provider.generateResponse({
+          apiKey: config.apiKey,
+          modelName: config.modelName,
+          systemPrompt,
+          userMessage: input.messageText,
+          history: input.history,
+        });
+        return {
+          replyText: res.replyText,
+          toolsCalled: res.toolsCalled as any,
+          handoffTriggered: false,
+          latencyMs: res.latencyMs,
+        };
+      } catch (err: any) {
+        console.warn(`[AIAgentEngine] ${config.provider} generation failed:`, err);
+        return {
+          replyText: `عذراً، حدث خطأ أثناء الاتصال بمزود ${config.provider}: ${err?.message || 'تحقق من المفتاح في الإعدادات'}`,
+          toolsCalled: [],
+          handoffTriggered: false,
+          latencyMs: Date.now() - startTime,
+        };
+      }
+    }
+
+    // 5. إعداد عميل Google GenAI الحديث
     const aiClient = new GoogleGenAI({ apiKey: config.apiKey });
     const knowledgeContext = this.buildKnowledgeContext(input.contactPhone);
 

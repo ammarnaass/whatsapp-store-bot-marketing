@@ -1,4 +1,4 @@
-export { useTheme } from './hooks/useTheme';
+export { useTheme, useThemeStore } from './hooks/useTheme';
 export { ThemeToggle } from './components/ThemeToggle';
 export { ThemeProvider } from './components/ThemeProvider';
 export * from './types/theme.types';

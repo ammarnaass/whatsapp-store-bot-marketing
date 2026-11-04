@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS contacts (
     id TEXT PRIMARY KEY,
     phone TEXT UNIQUE NOT NULL,
     name TEXT,
+    avatar TEXT,
+    notes TEXT,
     tags TEXT DEFAULT '[]',
     opted_out INTEGER DEFAULT 0,
     address_json TEXT,
@@ -297,7 +299,44 @@ CREATE TABLE IF NOT EXISTS inbound_events_queue (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 26. إعدادات المتجر وهوية العلامة التجارية وبوابات الدفع والشحن
+CREATE TABLE IF NOT EXISTS store_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 27. المستخدمون وإدارة الحسابات وفريق العمل
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    salt TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'owner',
+    phone TEXT,
+    avatar TEXT,
+    status TEXT NOT NULL DEFAULT 'active',
+    last_login_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 28. سجل تدقيق حركات وتعديلات المخزون
+CREATE TABLE IF NOT EXISTS inventory_logs (
+    id TEXT PRIMARY KEY,
+    variant_id TEXT REFERENCES variants(id) ON DELETE CASCADE,
+    change_qty INTEGER NOT NULL,
+    quantity_before INTEGER NOT NULL,
+    quantity_after INTEGER NOT NULL,
+    reason TEXT NOT NULL,
+    order_id TEXT,
+    created_by TEXT DEFAULT 'system',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- الفهارس
+CREATE INDEX IF NOT EXISTS idx_inventory_logs_variant ON inventory_logs(variant_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_contacts_phone ON contacts(phone);
 CREATE INDEX IF NOT EXISTS idx_messages_conv_ts ON messages(conversation_id, ts DESC);
 CREATE INDEX IF NOT EXISTS idx_orders_status_date ON orders(status, created_at DESC);

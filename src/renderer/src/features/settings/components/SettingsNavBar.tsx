@@ -2,11 +2,10 @@ import React from 'react';
 import {
   Store,
   Bot,
-  CreditCard,
-  Truck,
   BellRing,
   ShieldCheck,
-  LayoutGrid
+  Palette,
+  UserCheck
 } from 'lucide-react';
 import { SettingsTabId } from '../types/settings.types';
 
@@ -20,11 +19,10 @@ export const SettingsNavBar: React.FC<SettingsNavBarProps> = ({
   onTabChange
 }) => {
   const tabs = [
-    { id: 'tab-all' as SettingsTabId, label: 'عرض كافة الإعدادات', icon: LayoutGrid },
+    { id: 'tab-account' as SettingsTabId, label: 'إدارة الحساب وفريق العمل', icon: UserCheck },
+    { id: 'tab-appearance' as SettingsTabId, label: 'المظهر وتخصيص الواجهة', icon: Palette },
     { id: 'tab-identity' as SettingsTabId, label: 'هوية المتجر والبيانات الأساسية', icon: Store },
     { id: 'tab-commerce' as SettingsTabId, label: 'سلوك وتجربة واتساب', icon: Bot },
-    { id: 'tab-payments' as SettingsTabId, label: 'بوابات الدفع والتحصيل', icon: CreditCard },
-    { id: 'tab-shipping' as SettingsTabId, label: 'الشحن واللوجستيات', icon: Truck },
     { id: 'tab-alerts' as SettingsTabId, label: 'الإشعارات وتنبيهات الإدارة', icon: BellRing },
     { id: 'tab-security' as SettingsTabId, label: 'الأمان والنسخ الاحتياطي', icon: ShieldCheck }
   ];

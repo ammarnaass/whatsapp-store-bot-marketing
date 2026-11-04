@@ -1,0 +1,106 @@
+/* الأزرار الموحدة القياسية (Standard WaSell Buttons) */
+.wasell-btn-primary {
+  height: 38px;
+  padding: 0 16px;
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.18s ease;
+  box-shadow: var(--glow-whatsapp);
+}
+
+.wasell-btn-primary:hover {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+.wasell-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.wasell-btn-secondary {
+  height: 38px;
+  padding: 0 16px;
+  background-color: var(--color-card);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.18s ease;
+  box-shadow: var(--shadow-elevation-1);
+}
+
+.wasell-btn-secondary:hover {
+  background-color: var(--color-muted);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.wasell-btn-secondary:active {
+  transform: scale(0.98);
+}
+
+.wasell-btn-ai {
+  height: 38px;
+  padding: 0 16px;
+  background-color: var(--color-ai);
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.18s ease;
+  box-shadow: var(--glow-ai);
+}
+
+.wasell-btn-ai:hover {
+  background-color: var(--color-ai-dark);
+  transform: translateY(-1px);
+}
+
+.wasell-btn-ai:active {
+  transform: scale(0.98);
+}
+
+.wasell-btn-danger {
+  height: 38px;
+  padding: 0 16px;
+  background-color: var(--color-danger);
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.18s ease;
+  box-shadow: var(--glow-danger);
+}
+
+.wasell-btn-danger:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+

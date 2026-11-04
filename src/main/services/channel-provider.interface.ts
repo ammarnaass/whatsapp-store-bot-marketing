@@ -1,4 +1,4 @@
-import { ChannelProviderType } from '../../shared/types';
+import { ChannelProviderType, SessionStatus } from '../../shared/types';
 
 export interface SendMessageOptions {
   to: string; // E.164 formatted number or with @c.us
@@ -9,6 +9,7 @@ export interface SendMessageOptions {
 }
 
 export interface ChannelStatusResult {
+  status: SessionStatus;
   isConnected: boolean;
   statusText: string;
   phone?: string;

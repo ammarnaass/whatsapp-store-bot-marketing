@@ -8,6 +8,7 @@ import { ChannelsKpis } from '../components/ChannelsKpis';
 import { ProviderSelectorCard } from '../components/ProviderSelectorCard';
 import { OpenWACard } from '../components/OpenWACard';
 import { OpenWAQrModal } from '../components/OpenWAQrModal';
+import { SwaggerDocsCard } from '../components/SwaggerDocsCard';
 import { WabaCredentialsCard } from '../components/WabaCredentialsCard';
 import { WebhookConfigCard } from '../components/WebhookConfigCard';
 import { LiveWebhookStreamCard } from '../components/LiveWebhookStreamCard';
@@ -177,6 +178,11 @@ export const ChannelsPage: React.FC = () => {
           onPing={handleOpenwaPing}
           onLogout={handleOpenwaLogout}
         />
+      )}
+
+      {/* 5b. Swagger API Interactive Documentation Card (Port 2785) */}
+      {(activeSubtab === 'swagger_docs' || activeSubtab === 'openwa') && (
+        <SwaggerDocsCard />
       )}
 
       {/* 6. Meta Cloud Credentials & Webhooks Grid */}

@@ -24,7 +24,7 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
           </span>
         </div>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-3xl leading-relaxed">
-          إدارة الهوية التجارية، سلوك التطبيق، بوابات الدفع واللوجستيات، تفضيلات الإشعارات، وسياسات الخصوصية والأمان لحساب متجرك في منصة WaSell.
+          إدارة الهوية التجارية، سلوك الوكيل الذكي، إدارة الحساب وفريق العمل، تفضيلات الإشعارات، وسياسات الخصوصية والأمان لحساب متجرك في منصة WaSell.
         </p>
       </div>
 

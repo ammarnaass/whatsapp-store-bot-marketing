@@ -20,11 +20,17 @@ export const CustomerProfileModal: React.FC<CustomerProfileModalProps> = ({
       <div className="bg-white dark:bg-[#111827] w-full max-w-xl rounded-2xl border border-slate-200 dark:border-[#1F293D] shadow-2xl p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#1F293D]">
           <div className="flex items-center gap-3">
-            <img
-              src={customer.avatar}
-              alt={customer.name}
-              className="w-12 h-12 rounded-full object-cover ring-2 ring-[#128C7E]/30"
-            />
+            {customer.avatar ? (
+              <img
+                src={customer.avatar}
+                alt={customer.name}
+                className="w-12 h-12 rounded-full object-cover ring-2 ring-[#128C7E]/30"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 flex items-center justify-center text-lg font-bold ring-2 ring-[#128C7E]/30 shrink-0">
+                {(customer.name || 'ع')[0]}
+              </div>
+            )}
             <div>
               <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
                 {customer.name}

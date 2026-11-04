@@ -1,48 +1,111 @@
 import React, { useState } from 'react';
-import { Megaphone, Plus } from 'lucide-react';
-import { useMarketingData } from '../hooks/useMarketingData';
-import { AntiBanSafeguards } from '../components/AntiBanSafeguards';
-import { CampaignList } from '../components/CampaignList';
-import { CreateCampaignModal } from '../components/CreateCampaignModal';
+import { MarketingTab } from '../types/marketing.types';
+import { useCampaigns } from '../hooks/useCampaigns';
+import { useCoupons } from '../hooks/useCoupons';
+import { useMarketingStats } from '../hooks/useMarketingStats';
+import { MarketingHeader } from '../components/MarketingHeader';
+import { AntiBanSafeguardsCard } from '../components/AntiBanSafeguardsCard';
+import { CampaignsTab } from '../components/tabs/CampaignsTab';
+import { CouponsTab } from '../components/tabs/CouponsTab';
+import { BlocklistTab } from '../components/tabs/BlocklistTab';
+import { CreateCampaignModal } from '../components/create-campaign-modal/CreateCampaignModal';
+import { CreateCouponModal } from '../components/coupons/CreateCouponModal';
+import { CampaignRecipientsDrawer } from '../components/campaigns/CampaignRecipientsDrawer';
 
 export const MarketingPage: React.FC = () => {
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const { campaigns, createCampaign } = useMarketingData();
+  const [currentTab, setCurrentTab] = useState<MarketingTab>('campaigns');
+  const [showCreateCampaign, setShowCreateCampaign] = useState(false);
+  const [showCreateCoupon, setShowCreateCoupon] = useState(false);
+
+  const {
+    campaigns,
+    isLoading: isCampaignsLoading,
+    activeRecipientCampaignId,
+    setActiveRecipientCampaignId,
+    createCampaign,
+    controlCampaign,
+    deleteCampaign,
+  } = useCampaigns();
+
+  const {
+    coupons,
+    isLoading: isCouponsLoading,
+    createCoupon,
+    toggleCoupon,
+    deleteCoupon,
+  } = useCoupons();
+
+  const {
+    blocklist,
+    isLoading: isBlocklistLoading,
+    addToBlocklist,
+    removeFromBlocklist,
+  } = useMarketingStats();
 
   return (
-    <div className="space-y-6">
-      {/* رأس الصفحة */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-[#1F293D] pb-4">
-        <div>
-          <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <Megaphone className="w-5 h-5 text-[#128C7E]" />
-            التسويق والحملات المقسمة عبر واتساب
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            إرسال حملات جماعية مجدولة مع خوارزميات مكافحة الحظر وتأخير بشري عشوائي واحترام الانسحاب الفوري
-          </p>
-        </div>
+    <div className="space-y-5">
+      {/* الترويسة الرئيسية والتبويبات وأزرار الإضافة السريعة */}
+      <MarketingHeader
+        currentTab={currentTab}
+        onTabChange={setCurrentTab}
+        onOpenCreateCampaign={() => setShowCreateCampaign(true)}
+        onOpenCreateCoupon={() => setShowCreateCoupon(true)}
+        campaignsCount={campaigns.length}
+        couponsCount={coupons.length}
+        blocklistCount={blocklist.length}
+      />
 
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-[#128C7E] hover:bg-[#075E54] text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-all shadow-md cursor-pointer self-start md:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          إنشاء حملة تسويقية جديدة
-        </button>
-      </div>
+      {/* بطاقات مؤشرات الحماية من الحظر */}
+      <AntiBanSafeguardsCard />
 
-      {/* بطاقات الإحصائيات لمكافحة الحظر */}
-      <AntiBanSafeguards />
+      {/* التبويب النشط */}
+      {currentTab === 'campaigns' && (
+        <CampaignsTab
+          campaigns={campaigns}
+          isLoading={isCampaignsLoading}
+          onControl={controlCampaign}
+          onDelete={deleteCampaign}
+          onViewRecipients={(id) => setActiveRecipientCampaignId(id)}
+          onOpenCreate={() => setShowCreateCampaign(true)}
+        />
+      )}
 
-      {/* سجل الحملات */}
-      <CampaignList campaigns={campaigns} />
+      {currentTab === 'coupons' && (
+        <CouponsTab
+          coupons={coupons}
+          isLoading={isCouponsLoading}
+          onToggle={toggleCoupon}
+          onDelete={deleteCoupon}
+          onOpenCreate={() => setShowCreateCoupon(true)}
+        />
+      )}
 
-      {/* نافذة إنشاء حملة جديدة */}
+      {currentTab === 'blocklist' && (
+        <BlocklistTab
+          blocklist={blocklist}
+          isLoading={isBlocklistLoading}
+          onAdd={addToBlocklist}
+          onRemove={removeFromBlocklist}
+        />
+      )}
+
+      {/* نوافذ الإدخال والمودالات */}
       <CreateCampaignModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+        isOpen={showCreateCampaign}
+        onClose={() => setShowCreateCampaign(false)}
         onSubmit={createCampaign}
+      />
+
+      <CreateCouponModal
+        isOpen={showCreateCoupon}
+        onClose={() => setShowCreateCoupon(false)}
+        onSubmit={createCoupon}
+      />
+
+      {/* درج سجل المستلمين */}
+      <CampaignRecipientsDrawer
+        campaignId={activeRecipientCampaignId}
+        onClose={() => setActiveRecipientCampaignId(null)}
       />
     </div>
   );

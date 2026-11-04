@@ -41,17 +41,17 @@ export const DashboardPage: React.FC = () => {
               نظرة عامة على المبيعات والتجارة الذكية
             </h1>
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border transition-colors ${
-              isMockDataActive
+              chats.length > 0
                 ? 'bg-[#E7F6F2] dark:bg-[#128C7E]/20 text-[#075E54] dark:text-emerald-300 border-emerald-200/50'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
             }`}>
-              {isMockDataActive ? 'بيانات تجريبية نشطة' : 'وضع البيانات النظيفة'}
+              {chats.length > 0 ? 'واتساب متصل ونشط' : 'بانتظار بدء المحادثات'}
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {isMockDataActive
-              ? 'يراقب وكيل WaSell الذكي حالياً 1,280 محادثة، مع معدل تحويل آلي يتجاوز 84% خلال اليوم.'
-              : 'النظام في وضع البيانات الحقيقية النظيفة (فارغ). بانتظار بدء أول محادثة أو طلب عبر واتساب.'}
+            {chats.length > 0
+              ? `يراقب وكيل WaSell الذكي حالياً ${chats.length} محادثات مسجلة مع معدل أتمتة يبلغ ${kpis?.agentHandledPercentage || 0}%.`
+              : 'النظام متصل بقاعدة بيانات المتجر وبوابة واتساب المحلية بانتظار بدء أول محادثة أو طلب.'}
           </p>
         </div>
 
@@ -83,27 +83,23 @@ export const DashboardPage: React.FC = () => {
         <div className="bg-white dark:bg-[#111827] p-5 rounded-2xl border border-slate-200 dark:border-[#1F293D] shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-1.5 h-full bg-[#128C7E]"></div>
           <div className="flex items-start justify-between mb-3">
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">مبيعات اليوم عبر الواتساب</span>
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">مبيعات المتجر عبر الواتساب</span>
             <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-[#128C7E]/20 text-[#128C7E] flex items-center justify-center">
               <DollarSign className="w-5 h-5" />
             </div>
           </div>
           <div className="flex items-baseline gap-2 mb-2">
             <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              {isMockDataActive ? '14,850' : '0'}
+              {(kpis?.totalRevenue || 0).toLocaleString()}
             </span>
             <span className="text-xs font-bold text-slate-400">ر.س</span>
           </div>
           <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-[#1F293D]">
-            <span className={`inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-full ${
-              isMockDataActive
-                ? 'text-emerald-600 bg-emerald-50 dark:bg-[#128C7E]/20'
-                : 'text-slate-400 bg-slate-100 dark:bg-slate-800'
-            }`}>
-              {isMockDataActive && <ArrowUpRight className="w-3.5 h-3.5" />}
-              {isMockDataActive ? '+18.4%' : '0%'}
+            <span className="inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-full text-emerald-600 bg-emerald-50 dark:bg-[#128C7E]/20">
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <span>مبيعات موثقة</span>
             </span>
-            <span className="text-slate-400">{isMockDataActive ? 'مقارنة بيوم أمس' : 'لا توجد مقارنة'}</span>
+            <span className="text-slate-400 font-mono tabular-nums">{orders.length} طلبات إجمالية</span>
           </div>
         </div>
 
@@ -111,7 +107,7 @@ export const DashboardPage: React.FC = () => {
         <div className="bg-white dark:bg-[#111827] p-5 rounded-2xl border border-slate-200 dark:border-[#1F293D] shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-1.5 h-full bg-[#7C3AED]"></div>
           <div className="flex items-start justify-between mb-3">
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">الطلبات الجديدة</span>
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">الطلبات المسجلة</span>
             <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-[#7C3AED]/20 text-[#7C3AED] flex items-center justify-center">
               <ShoppingBag className="w-5 h-5" />
             </div>
@@ -125,9 +121,9 @@ export const DashboardPage: React.FC = () => {
           <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-[#1F293D]">
             <span className="inline-flex items-center gap-1 text-[#7C3AED] font-bold bg-violet-50 dark:bg-[#7C3AED]/20 px-2 py-0.5 rounded-full">
               <Sparkles className="w-3.5 h-3.5" />
-              {isMockDataActive ? '88 طلب آلي (62%)' : '0 طلب آلي'}
+              <span>{kpis?.agentHandledOrders || 0} طلب آلي ({kpis?.agentHandledPercentage || 0}%)</span>
             </span>
-            <span className="text-slate-400">أغلقها الوكيل الذكي</span>
+            <span className="text-slate-400">إغلاق آلي</span>
           </div>
         </div>
 
@@ -142,20 +138,20 @@ export const DashboardPage: React.FC = () => {
           </div>
           <div className="flex items-baseline justify-between mb-2">
             <span className="text-2xl font-black text-[#7C3AED]">
-              {isMockDataActive ? '84%' : '0%'} <span className="text-xs font-normal text-slate-400">آلي</span>
+              {kpis?.agentHandledPercentage || 0}% <span className="text-xs font-normal text-slate-400">آلي</span>
             </span>
             <span className="text-xl font-bold text-[#128C7E]">
-              {isMockDataActive ? '16%' : '0%'} <span className="text-xs font-normal text-slate-400">بشري</span>
+              {100 - (kpis?.agentHandledPercentage || 0)}% <span className="text-xs font-normal text-slate-400">بشري</span>
             </span>
           </div>
           {/* Dual progress bar */}
           <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex mb-2">
-            <div className="bg-[#7C3AED] h-full transition-all duration-500" style={{ width: isMockDataActive ? '84%' : '0%' }} title="ذكاء اصطناعي"></div>
-            <div className="bg-[#128C7E] h-full transition-all duration-500" style={{ width: isMockDataActive ? '16%' : '0%' }} title="تدخل بشري"></div>
+            <div className="bg-[#7C3AED] h-full transition-all duration-500" style={{ width: `${kpis?.agentHandledPercentage || 0}%` }} title="ذكاء اصطناعي"></div>
+            <div className="bg-[#128C7E] h-full transition-all duration-500" style={{ width: `${100 - (kpis?.agentHandledPercentage || 0)}%` }} title="تدخل بشري"></div>
           </div>
           <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
             <span>إجمالي {chats.length} محادثات مسجلة</span>
-            <span className="font-bold text-[#128C7E]">{isMockDataActive ? 'وفّر 48 ساعة' : '0 ساعات'}</span>
+            <span className="font-bold text-[#128C7E]">واتساب مباشر</span>
           </div>
         </div>
 
@@ -170,30 +166,19 @@ export const DashboardPage: React.FC = () => {
           </div>
           <div className="flex items-baseline gap-2 mb-2">
             <span className="text-3xl font-black text-amber-600 tracking-tight">
-              {isMockDataActive ? '1' : '0'}
+              {kpis?.waitingHumanCount || 0}
             </span>
             <span className="text-xs font-bold text-slate-400">محادثة بانتظار الرد</span>
           </div>
           <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-[#1F293D]">
             <span className={`inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-full ${
-              isMockDataActive
+              (kpis?.waitingHumanCount || 0) > 0
                 ? 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40'
-                : 'text-slate-400 bg-slate-100 dark:bg-slate-800'
+                : 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40'
             }`}>
-              {isMockDataActive ? (
-                <>
-                  <AlertTriangle className="w-3.5 h-3.5" />
-                  مطلوب تدخل بشري
-                </>
-              ) : (
-                'لا توجد تحويلات معلقة'
-              )}
+              {(kpis?.waitingHumanCount || 0) > 0 ? 'تتطلب تدخلاً عاجلاً' : 'جميع المحادثات مستقرة'}
             </span>
-            {isMockDataActive && (
-              <span className="text-xs font-bold text-[#128C7E] flex items-center">
-                استلام المحادثة <ChevronLeft className="w-3.5 h-3.5" />
-              </span>
-            )}
+            <span className="text-slate-400">تحكم فوري</span>
           </div>
         </div>
       </div>

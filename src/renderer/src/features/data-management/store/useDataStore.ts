@@ -115,7 +115,7 @@ function mapBackendConversationToChatItem(c: any): ChatItem {
     id: c.id,
     name: c.contact?.name || c.contact?.phone || 'محادثة عميل',
     phone: c.contact?.phone || '',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+    avatar: c.contact?.avatar || '',
     time: c.last_message_at
       ? new Date(c.last_message_at).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })
       : 'الآن',
@@ -158,9 +158,7 @@ export interface DataState {
 }
 
 const getStoredPreference = (): boolean => {
-  if (typeof window === 'undefined') return true;
-  const stored = localStorage.getItem(STORAGE_KEY);
-  return stored !== 'empty' && stored !== 'real';
+  return false;
 };
 
 const initialIsActive = getStoredPreference();
@@ -168,29 +166,16 @@ const initialIsActive = getStoredPreference();
 export const useDataStore = create<DataState>((set, get) => ({
   isMockDataActive: initialIsActive,
   isLoading: false,
-  products: initialIsActive ? INITIAL_PRODUCTS : [],
-  orders: initialIsActive ? INITIAL_ORDERS : [],
-  customers: initialIsActive ? INITIAL_CUSTOMERS : [],
-  chats: initialIsActive ? INITIAL_CHATS : [],
-  webhookLogs: initialIsActive ? INITIAL_WEBHOOK_LOGS : [],
-  templates: initialIsActive ? INITIAL_TEMPLATES : [],
-  kpis: initialIsActive ? DEFAULT_KPIS : EMPTY_KPIS,
+  products: [],
+  orders: [],
+  customers: [],
+  chats: [],
+  webhookLogs: [],
+  templates: [],
+  kpis: EMPTY_KPIS,
 
   hydrateFromApi: async () => {
     const isMock = get().isMockDataActive;
-    if (isMock) {
-      set({
-        products: [...INITIAL_PRODUCTS],
-        orders: [...INITIAL_ORDERS],
-        customers: [...INITIAL_CUSTOMERS],
-        chats: [...INITIAL_CHATS],
-        webhookLogs: [...INITIAL_WEBHOOK_LOGS],
-        templates: [...INITIAL_TEMPLATES],
-        kpis: DEFAULT_KPIS,
-      });
-      return;
-    }
-
     set({ isLoading: true });
     try {
       const [rawProducts, rawOrders, rawCustomers, rawChats, rawKpis] = await Promise.all([
@@ -202,18 +187,18 @@ export const useDataStore = create<DataState>((set, get) => ({
       ]);
 
       set({
-        products: rawProducts.map(mapBackendProductToCatalogProduct),
-        orders: rawOrders.map(mapBackendOrderToOrderItem),
-        customers: (rawCustomers && rawCustomers.length > 0) ? rawCustomers : [],
+        products: isMock && rawProducts.length === 0 ? [...INITIAL_PRODUCTS] : rawProducts.map(mapBackendProductToCatalogProduct),
+        orders: isMock && rawOrders.length === 0 ? [...INITIAL_ORDERS] : rawOrders.map(mapBackendOrderToOrderItem),
+        customers: (rawCustomers && rawCustomers.length > 0) ? rawCustomers : (isMock ? [...INITIAL_CUSTOMERS] : []),
         chats: rawChats.map(mapBackendConversationToChatItem),
         kpis: rawKpis
           ? {
               revenue: rawKpis.totalRevenue,
               ordersCount: rawKpis.totalOrders,
-              activeChats: rawKpis.activeConversations,
+              activeChats: rawKpis.activeConversations || rawChats.length,
               automationRate: rawKpis.agentHandledPercentage,
             }
-          : EMPTY_KPIS,
+          : (isMock ? DEFAULT_KPIS : EMPTY_KPIS),
       });
     } catch (err) {
       console.error('[useDataStore] Failed to hydrate from API:', err);
@@ -279,21 +264,25 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   handleLiveMessageReceived: (data) => {
     set((state) => {
-      const existingIndex = state.chats.findIndex((c) => c.id === data.conversationId);
+      const cleanDataPhone = data.phone ? data.phone.replace(/\D/g, '') : '';
+      const existingIndex = state.chats.findIndex(
+        (c) => c.id === data.conversationId || (cleanDataPhone && c.phone && c.phone.replace(/\D/g, '') === cleanDataPhone)
+      );
       const nowTime = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
 
       if (existingIndex >= 0) {
-        const updatedChats = [...state.chats];
-        const current = updatedChats[existingIndex];
-        updatedChats[existingIndex] = {
+        const current = state.chats[existingIndex];
+        const updatedChat: ChatItem = {
           ...current,
           lastMessage: data.body,
           time: nowTime,
         };
-        return { chats: updatedChats };
+        // رفع المحادثة فوراً إلى أعلى القائمة
+        const remainingChats = state.chats.filter((_, idx) => idx !== existingIndex);
+        return { chats: [updatedChat, ...remainingChats] };
       }
 
-      // إضافة محادثة جديدة فوراً
+      // إضافة محادثة جديدة فوراً في مقدمة القائمة
       const newChat: ChatItem = {
         id: data.conversationId,
         name: `عميل واتساب (${data.phone})`,

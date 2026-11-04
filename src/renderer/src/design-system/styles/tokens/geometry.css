@@ -1,0 +1,82 @@
+:root {
+  /* أنصاف أقطار الحواف (Radius Scale) */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-card: 14px;
+  --radius-modal: 18px;
+  --radius-pill: 9999px;
+
+  /* مستويات الكثافة الافتراضية (Standard Density) */
+  --table-py: 0.75rem;
+  --card-p: 1.25rem;
+  --gap-size: 1rem;
+}
+
+/* درجات الكثافة المخصصة (Density Modes) */
+.density-compact {
+  --table-py: 0.35rem;
+  --card-p: 0.75rem;
+  --gap-size: 0.5rem;
+}
+
+.density-standard {
+  --table-py: 0.75rem;
+  --card-p: 1.25rem;
+  --gap-size: 1rem;
+}
+
+.density-comfortable {
+  --table-py: 1rem;
+  --card-p: 1.5rem;
+  --gap-size: 1.25rem;
+}
+
+/* شريط التمرير المخصص الأنيق (RTL Custom Scrollbar) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(18, 140, 126, 0.35);
+  border-radius: var(--radius-pill);
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* شريط تمرير القائمة الجانبية السلس */
+.wasell-sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-brand-primary, #128C7E) 30%, transparent) transparent;
+}
+
+.wasell-sidebar-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.wasell-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.wasell-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-brand-primary, #128C7E) 30%, transparent);
+  border-radius: var(--radius-pill);
+  transition: background 0.15s ease;
+}
+
+.wasell-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-primary, #128C7E);
+}
+

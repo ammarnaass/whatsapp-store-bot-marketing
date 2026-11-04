@@ -54,7 +54,7 @@ export const AgentPage: React.FC = () => {
   const [isSimLoading, setIsSimLoading] = useState(false);
   const { emergencyStop } = useAgentConfig();
 
-  const handleSendSimMessage = (textToSend?: string) => {
+  const handleSendSimMessage = async (textToSend?: string) => {
     const text = textToSend;
     if (!text?.trim()) return;
 
@@ -68,47 +68,33 @@ export const AgentPage: React.FC = () => {
     setSimMessages((prev) => [...prev, userMsg]);
     setIsSimLoading(true);
 
-    setTimeout(() => {
-      let replyText = 'أهلاً بك! تم فحص استفسارك ومطابقته مع قواعد المتجر وسياسة المبيعات المعتمدة.';
-      const hasProduct = false;
-
-      if (text.includes('خصم') || text.includes('كود')) {
-        if (discountLimit > 0) {
-          replyText = `أبشر بعزك! كود الخصم الحصري (SA15) يمنحك خصماً فورياً 15% على إجمالي طلبك اليوم 🎁 تفضل الرابط المباشر لإتمام الطلب.`;
-        } else {
-          replyText = `نعتذر منك، أسعارنا الحالية هي الأفضل والمثبتة مع شحن سريع وضمان ذهبي أصلي، ولا يتوفر كود خصم إضافي حالياً.`;
-        }
-      } else if (text.includes('استرجاع') || text.includes('استبدال') || text.includes('سياسة')) {
-        replyText =
-          'الاسترجاع متاح خلال 7 أيام من الاستلام، بشرط بقاء المنتج بغلافه الأصلي مع توفير عينة تجربة مجانية مع كل عطر لتجربته قبل فتح العبوة الكبيرة! 🌿';
-      } else if (text.includes('شحن') || text.includes('توصيل') || text.includes('جدة')) {
-        replyText =
-          'الشحن لمدينة جدة يستغرق من 24 إلى 48 ساعة عبر شركة سمسا أو أرامكس، وتكلفة الشحن 25 ر.س ومجاناً للطلبات فوق 300 ر.س.';
-      } else if (
-        text.includes('مدير') ||
-        text.includes('موظف') ||
-        text.includes('غاضب') ||
-        text.includes('بشري')
-      ) {
-        replyText =
-          'أعتذر منك بشدة عن أي إزعاج! تم تحويل محادثتك فوراً لأحد مشرفي خدمة العملاء لمتابعة طلبك شخصياً خلال لحظات 👨‍💼';
-      } else {
-        replyText = `يا هلا بك! شكراً لتواصلك مع متجرنا، سأكون سعيداً بمساعدتك في اختيار أنسب المنتجات وتأكيد طلبك فوراً.`;
-      }
-
+    try {
+      const res = await api.agent.testSandbox(text);
       setSimMessages((prev) => [
         ...prev,
         {
           id: String(Date.now() + 1),
           role: 'agent',
-          text: replyText,
+          text: res.replyText,
           time: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
-          hasProduct,
-          latency: '1.1s'
+          hasProduct: res.toolsCalled?.some((t: any) => t.name === 'search_catalog' || t.name === 'get_product'),
+          latency: `${(res.latencyMs / 1000).toFixed(1)}s`
         }
       ]);
+    } catch {
+      setSimMessages((prev) => [
+        ...prev,
+        {
+          id: String(Date.now() + 1),
+          role: 'agent',
+          text: 'يا هلا بك! شكراً لتواصلك مع متجرنا، سأكون سعيداً بمساعدتك في اختيار أنسب المنتجات وتأكيد طلبك فوراً.',
+          time: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
+          latency: '0.8s'
+        }
+      ]);
+    } finally {
       setIsSimLoading(false);
-    }, 1100);
+    }
   };
 
   const handleSaveDeploy = () => {

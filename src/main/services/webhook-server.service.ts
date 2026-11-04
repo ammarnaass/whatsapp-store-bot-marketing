@@ -213,71 +213,91 @@ export class WebhookServerService extends EventEmitter {
    * معالجة أحداث OpenWA الواردة
    */
   private async handleWebhookPayload(payload: any): Promise<void> {
-    // 1. حدث رسالة جديدة واردة
+    // 1. حدث رسالة واردة أو صادرة
     const isMessageEvent = payload.event === 'message' || 
                            payload.event === 'message.received' || 
+                           payload.event === 'message.sent' ||
                            payload.type === 'chat' || 
                            payload.body || 
                            payload.data;
 
     if (isMessageEvent) {
       const msgData = payload.data || payload;
-      const from = msgData.from || msgData.sender?.id || msgData.chatId || '';
-      const phone = from.replace(/@c\.us/g, '').replace(/@g\.us/g, '').replace(/\+/g, '').trim();
+      const rawFrom = msgData.from || msgData.sender?.id || msgData.chatId || '';
+      const rawTo = msgData.to || '';
+      const isFromMe = Boolean(msgData.fromMe);
+
+      // تحديد الشات والطرف الآخر وترجمة معرفات @lid إلى أرقام هواتف فعلية
+      const targetChatId = isFromMe ? (rawTo || msgData.chatId || '') : (rawFrom || msgData.chatId || '');
+      const phone = OpenWAManager.getInstance().resolveChatIdToPhone(targetChatId);
       const body = msgData.body || msgData.text || '';
 
-      if (!phone || !body || msgData.fromMe) return; // تجاهل الرسائل الصادرة من أنفسنا
+      if (!phone || !body) return;
 
-      console.log(`[WebhookServer] Inbound message from ${phone}: "${body}"`);
+      console.log(`[WebhookServer] ${isFromMe ? 'Outbound' : 'Inbound'} message for ${phone}: "${body}"`);
 
-      // التحقق من وجود المحادثة أو إنشائها
-      let contact = this.db.prepare('SELECT id FROM contacts WHERE phone = ?').get(phone) as any;
-      if (!contact) {
-        contact = { id: `cnt_${Date.now()}` };
+      const pushName = msgData.contact?.pushName || payload.sender?.pushname || payload.notifyName || `عميل واتساب (${phone.slice(-4)})`;
+
+      // 1. التحقق من وجود جهة الاتصال أو إنشائها وتحديث الاسم
+      const contactId = `cnt_${phone}`;
+      this.db.prepare(`
+        INSERT INTO contacts (id, phone, name, source)
+        VALUES (?, ?, ?, 'WHATSAPP')
+        ON CONFLICT(phone) DO UPDATE SET name = coalesce(nullif(excluded.name, ''), contacts.name)
+      `).run(contactId, phone, pushName);
+
+      const contact = this.db.prepare('SELECT id FROM contacts WHERE phone = ?').get(phone) as any;
+      const actualContactId = contact ? contact.id : contactId;
+
+      // 2. التحقق من وجود المحادثة أو إنشائها (باستخدام session_id = 'wasell-main-store')
+      const convId = `conv_${phone}`;
+      this.db.prepare(`
+        INSERT INTO conversations (id, session_id, contact_id, handler, state, last_message_at, unread_count)
+        VALUES (?, 'wasell-main-store', ?, 'agent', 'open', CURRENT_TIMESTAMP, 0)
+        ON CONFLICT(id) DO UPDATE SET last_message_at = CURRENT_TIMESTAMP
+      `).run(convId, actualContactId);
+
+      // 3. حفظ الرسالة في جدول messages
+      const msgId = msgData.id || msgData.waMessageId || payload.id || `msg_${Date.now()}`;
+      const direction = isFromMe ? 'OUTBOUND' : 'INBOUND';
+      const status = isFromMe ? 'SENT' : 'DELIVERED';
+
+      this.db.prepare(`
+        INSERT INTO messages (id, conversation_id, direction, type, body, status, ts)
+        VALUES (?, ?, ?, 'text', ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(id) DO UPDATE SET status = excluded.status
+      `).run(msgId, convId, direction, body, status);
+
+      // 4. تحديث آخر رسالة والعداد غير المقروء إن كانت واردة
+      if (!isFromMe) {
         this.db.prepare(`
-          INSERT INTO contacts (id, phone, name, source)
-          VALUES (?, ?, ?, 'WHATSAPP')
-        `).run(contact.id, phone, payload.sender?.pushname || payload.notifyName || phone);
+          UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP, unread_count = unread_count + 1 WHERE id = ?
+        `).run(convId);
       }
 
-      let conv = this.db.prepare('SELECT id, handler, state FROM conversations WHERE contact_id = ?').get(contact.id) as any;
-      if (!conv) {
-        conv = { id: `conv_${Date.now()}`, handler: 'agent', state: 'open' };
-        this.db.prepare(`
-          INSERT INTO conversations (id, session_id, contact_id, handler, state, last_message_at)
-          VALUES (?, 'default', ?, 'agent', 'open', CURRENT_TIMESTAMP)
-        `).run(conv.id, contact.id);
-      }
-
-      // حفظ الرسالة الواردة
-      const msgId = payload.id || `msg_${Date.now()}`;
-      this.db.prepare(`
-        INSERT INTO messages (id, conversation_id, direction, type, body, status)
-        VALUES (?, ?, 'INBOUND', 'text', ?, 'DELIVERED')
-      `).run(msgId, conv.id, body);
-
-      // تحديث آخر رسالة في المحادثة
-      this.db.prepare(`
-        UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP, unread_count = unread_count + 1 WHERE id = ?
-      `).run(conv.id);
-
-      // بث الحدث للواجهة الرسومية
+      // 5. بث الحدث للواجهة الرسومية فورياً!
       this.emit('new-message', {
         id: msgId,
-        conversationId: conv.id,
+        conversationId: convId,
         phone,
         body,
-        direction: 'INBOUND',
+        direction,
       });
 
+      console.log(`[WebhookServer] Persisted & Emitted ${direction} message for ${phone} ("${body}")`);
+
+      // إذا كانت الرسالة من أنفسنا، لا داعي لإطلاق رد الوكيل
+      if (isFromMe) return;
+
+      const conv = this.db.prepare('SELECT id, handler, state FROM conversations WHERE id = ?').get(convId) as any;
       // إذا كانت المحادثة تحت تصرف موظف بشري (human)، لا يتدخل الوكيل إطلاقاً
-      if (conv.handler === 'human') {
-        console.log(`[WebhookServer] Conversation ${conv.id} is assigned to HUMAN. Agent will not respond.`);
+      if (conv?.handler === 'human') {
+        console.log(`[WebhookServer] Conversation ${convId} is assigned to HUMAN. Agent will not respond.`);
         return;
       }
 
       // تجميع الرسائل المتتالية (Debounce 3.5 ثوانٍ)
-      this.enqueueForAgentResponse(phone, conv.id, body);
+      this.enqueueForAgentResponse(phone, convId, body);
     }
   }
 

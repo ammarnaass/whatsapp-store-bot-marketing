@@ -1,67 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { StoreSettingsState, SettingsTabId } from '../types/settings.types';
+import { DEFAULT_STORE_SETTINGS } from '../constants/settings.constants';
 import { api } from '../../../api-bridge';
 
-const SETTINGS_STORAGE_KEY = 'wasell_store_settings_v1';
-
-export const DEFAULT_STORE_SETTINGS: StoreSettingsState = {
-  identity: {
-    storeNameAr: 'متجر الرياض الفاخر',
-    storeNameEn: 'Riyadh Luxury Store',
-    storeUrl: 'https://salla.sa/riyadh-luxury',
-    currency: 'SAR',
-    timezone: 'Asia/Riyadh',
-    aiDialect: 'اللهجة السعودية (نجدية / حجازية راقية)',
-    logoUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=160'
-  },
-  behavior: {
-    autoSelling247: true,
-    offHoursResponse: true,
-    taxInvoiceAndTracking: true,
-    greetingMessage:
-      'يا هلا ومرحب فيك بمتجر الرياض الفاخر! يسعدني أساعدك في اختيار أرقى القطع وتجهيز طلبك فوراً. وش حاب تشوف اليوم؟'
-  },
-  payments: {
-    madaApplePay: true,
-    tamara: true,
-    tabby: true,
-    cod: true,
-    codFee: 15
-  },
-  shipping: {
-    smsaActive: true,
-    aramexActive: true,
-    torodActive: true,
-    splActive: false,
-    flatShippingRate: 25,
-    freeShippingThreshold: 300,
-    autoPrintWaybill: true
-  },
-  alerts: {
-    vipOrdersAlert: true,
-    humanEscalationAlert: true,
-    morningDigestAlert: true,
-    adminWhatsAppNumber: '+966 50 123 4567'
-  },
-  security: {
-    twoFactorAuth: true,
-    localHostingPdpl: true,
-    lastBackupDate: 'اليوم، 03:00 ص',
-    backupSizeBytes: '142 MB'
-  }
-};
-
 export function useStoreSettings() {
-  const [settings, setSettings] = useState<StoreSettingsState>(() => {
-    try {
-      const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
-      return stored ? JSON.parse(stored) : DEFAULT_STORE_SETTINGS;
-    } catch {
-      return DEFAULT_STORE_SETTINGS;
-    }
-  });
-
-  const [activeTab, setActiveTab] = useState<SettingsTabId>('tab-all');
+  const [settings, setSettings] = useState<StoreSettingsState>(DEFAULT_STORE_SETTINGS);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [activeTab, setActiveTab] = useState<SettingsTabId>('tab-account');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isTestingSync, setIsTestingSync] = useState(false);
   const [isSendingAlert, setIsSendingAlert] = useState(false);
@@ -74,26 +19,53 @@ export function useStoreSettings() {
     }, 3500);
   }, []);
 
-  const saveSettings = useCallback((newSettings: StoreSettingsState) => {
-    setSettings(newSettings);
+  const loadSettings = useCallback(async () => {
+    setIsLoading(true);
     try {
-      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
-    } catch (e) {
-      console.error('Failed to save settings to localStorage:', e);
+      const liveSettings = await api.settings.getStoreSettings();
+      if (liveSettings && liveSettings.identity) {
+        setSettings(liveSettings);
+      }
+    } catch (err) {
+      console.warn('[useStoreSettings] Failed to fetch settings from SQLite:', err);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
-  const handleSaveAll = useCallback(() => {
-    saveSettings(settings);
-    showToast('تم حفظ كافة إعدادات المنظومة وهوية المتجر وتحديث بوابات الدفع والشحن بنجاح!');
-  }, [settings, saveSettings, showToast]);
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
-  const handleRestoreDefaults = useCallback(() => {
-    if (confirm('هل أنت متأكد من رغبتك في استعادة الإعدادات الافتراضية للمتجر؟')) {
-      saveSettings(DEFAULT_STORE_SETTINGS);
-      showToast('تمت استعادة الإعدادات الافتراضية لمنصة WaSell بنجاح.');
+  const handleSaveAll = useCallback(async () => {
+    try {
+      const res = await api.settings.saveStoreSettings(settings);
+      if (res?.success) {
+        showToast('تم حفظ كافة إعدادات المنظومة وهوية المتجر وبوابات الدفع في قاعدة بيانات SQLite بنجاح! 💾');
+      } else {
+        showToast(res?.error ? `خطأ: ${res.error}` : 'تعذر حفظ الإعدادات');
+      }
+    } catch (err: any) {
+      showToast(`خطأ في الحفظ: ${err.message}`);
     }
-  }, [saveSettings, showToast]);
+  }, [settings, showToast]);
+
+  const handleRestoreDefaults = useCallback(async () => {
+    if (confirm('هل أنت متأكد من رغبتك في استعادة الإعدادات الافتراضية للمتجر؟')) {
+      try {
+        const res = await api.settings.resetDefaults();
+        if (res?.settings) {
+          setSettings(res.settings);
+        } else {
+          setSettings(DEFAULT_STORE_SETTINGS);
+        }
+        showToast('تمت استعادة الإعدادات الافتراضية لمنصة WaSell بنجاح.');
+      } catch {
+        setSettings(DEFAULT_STORE_SETTINGS);
+        showToast('تمت استعادة الإعدادات الافتراضية.');
+      }
+    }
+  }, [showToast]);
 
   const handleTestSync = useCallback(() => {
     setIsTestingSync(true);
@@ -125,6 +97,7 @@ export function useStoreSettings() {
   return {
     settings,
     setSettings,
+    isLoading,
     activeTab,
     setActiveTab,
     toastMessage,
@@ -136,6 +109,6 @@ export function useStoreSettings() {
     handleRestoreDefaults,
     handleTestSync,
     handleSendTestAlert,
-    handleEmergencyStop
+    handleEmergencyStop,
   };
 }

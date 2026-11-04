@@ -29,3 +29,7 @@ yarn-error.log*
 .idea/
 .vscode/
 Thumbs.db
+
+# OpenWA Standalone Microservice
+OpenWA/
+

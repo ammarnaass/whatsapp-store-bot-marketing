@@ -1,3 +1,5 @@
-export { MarketingPage as MarketingView } from './pages/MarketingPage';
 export { MarketingPage } from './pages/MarketingPage';
-export * from './hooks/useMarketingData';
+export * from './types/marketing.types';
+export * from './constants/marketing.constants';
+export * from './hooks/useCampaigns';
+export * from './hooks/useCoupons';

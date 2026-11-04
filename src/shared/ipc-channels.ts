@@ -7,6 +7,7 @@ export const IPC_CHANNELS = {
   SESSION_START: 'session:start',
   SESSION_LOGOUT: 'session:logout',
   SESSION_SIMULATE_PAIR: 'session:simulate-pair',
+  SESSION_GET_PAIRING_CODE: 'session:get-pairing-code',
   SESSION_QR_EVENT: 'session:qr-event',
   SESSION_STATUS_CHANGED: 'session:status-changed',
 
@@ -16,7 +17,15 @@ export const IPC_CHANNELS = {
   CATALOG_CREATE_PRODUCT: 'catalog:create-product',
   CATALOG_UPDATE_PRODUCT: 'catalog:update-product',
   CATALOG_DELETE_PRODUCT: 'catalog:delete-product',
+  CATALOG_TOGGLE_AI: 'catalog:toggle-ai',
   CATALOG_IMPORT_KEYS: 'catalog:import-keys',
+
+  // Smart Inventory
+  INVENTORY_GET_STOCK_SUMMARY: 'inventory:get-stock-summary',
+  INVENTORY_ADJUST_STOCK: 'inventory:adjust-stock',
+  INVENTORY_GET_LOGS: 'inventory:get-logs',
+  INVENTORY_GET_LICENSE_KEYS: 'inventory:get-license-keys',
+  INVENTORY_ADD_LICENSE_KEYS: 'inventory:add-license-keys',
 
   // Inbox & Chat
   CHAT_LIST_CONVERSATIONS: 'chat:list-conversations',
@@ -24,6 +33,7 @@ export const IPC_CHANNELS = {
   CHAT_SEND_MESSAGE: 'chat:send-message',
   CHAT_TAKEOVER: 'chat:takeover',
   CHAT_RETURN_TO_AGENT: 'chat:return-to-agent',
+  CHAT_SYNC_CONVERSATIONS: 'chat:sync-conversations',
   CHAT_MESSAGE_RECEIVED_EVENT: 'chat:message-received-event',
 
   // Orders & Checkout
@@ -31,17 +41,44 @@ export const IPC_CHANNELS = {
   ORDERS_GET_DETAILS: 'orders:get-details',
   ORDERS_UPDATE_STATUS: 'orders:update-status',
   ORDERS_CREATE_MANUAL: 'orders:create-manual',
+  ORDERS_CANCEL: 'orders:cancel',
   ORDERS_GENERATE_PAYMENT_LINK: 'orders:generate-payment-link',
+
+  // Shipping & Logistics
+  SHIPPING_LIST_SHIPMENTS: 'shipping:list-shipments',
+  SHIPPING_GET_SHIPMENT: 'shipping:get-shipment',
+  SHIPPING_CREATE_SHIPMENT: 'shipping:create-shipment',
+  SHIPPING_UPDATE_STATUS: 'shipping:update-status',
+  SHIPPING_LIST_ZONES: 'shipping:list-zones',
+  SHIPPING_SAVE_ZONE: 'shipping:save-zone',
+  SHIPPING_DELETE_ZONE: 'shipping:delete-zone',
+  SHIPPING_GET_KPIS: 'shipping:get-kpis',
 
   // Marketing Campaigns
   CAMPAIGNS_LIST: 'campaigns:list',
   CAMPAIGNS_CREATE: 'campaigns:create',
   CAMPAIGNS_CONTROL: 'campaigns:control',
+  CAMPAIGNS_DELETE: 'campaigns:delete',
+  CAMPAIGNS_GET_RECIPIENTS: 'campaigns:get-recipients',
+  CAMPAIGNS_ESTIMATE_AUDIENCE: 'campaigns:estimate-audience',
   CAMPAIGNS_PROGRESS_EVENT: 'campaigns:progress-event',
+
+  // Marketing Coupons
+  COUPONS_LIST: 'coupons:list',
+  COUPONS_CREATE: 'coupons:create',
+  COUPONS_TOGGLE: 'coupons:toggle',
+  COUPONS_DELETE: 'coupons:delete',
+  COUPONS_VALIDATE: 'coupons:validate',
+
+  // Marketing Blocklist (Anti-Ban / Opt-Out)
+  BLOCKLIST_LIST: 'blocklist:list',
+  BLOCKLIST_ADD: 'blocklist:add',
+  BLOCKLIST_REMOVE: 'blocklist:remove',
 
   // AI Agent & Sandbox
   AGENT_GET_CONFIG: 'agent:get-config',
   AGENT_UPDATE_CONFIG: 'agent:update-config',
+  AGENT_TEST_API_CONNECTION: 'agent:test-api-connection',
   AGENT_SET_MODE: 'agent:set-mode',
   AGENT_EMERGENCY_STOP: 'agent:emergency-stop',
   AGENT_SANDBOX_TEST: 'agent:sandbox-test',
@@ -54,8 +91,40 @@ export const IPC_CHANNELS = {
   KNOWLEDGE_UPDATE: 'knowledge:update',
   KNOWLEDGE_DELETE: 'knowledge:delete',
 
+  // Authentication & Account Management
+  AUTH_LOGIN: 'auth:login',
+  AUTH_REGISTER: 'auth:register',
+  AUTH_GET_CURRENT_USER: 'auth:get-current-user',
+  AUTH_UPDATE_PROFILE: 'auth:update-profile',
+  AUTH_CHANGE_PASSWORD: 'auth:change-password',
+  AUTH_LIST_USERS: 'auth:list-users',
+  AUTH_CREATE_USER: 'auth:create-user',
+  AUTH_DELETE_USER: 'auth:delete-user',
+
   // Customers & Analytics
   CUSTOMERS_LIST: 'customers:list',
   CUSTOMERS_GET: 'customers:get',
+  CUSTOMERS_UPDATE_NOTES: 'customers:update-notes',
+  CUSTOMERS_UPDATE_TAGS: 'customers:update-tags',
   ANALYTICS_GET_KPIS: 'analytics:get-kpis',
+
+  // Store & Application Settings
+  SETTINGS_GET_STORE_SETTINGS: 'settings:get-store-settings',
+  SETTINGS_SAVE_STORE_SETTINGS: 'settings:save-store-settings',
+  SETTINGS_RESET_DEFAULTS: 'settings:reset-defaults',
+  SETTINGS_CREATE_BACKUP: 'settings:create-backup',
+  SETTINGS_LIST_BACKUPS: 'settings:list-backups',
+  SETTINGS_RESTORE_BACKUP: 'settings:restore-backup',
+  SETTINGS_DELETE_BACKUP: 'settings:delete-backup',
+
+  // Window Management & Fullscreen
+  WINDOW_MINIMIZE: 'window:minimize',
+  WINDOW_MAXIMIZE: 'window:maximize',
+  WINDOW_UNMAXIMIZE: 'window:unmaximize',
+  WINDOW_TOGGLE_MAXIMIZE: 'window:toggle-maximize',
+  WINDOW_IS_MAXIMIZED: 'window:is-maximized',
+  WINDOW_TOGGLE_FULLSCREEN: 'window:toggle-fullscreen',
+  WINDOW_IS_FULLSCREEN: 'window:is-fullscreen',
+  WINDOW_CLOSE: 'window:close',
+  WINDOW_STATE_CHANGED_EVENT: 'window:state-changed-event',
 } as const;

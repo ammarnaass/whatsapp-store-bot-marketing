@@ -1,0 +1,66 @@
+:root {
+  /* ألوان الهوية الرئيسية (WhatsApp Official Brand Palette) */
+  --color-primary: #128C7E;
+  --color-primary-dark: #075E54;
+  --color-primary-light: #E7F6F2;
+  --color-whatsapp-emerald: #25D366;
+
+  /* بصمة الذكاء الاصطناعي (AI Signature Palette) */
+  --color-ai: #7C3AED;
+  --color-ai-light: #EDE9FE;
+  --color-ai-dark: #5B21B6;
+
+  /* الألوان الدلالية والحالات (Semantic Statuses) */
+  --color-success: #059669;
+  --color-success-bg: #ECFDF5;
+  --color-warning: #D97706;
+  --color-warning-bg: #FFFBEB;
+  --color-danger: #DC2626;
+  --color-danger-bg: #FEF2F2;
+  --color-info: #2563EB;
+  --color-info-bg: #EFF6FF;
+
+  /* الأسطح والحدود - الوضع النهاري (Light Surfaces & Borders) */
+  --color-bg: #F6F7F9;
+  --color-card: #FFFFFF;
+  --color-sidebar: #FFFFFF;
+  --color-muted: #F1F5F9;
+  --color-border: #E2E8F0;
+  --color-border-strong: #CBD5E1;
+
+  /* النصوص والتباين المعتمد (Typography & Contrast) */
+  --color-text: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748B;
+
+  /* متغيرات السمة التفاعلية الديناميكية (Dynamic Theme Tokens) */
+  --color-brand-primary: #128C7E;
+  --color-brand-accent: #25D366;
+  --color-brand-glow: rgba(18, 140, 126, 0.25);
+  --color-brand-light-bg: #E7F6F2;
+  --color-brand-dark-bg: rgba(18, 140, 126, 0.15);
+}
+
+.dark {
+  /* الأسطح والحدود - الوضع الليلي الموحد (Unified Dark Surfaces & Borders) */
+  --color-bg: #0B0F19;
+  --color-card: #111827;
+  --color-sidebar: #111827;
+  --color-muted: #1E293B;
+  --color-border: #1F293D;
+  --color-border-strong: #334155;
+
+  /* النصوص والتباين في الوضع الليلي */
+  --color-text: #F8FAFC;
+  --color-text-secondary: #CBD5E1;
+  --color-text-muted: #94A3B8;
+
+  /* خلفيات الحالات المخففة للوضع الليلي */
+  --color-primary-light: rgba(18, 140, 126, 0.16);
+  --color-ai-light: rgba(124, 58, 237, 0.18);
+  --color-success-bg: rgba(5, 150, 105, 0.16);
+  --color-warning-bg: rgba(217, 119, 6, 0.16);
+  --color-danger-bg: rgba(220, 38, 38, 0.16);
+  --color-info-bg: rgba(37, 99, 235, 0.16);
+}
+

@@ -6,35 +6,18 @@ import { api } from '../../../api-bridge';
 export function useInbox() {
   const chats = useDataStore((s) => s.chats);
   const setChats = useDataStore((s) => s.setChats);
+  const hydrateFromApi = useDataStore((s) => s.hydrateFromApi);
+  const handleLiveMessageReceived = useDataStore((s) => s.handleLiveMessageReceived);
 
-  const [selectedChatId, setSelectedChatId] = useState<string>('c1');
+  const [selectedChatId, setSelectedChatId] = useState<string>('');
   const [filterMode, setFilterMode] = useState<ChatFilterMode>('all');
   const [isHumanControl, setIsHumanControl] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      id: 'm1',
-      sender: 'customer',
-      text: 'السلام عليكم ورحمة الله، شفت إعلانكم عن باقة عطور العود الفاخرة، هل عليها توصيل مجاني للرياض؟ وهل في كود خصم إضافي لو أخذت قطعتين؟',
-      time: '04:14 م'
-    },
-    {
-      id: 'm2',
-      sender: 'ai',
-      text: 'وعليكم السلام ورحمة الله وبركاته أهلاً بك أستاذ سلطان! يسعدنا تواصلك 🌿\n\nنعم، التوصيل داخل الرياض مجاني وفوري خلال 3-5 ساعات لباقة عطور العود الملكية.\n\nولأنك من عملائنا المميزين، تم تفعيل كود الخصم الحصري (SA15) يخصم لك 84 ريال فورياً عند إتمام الطلب الآن!',
-      time: '04:14 م',
-      latency: '1.2 ثانية',
-      hasProduct: true
-    },
-    {
-      id: 'm3',
-      sender: 'customer',
-      text: 'ممتاز جداً! اعتمد لي العطر مع المخلط الصغير، وأرسل لي رابط السداد على جوالي عشان أدفع بـ Apple Pay.',
-      time: '04:15 م'
-    }
-  ]);
+  // سجل الرسائل يبدأ فارغاً بدون أي بيانات وهمية ويتم جلبه حصراً من SQLite/واتساب
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   const [inputMsg, setInputMsg] = useState('');
 
@@ -45,9 +28,44 @@ export function useInbox() {
     }, 3200);
   }, []);
 
+  // تحديث المحادثة المختارة تلقائياً عند جلب المحادثات
+  useEffect(() => {
+    if (chats.length > 0) {
+      const exists = chats.some((c) => c.id === selectedChatId);
+      if (!exists) {
+        setSelectedChatId(chats[0].id);
+      }
+    } else {
+      setSelectedChatId('');
+    }
+  }, [chats, selectedChatId]);
+
   const selectedChat = useMemo(() => {
     return chats.find((c) => c.id === selectedChatId) || chats[0] || null;
   }, [chats, selectedChatId]);
+
+  // مزامنة محادثات واتساب الحقيقية عبر بوابة OpenWA
+  const handleSyncChats = useCallback(async () => {
+    setIsSyncing(true);
+    try {
+      const res = await api.chat.syncConversations();
+      await hydrateFromApi();
+      if (res.success) {
+        showToast(`تمت مزامنة ${res.count} محادثة بنجاح من واتساب`);
+      } else {
+        showToast(res.error ? `تنبيه: ${res.error}` : 'تعذر مزامنة المحادثات، تأكد من اتصال واتساب');
+      }
+    } catch (err: any) {
+      showToast(`خطأ في المزامنة: ${err.message}`);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [hydrateFromApi, showToast]);
+
+  // تحميل أولي للبيانات الحقيقية عند فتح صفحة المحادثات
+  useEffect(() => {
+    hydrateFromApi();
+  }, [hydrateFromApi]);
 
   // تحديث حالة التحكم البشري وفق حالة المحادثة المختارة
   useEffect(() => {
@@ -58,7 +76,10 @@ export function useInbox() {
 
   // جلب سجل رسائل المحادثة الحقيقي من SQLite
   useEffect(() => {
-    if (!selectedChatId) return;
+    if (!selectedChatId) {
+      setChatMessages([]);
+      return;
+    }
     let isMounted = true;
     api.chat.getMessages(selectedChatId).then((dbMsgs) => {
       if (!isMounted) return;
@@ -71,28 +92,62 @@ export function useInbox() {
             time: m.ts ? new Date(m.ts).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }) : 'الآن',
           }))
         );
+      } else {
+        setChatMessages([]);
       }
-    }).catch(() => {});
+    }).catch(() => {
+      if (isMounted) setChatMessages([]);
+    });
     return () => {
       isMounted = false;
     };
   }, [selectedChatId, isHumanControl]);
 
+  // استدراك دوري سريع وتلقائي في الخلفية (Silent Reconciler) كل 3 ثوانٍ لضمان التزامن الفوري التام
+  useEffect(() => {
+    if (!selectedChatId) return;
+    const pollInterval = setInterval(() => {
+      api.chat.getMessages(selectedChatId).then((dbMsgs) => {
+        if (dbMsgs && dbMsgs.length > 0) {
+          setChatMessages((prev) => {
+            if (dbMsgs.length === prev.length) return prev;
+            return dbMsgs.map((m) => ({
+              id: m.id,
+              sender: m.direction === 'INBOUND' ? 'customer' : (m.direction === 'OUTBOUND' && isHumanControl ? 'human' : 'ai'),
+              text: m.body || '',
+              time: m.ts ? new Date(m.ts).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }) : 'الآن',
+            }));
+          });
+        }
+      }).catch(() => {});
+    }, 3000);
+    return () => clearInterval(pollInterval);
+  }, [selectedChatId, isHumanControl]);
+
   // الاستماع لوصول رسائل جديدة حية عبر الـ Webhook
   useEffect(() => {
     const unsub = api.chat.onMessageReceived((data) => {
-      if (data.conversationId === selectedChatId) {
+      handleLiveMessageReceived(data);
+      const cleanDataPhone = data.phone ? data.phone.replace(/\D/g, '') : '';
+      const cleanSelectedPhone = selectedChat?.phone ? selectedChat.phone.replace(/\D/g, '') : '';
+      const isCurrentChat = data.conversationId === selectedChatId || 
+                            (cleanDataPhone && cleanSelectedPhone && cleanDataPhone === cleanSelectedPhone);
+
+      if (isCurrentChat) {
         const newMsg: ChatMessage = {
           id: data.id || String(Date.now()),
-          sender: data.direction === 'INBOUND' ? 'customer' : 'ai',
+          sender: data.direction === 'INBOUND' ? 'customer' : (isHumanControl ? 'human' : 'ai'),
           text: data.body,
           time: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
         };
-        setChatMessages((prev) => [...prev, newMsg]);
+        setChatMessages((prev) => {
+          if (prev.some((m) => m.id === newMsg.id)) return prev;
+          return [...prev, newMsg];
+        });
       }
     });
     return () => unsub();
-  }, [selectedChatId]);
+  }, [selectedChatId, selectedChat, isHumanControl, handleLiveMessageReceived]);
 
   const filteredChats = useMemo(() => {
     return chats.filter((c) => {
@@ -188,6 +243,8 @@ export function useInbox() {
     setInputMsg,
     filteredChats,
     handleSendMessage,
-    handleSendPaymentLink
+    handleSendPaymentLink,
+    isSyncing,
+    handleSyncChats,
   };
 }

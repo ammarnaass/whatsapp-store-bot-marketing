@@ -1,0 +1,11 @@
+export { ProductsHeader } from './ProductsHeader';
+export { ProductsKpiCards } from './ProductsKpiCards';
+export { ProductsFilterBar } from './ProductsFilterBar';
+export { ProductsTable } from './ProductsTable';
+export { ProductsGrid } from './ProductsGrid';
+export { WhatsAppCardPreviewModal } from './WhatsAppCardPreviewModal';
+export { ProductFormModal } from './modals/ProductFormModal';
+export { AddProductModal } from './AddProductModal';
+export { EditProductModal } from './EditProductModal';
+export { ProfitMarginBadge } from './badges/ProfitMarginBadge';
+export { StockStatusBadge } from './badges/StockStatusBadge';

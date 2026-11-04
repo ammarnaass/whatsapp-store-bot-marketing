@@ -29,7 +29,9 @@ export const OrdersPage: React.FC = () => {
     handleCopyOrder,
     handleSendWhatsAppTracking,
     handleSyncStore,
-    handleCreateManualOrder
+    handleCreateManualOrder,
+    handleUpdateStatus,
+    handleCancelOrder,
   } = useOrders();
 
   const counts = {
@@ -86,6 +88,8 @@ export const OrdersPage: React.FC = () => {
         order={selectedOrder}
         onClose={() => setSelectedOrder(null)}
         onSendWhatsAppTracking={handleSendWhatsAppTracking}
+        onUpdateStatus={handleUpdateStatus}
+        onCancelOrder={handleCancelOrder}
       />
 
       {/* 6. Create Manual Order Modal */}
