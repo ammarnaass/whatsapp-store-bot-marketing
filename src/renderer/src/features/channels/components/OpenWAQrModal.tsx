@@ -37,8 +37,13 @@ export const OpenWAQrModal: React.FC<OpenWAQrModalProps> = ({
 
   if (!isOpen) return null;
 
-  // ضمان وجود رمز QR دائماً وعدم بقاء الشاشة في وضع تحميل لا نهائي
-  const safeQrSrc = formatQrCodeDataUrl(qrCodeData) || getMockWhatsAppQrDataUrl();
+  // عرض رمز QR الحقيقي من واتساب، أو رمز المعاينة فقط إذا كان وضع Demo صريح
+  const hasRealQr = qrCodeData && (qrCodeData.startsWith('data:image/') || qrCodeData.startsWith('http'));
+  const safeQrSrc = hasRealQr
+    ? formatQrCodeDataUrl(qrCodeData)
+    : isOfflineDemo
+    ? getMockWhatsAppQrDataUrl()
+    : '';
 
   const handleCopyQr = () => {
     navigator.clipboard.writeText(qrCodeData || safeQrSrc);

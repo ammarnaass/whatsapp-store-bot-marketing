@@ -108,19 +108,15 @@ export const useOpenWA = (onToast?: (msg: string) => void) => {
           isDemo = Boolean(res.isOfflineDemo);
         }
       }
-      if (!qr) {
-        qr = getMockWhatsAppQrDataUrl(session.sessionId);
-        isDemo = true;
-      }
 
       setQrCodeData(qr);
       setIsOfflineDemo(isDemo);
       setSession((prev) => ({ ...prev, status: 'QR_READY', qrCode: qr }));
       setIsQrModalOpen(true);
-      if (isDemo) {
-        onToast?.('تم تجهيز رمز QR التفاعلي (وضع الـ Sandbox)');
+      if (qr) {
+        onToast?.(isDemo ? 'تم فتح رمز المعاينة' : 'تم استلام رمز QR الحقيقي من واتساب');
       } else {
-        onToast?.('تم استلام رمز QR من بوابة OpenWA');
+        onToast?.('جارٍ توليد الرمز الحقيقي من خوادم واتساب...');
       }
     } catch {
       const fallbackQr = getMockWhatsAppQrDataUrl(session.sessionId);
@@ -137,20 +133,16 @@ export const useOpenWA = (onToast?: (msg: string) => void) => {
   // تحديث رمز الـ QR يدوياً أو آلياً
   const handleRefreshQr = useCallback(async () => {
     try {
-      let qr = '';
       if (window.api?.session?.start) {
         const res = await window.api.session.start(session.sessionId);
         if (res?.qr) {
-          qr = formatQrCodeDataUrl(res.qr);
+          const formatted = formatQrCodeDataUrl(res.qr);
+          setQrCodeData(formatted);
           setIsOfflineDemo(Boolean(res.isOfflineDemo));
         }
       }
-      if (!qr) {
-        qr = getMockWhatsAppQrDataUrl(session.sessionId);
-      }
-      setQrCodeData(qr);
-    } catch {
-      setQrCodeData(getMockWhatsAppQrDataUrl(session.sessionId));
+    } catch (err) {
+      console.warn('[useOpenWA] Refresh QR error:', err);
     }
     setCountdown(20);
   }, [session.sessionId]);

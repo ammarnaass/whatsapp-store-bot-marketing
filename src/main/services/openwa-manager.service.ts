@@ -1,5 +1,8 @@
 import { EventEmitter } from 'events';
 import http from 'http';
+import fs from 'fs';
+import path from 'path';
+import { spawn, ChildProcess } from 'child_process';
 import { AppDatabase } from '../database/db';
 import { SessionStatus, ChannelProviderType } from '../../shared/types';
 import { IWhatsAppChannelProvider, SendMessageOptions, ChannelStatusResult } from './channel-provider.interface';
@@ -12,15 +15,20 @@ export class OpenWAManager extends EventEmitter implements IWhatsAppChannelProvi
   public readonly name = 'بوابة OpenWA المفتوحة (Multi-Device QR)';
 
   public openwaHost = '127.0.0.1';
-  public openwaPort = 2785; // منفذ OpenWA الافتراضي (rmyndharis/OpenWA)
-  public apiKey = 'wasell_secure_openwa_key_2026';
-  public defaultSessionId = 'wasell_main_store';
+  public openwaPort = 2785;
+  public apiKey = 'owa_k1_ae432e36acd4d1f24bccbd03e0e132606b163780f12985b96c724d3f3a97bcf9';
+  public defaultSessionId = 'wasell-main-store';
   public currentStatus: SessionStatus = 'DISCONNECTED';
+  
+  private activeSessionUuid: string | null = null;
   private latestQrCode: string = '';
   private pollingTimer: NodeJS.Timeout | null = null;
+  private childProcess: ChildProcess | null = null;
+  private openwaDir = '/home/ammar/OpenWA';
 
   private constructor() {
     super();
+    this.refreshApiKey();
   }
 
   public static getInstance(): OpenWAManager {
@@ -28,6 +36,124 @@ export class OpenWAManager extends EventEmitter implements IWhatsAppChannelProvi
       OpenWAManager.instance = new OpenWAManager();
     }
     return OpenWAManager.instance;
+  }
+
+  /**
+   * تحديث مفتاح API من ملف .api-key المنشأ بواسطة OpenWA
+   */
+  public refreshApiKey(): string {
+    try {
+      const keyPath = path.join(this.openwaDir, 'data/.api-key');
+      if (fs.existsSync(keyPath)) {
+        const key = fs.readFileSync(keyPath, 'utf-8').trim();
+        if (key) {
+          this.apiKey = key;
+          return key;
+        }
+      }
+    } catch {
+      // صامت
+    }
+    return this.apiKey;
+  }
+
+  /**
+   * التحقق من تشغيل بوابة OpenWA وإطلاقها كعملية فرعية إن كانت متوقفة
+   */
+  public async ensureGatewayRunning(): Promise<boolean> {
+    this.refreshApiKey();
+    try {
+      await this.request('/api/health', 'GET', undefined, 1000);
+      return true;
+    } catch {
+      // البوابة غير متصلة، نحاول تشغيلها
+    }
+
+    const mainJs = path.join(this.openwaDir, 'dist/main.js');
+    if (!fs.existsSync(mainJs)) {
+      console.warn(`[OpenWA] main.js not found at ${mainJs}`);
+      return false;
+    }
+
+    console.log('[OpenWA] Auto-spawning OpenWA background process on Port 2785 with Baileys...');
+    this.childProcess = spawn('node', ['dist/main.js'], {
+      cwd: this.openwaDir,
+      env: {
+        ...process.env,
+        PORT: String(this.openwaPort),
+        DATABASE_TYPE: 'sqlite',
+        DATABASE_NAME: './data/openwa.sqlite',
+        DATABASE_SYNCHRONIZE: 'true',
+        ENGINE_TYPE: 'baileys',
+        SESSION_DATA_PATH: './data/sessions',
+        STORAGE_TYPE: 'local',
+        STORAGE_LOCAL_PATH: './data/media',
+        REDIS_ENABLED: 'false',
+        QUEUE_ENABLED: 'false',
+        CACHE_ENABLED: 'false',
+        SEND_PACING_ENABLED: 'true',
+        AUTO_START_SESSIONS: 'true',
+      },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    this.childProcess.on('exit', (code, signal) => {
+      console.warn(`[OpenWA] Process exited with code ${code}, signal: ${signal}`);
+      this.childProcess = null;
+    });
+
+    // الانتظار حتى تستجيب نقطة الصحة /api/health
+    for (let i = 0; i < 15; i++) {
+      await new Promise((r) => setTimeout(r, 600));
+      try {
+        await this.request('/api/health', 'GET', undefined, 800);
+        this.refreshApiKey();
+        console.log('[OpenWA] Gateway is now UP and responding!');
+        return true;
+      } catch {
+        // مواصلة الانتظار
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * ضمان وجود الجلسة واستخراج المعرف الفريد UUID المطلوب في مسارات OpenWA
+   */
+  public async ensureSessionUuid(): Promise<string> {
+    this.refreshApiKey();
+    if (this.activeSessionUuid) {
+      return this.activeSessionUuid;
+    }
+
+    try {
+      const sessions = await this.request('/api/sessions', 'GET', undefined, 3000);
+      if (Array.isArray(sessions)) {
+        const found = sessions.find((s: any) => s.name === this.defaultSessionId);
+        if (found && found.id) {
+          this.activeSessionUuid = found.id;
+          return found.id;
+        }
+      }
+    } catch {
+      // مواصلة المحاولة للإنشاء
+    }
+
+    try {
+      const created = await this.request('/api/sessions', 'POST', {
+        name: this.defaultSessionId,
+        webhookUrl: 'http://127.0.0.1:3005/webhook/openwa',
+      }, 3000);
+      if (created && created.id) {
+        this.activeSessionUuid = created.id;
+        return created.id;
+      }
+    } catch (err: any) {
+      console.warn('[OpenWA] Session create note:', err.message);
+    }
+
+    return this.activeSessionUuid || this.defaultSessionId;
   }
 
   /**
@@ -97,28 +223,37 @@ export class OpenWAManager extends EventEmitter implements IWhatsAppChannelProvi
   public async getStatus(): Promise<ChannelStatusResult> {
     const startTime = Date.now();
     try {
-      // محاولة استعلام خادم OpenWA الحي
-      const res = await this.request(`/api/sessions/${this.defaultSessionId}`, 'GET', undefined, 2000);
+      await this.ensureGatewayRunning();
+      const uuid = await this.ensureSessionUuid();
+      const res = await this.request(`/api/sessions/${uuid}`, 'GET', undefined, 2000);
       const latencyMs = Date.now() - startTime;
 
       let status: SessionStatus = 'DISCONNECTED';
       if (res && res.status) {
-        if (res.status === 'WORKING' || res.status === 'CONNECTED') status = 'CONNECTED';
-        else if (res.status === 'SCAN_QR') status = 'QR_READY';
-        else if (res.status === 'STARTING') status = 'STARTING';
+        const s = String(res.status).toLowerCase();
+        if (s === 'working' || s === 'connected') status = 'CONNECTED';
+        else if (s === 'qr_ready' || s === 'scan_qr') status = 'QR_READY';
+        else if (s === 'starting' || s === 'initializing') status = 'STARTING';
       }
 
       this.currentStatus = status;
+      if (res?.phone) {
+        this.db.prepare(`
+          INSERT INTO sessions (id, name, status, phone)
+          VALUES (?, ?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET status = ?, phone = ?
+        `).run(this.defaultSessionId, 'رقم المتجر الرئيسي', status, res.phone, status, res.phone);
+      }
+
       return {
         isConnected: status === 'CONNECTED',
         statusText: status === 'CONNECTED' ? 'متصل وجاهز للاستقبال والإرسال' : status === 'QR_READY' ? 'بانتظار مسح رمز QR' : 'غير متصل',
         phone: res?.phone,
         latencyMs,
         uptimeSeconds: res?.uptime || 0,
-        provider: 'openwa_gateway'
+        provider: 'openwa_gateway',
       };
     } catch {
-      // في حال عدم استجابة حاوية OpenWA
       const session = this.db.prepare('SELECT status, phone FROM sessions ORDER BY created_at DESC LIMIT 1').get() as any;
       const dbStatus = session?.status ? (session.status as SessionStatus) : this.currentStatus;
       return {
@@ -126,77 +261,144 @@ export class OpenWAManager extends EventEmitter implements IWhatsAppChannelProvi
         statusText: dbStatus === 'CONNECTED' ? 'متصل' : dbStatus === 'QR_READY' ? 'بانتظار مسح رمز QR' : 'بوابة OpenWA غير متصلة حالياً',
         phone: session?.phone,
         latencyMs: undefined,
-        provider: 'openwa_gateway'
+        provider: 'openwa_gateway',
       };
     }
   }
 
   /**
-   * جلب رمز QR الحالي
+   * جلب رمز QR الحقيقي من OpenWA
    */
-  public async getQrCode(sessionId: string = this.defaultSessionId): Promise<string> {
+  public async getQrCode(): Promise<string> {
     try {
-      const res = await this.request(`/api/sessions/${sessionId}/qr`, 'GET', undefined, 2500);
-      if (res && (res.qr || res.data)) {
-        this.latestQrCode = res.qr || res.data;
-        return this.latestQrCode;
+      const uuid = await this.ensureSessionUuid();
+      const res = await this.request(`/api/sessions/${uuid}/qr`, 'GET', undefined, 3000);
+      const qr = res?.qrCode || res?.qr || res?.data;
+      if (qr && typeof qr === 'string') {
+        this.latestQrCode = qr;
+        return qr;
       }
-    } catch {
-      // صامت
+    } catch (err: any) {
+      console.warn('[OpenWA] Failed to fetch QR code:', err.message);
     }
     return this.latestQrCode || '';
   }
 
   /**
-   * بدء جلسة واتساب وتوليد رمز الاستجابة السريعة QR
+   * بدء جلسة واتساب وتوليد رمز الاستجابة السريعة الحقيقي من خوادم واتساب
    */
-  public async startSession(sessionName: string = this.defaultSessionId): Promise<{ success: boolean; message: string; qr?: string }> {
-    console.log(`[OpenWA] Starting session "${sessionName}" via OpenWA Gateway (Port ${this.openwaPort})...`);
+  public async startSession(sessionName: string = this.defaultSessionId): Promise<{ success: boolean; message: string; qr?: string; isOfflineDemo?: boolean }> {
+    console.log(`[OpenWA] Starting real session "${sessionName}" via Baileys engine...`);
     this.currentStatus = 'STARTING';
     this.emit('status-changed', { status: 'STARTING' });
 
-    this.db.prepare(`
-      INSERT INTO sessions (id, name, status)
-      VALUES (?, ?, 'STARTING')
-      ON CONFLICT(id) DO UPDATE SET status = 'STARTING'
-    `).run(sessionName, 'رقم المتجر الرئيسي');
-
     try {
-      // 1. تسجيل أو بدء الجلسة في OpenWA
-      await this.request('/api/sessions', 'POST', {
-        name: sessionName,
-        webhookUrl: 'http://127.0.0.1:3005/webhook/openwa'
-      }, 3000);
+      await this.ensureGatewayRunning();
+      const uuid = await this.ensureSessionUuid();
 
-      await this.request(`/api/sessions/${sessionName}/start`, 'POST', undefined, 3000);
-
-      // 2. جلب رمز QR
-      const qrData = await this.getQrCode(sessionName);
-      if (qrData) {
-        this.currentStatus = 'QR_READY';
-        this.db.prepare('UPDATE sessions SET status = ? WHERE id = ?').run('QR_READY', sessionName);
-        this.emit('qr', { qrCodeDataUrl: qrData });
-        this.emit('status-changed', { status: 'QR_READY' });
-        return { success: true, message: 'تم إطلاق الجلسة وبانتظار مسح رمز الـ QR', qr: qrData };
-      } else {
-        throw new Error('لم يتم استلام رمز QR من بوابة OpenWA');
+      // 1. بدء الجلسة في OpenWA
+      try {
+        await this.request(`/api/sessions/${uuid}/start`, 'POST', undefined, 4000);
+      } catch (err: any) {
+        console.log('[OpenWA] Session start call note:', err.message);
       }
-    } catch (err: any) {
-      console.warn(`[OpenWA] Gateway connection error: ${err.message}. Providing sandbox QR code.`);
-      const sampleQr = this.generateSampleQr();
-      this.latestQrCode = sampleQr;
-      this.currentStatus = 'QR_READY';
-      this.db.prepare('UPDATE sessions SET status = ? WHERE id = ?').run('QR_READY', sessionName);
-      this.emit('qr', { qrCodeDataUrl: sampleQr, isOfflineDemo: true });
-      this.emit('status-changed', { status: 'QR_READY' });
 
+      // 2. محاولة جلب رمز الـ QR الحقيقي (مع انتظار قصير لتوليد الكود)
+      for (let attempt = 1; attempt <= 6; attempt++) {
+        await new Promise((r) => setTimeout(r, 1200));
+        const realQr = await this.getQrCode();
+        if (realQr && realQr.startsWith('data:image/')) {
+          this.currentStatus = 'QR_READY';
+          this.db.prepare(`
+            INSERT INTO sessions (id, name, status)
+            VALUES (?, ?, 'QR_READY')
+            ON CONFLICT(id) DO UPDATE SET status = 'QR_READY'
+          `).run(this.defaultSessionId, 'رقم المتجر الرئيسي');
+
+          this.emit('qr', { qrCodeDataUrl: realQr, isOfflineDemo: false });
+          this.emit('status-changed', { status: 'QR_READY' });
+
+          // بدء مؤشر مراقبة نجاح الاقتران
+          this.startPairingWatcher(uuid);
+
+          return {
+            success: true,
+            message: 'تم توليد رمز QR الحقيقي الصالح للاقتران بتطبيق واتساب!',
+            qr: realQr,
+            isOfflineDemo: false,
+          };
+        }
+      }
+
+      // إذا استغرق التوليد وقتاً أطول، نطلق مراقب الخلفية ونبلغ الواجهة
+      this.startPairingWatcher(uuid);
       return {
         success: true,
-        isOfflineDemo: true,
-        message: `بوابة OpenWA غير متصلة على المنفذ ${this.openwaPort} (تم تفعيل رمز QR تجريبي للمعاينة)`,
-        qr: sampleQr
+        message: 'جارٍ توليد رمز QR من خوادم واتساب، سيظهر الرمز خلال لحظات...',
+        qr: this.latestQrCode,
+        isOfflineDemo: false,
+      };
+    } catch (err: any) {
+      console.warn(`[OpenWA] Gateway start error: ${err.message}.`);
+      return {
+        success: false,
+        message: `تعذر الاتصال ببوابة OpenWA (${err.message})`,
       };
     }
+  }
+
+  /**
+   * مراقبة حالة الاقتران وتحديث الجلسة عند مسح الرمز من الهاتف
+   */
+  private startPairingWatcher(uuid: string): void {
+    if (this.pollingTimer) clearInterval(this.pollingTimer);
+
+    let checks = 0;
+    this.pollingTimer = setInterval(async () => {
+      checks++;
+      try {
+        const session = await this.request(`/api/sessions/${uuid}`, 'GET', undefined, 2000);
+        const s = String(session?.status || '').toLowerCase();
+
+        if (s === 'connected' || s === 'working') {
+          console.log('[OpenWA] WhatsApp successfully paired and connected!');
+          this.currentStatus = 'CONNECTED';
+          if (this.pollingTimer) {
+            clearInterval(this.pollingTimer);
+            this.pollingTimer = null;
+          }
+
+          const phone = session.phone || '966500000000';
+          this.db.prepare(`
+            INSERT INTO sessions (id, name, status, phone)
+            VALUES (?, ?, 'CONNECTED', ?)
+            ON CONFLICT(id) DO UPDATE SET status = 'CONNECTED', phone = ?
+          `).run(this.defaultSessionId, 'رقم المتجر الرئيسي', phone, phone);
+
+          this.emit('status-changed', { status: 'CONNECTED', phone });
+          return;
+        }
+
+        // إن لم يكن متصلاً، نتحقق من تحديث كود QR
+        if (checks % 2 === 0 && s === 'qr_ready') {
+          const freshQr = await this.getQrCode();
+          if (freshQr && freshQr !== this.latestQrCode) {
+            this.latestQrCode = freshQr;
+            this.emit('qr', { qrCodeDataUrl: freshQr, isOfflineDemo: false });
+          }
+        }
+      } catch {
+        // صامت
+      }
+
+      // إيقاف المراقبة بعد دقيقتين إن لم يتم المسح
+      if (checks > 60) {
+        if (this.pollingTimer) {
+          clearInterval(this.pollingTimer);
+          this.pollingTimer = null;
+        }
+      }
+    }, 2000);
   }
 
   /**
@@ -223,7 +425,7 @@ export class OpenWAManager extends EventEmitter implements IWhatsAppChannelProvi
     return {
       success,
       messageId: `msg_openwa_${Date.now()}`,
-      error: success ? undefined : 'فشل الإرسال عبر بوابة OpenWA'
+      error: success ? undefined : 'فشل الإرسال عبر بوابة OpenWA',
     };
   }
 
@@ -233,9 +435,10 @@ export class OpenWAManager extends EventEmitter implements IWhatsAppChannelProvi
   public async sendTextMessage(phone: string, text: string): Promise<boolean> {
     const cleanPhone = phone.includes('@c.us') ? phone : `${phone.replace(/\+/g, '').trim()}@c.us`;
     try {
-      await this.request(`/api/sessions/${this.defaultSessionId}/messages/send-text`, 'POST', {
+      const uuid = await this.ensureSessionUuid();
+      await this.request(`/api/sessions/${uuid}/messages/send-text`, 'POST', {
         chatId: cleanPhone,
-        text
+        text,
       }, 5000);
       return true;
     } catch (err: any) {
@@ -254,9 +457,10 @@ export class OpenWAManager extends EventEmitter implements IWhatsAppChannelProvi
   public async setChatState(phone: string, state: 'composing' | 'paused'): Promise<void> {
     const cleanPhone = phone.includes('@c.us') ? phone : `${phone.replace(/\+/g, '').trim()}@c.us`;
     try {
-      await this.request(`/api/sessions/${this.defaultSessionId}/chats/presence`, 'POST', {
+      const uuid = await this.ensureSessionUuid();
+      await this.request(`/api/sessions/${uuid}/chats/presence`, 'POST', {
         chatId: cleanPhone,
-        presence: state
+        presence: state,
       }, 2000);
     } catch {
       // صامت
@@ -268,11 +472,14 @@ export class OpenWAManager extends EventEmitter implements IWhatsAppChannelProvi
    */
   public async logout(sessionName: string = this.defaultSessionId): Promise<boolean> {
     try {
-      await this.request(`/api/sessions/${sessionName}`, 'DELETE', undefined, 3000);
+      const uuid = await this.ensureSessionUuid();
+      await this.request(`/api/sessions/${uuid}`, 'DELETE', undefined, 3000);
     } catch {
       // صامت
     }
     this.currentStatus = 'DISCONNECTED';
+    this.activeSessionUuid = null;
+    this.latestQrCode = '';
     this.db.prepare('UPDATE sessions SET status = ? WHERE id = ?').run('DISCONNECTED', sessionName);
     this.emit('status-changed', { status: 'DISCONNECTED' });
     return true;
@@ -281,8 +488,5 @@ export class OpenWAManager extends EventEmitter implements IWhatsAppChannelProvi
   public async disconnect(): Promise<boolean> {
     return this.logout();
   }
-
-  private generateSampleQr(): string {
-    return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260" viewBox="0 0 260 260"><rect width="260" height="260" fill="%23ffffff"/><rect x="25" y="25" width="70" height="70" fill="%230f172a"/><rect x="35" y="35" width="50" height="50" fill="%23ffffff"/><rect x="45" y="45" width="30" height="30" fill="%230f172a"/><rect x="165" y="25" width="70" height="70" fill="%230f172a"/><rect x="175" y="35" width="50" height="50" fill="%23ffffff"/><rect x="185" y="45" width="30" height="30" fill="%230f172a"/><rect x="25" y="165" width="70" height="70" fill="%230f172a"/><rect x="35" y="175" width="50" height="50" fill="%23ffffff"/><rect x="45" y="185" width="30" height="30" fill="%230f172a"/><circle cx="130" cy="130" r="28" fill="%23128C7E"/><text x="130" y="135" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="%23ffffff">WaSell</text></svg>';
-  }
 }
+
