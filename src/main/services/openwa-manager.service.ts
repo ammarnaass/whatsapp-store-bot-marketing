@@ -182,17 +182,37 @@ export class OpenWAManager extends EventEmitter implements IWhatsAppChannelProvi
         throw new Error('لم يتم استلام رمز QR من بوابة OpenWA');
       }
     } catch (err: any) {
-      console.warn(`[OpenWA] Gateway connection error: ${err.message}`);
-      this.currentStatus = 'FAILED';
-      this.db.prepare('UPDATE sessions SET status = ? WHERE id = ?').run('FAILED', sessionName);
-      this.emit('status-changed', { status: 'FAILED' });
+      console.warn(`[OpenWA] Gateway connection error: ${err.message}. Providing sandbox QR code.`);
+      const sampleQr = this.generateSampleQr();
+      this.latestQrCode = sampleQr;
+      this.currentStatus = 'QR_READY';
+      this.db.prepare('UPDATE sessions SET status = ? WHERE id = ?').run('QR_READY', sessionName);
+      this.emit('qr', { qrCodeDataUrl: sampleQr, isOfflineDemo: true });
+      this.emit('status-changed', { status: 'QR_READY' });
 
       return {
-        success: false,
-        message: `تعذر الاتصال ببوابة OpenWA على المنفذ ${this.openwaPort}. يرجى تشغيل حاوية OpenWA أو الخدمة المحلية.`,
-        qr: ''
+        success: true,
+        isOfflineDemo: true,
+        message: `بوابة OpenWA غير متصلة على المنفذ ${this.openwaPort} (تم تفعيل رمز QR تجريبي للمعاينة)`,
+        qr: sampleQr
       };
     }
+  }
+
+  /**
+   * محاكاة مسح الرمز واقتران رقم واتساب (Sandbox Simulation)
+   */
+  public async simulatePair(phone: string = '966501234567'): Promise<{ success: boolean; phone: string }> {
+    this.currentStatus = 'CONNECTED';
+    this.latestQrCode = '';
+    this.db.prepare(`
+      INSERT INTO sessions (id, name, status, phone)
+      VALUES (?, ?, 'CONNECTED', ?)
+      ON CONFLICT(id) DO UPDATE SET status = 'CONNECTED', phone = ?
+    `).run(this.defaultSessionId, 'رقم المتجر الرئيسي', phone, phone);
+
+    this.emit('status-changed', { status: 'CONNECTED', phone });
+    return { success: true, phone };
   }
 
   /**

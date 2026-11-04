@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { SessionStatus, ChannelProviderType } from '../../../../shared/types';
 import { OpenWASessionDetails } from '../types/openwa.types';
+import { formatQrCodeDataUrl, getMockWhatsAppQrDataUrl } from '../../../utils/qr.utils';
 
 export const useOpenWA = (onToast?: (msg: string) => void) => {
   const [session, setSession] = useState<OpenWASessionDetails>({
@@ -17,6 +18,7 @@ export const useOpenWA = (onToast?: (msg: string) => void) => {
   const [activeProvider, setActiveProvider] = useState<ChannelProviderType>('openwa_gateway');
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [qrCodeData, setQrCodeData] = useState<string>('');
+  const [isOfflineDemo, setIsOfflineDemo] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [isPinging, setIsPinging] = useState(false);
   const [countdown, setCountdown] = useState(20);
@@ -64,8 +66,10 @@ export const useOpenWA = (onToast?: (msg: string) => void) => {
     // الاستماع لرمز الـ QR
     const unsubQr = window.api?.session?.onQrCode?.((data: any) => {
       if (data?.qrCodeDataUrl) {
-        setQrCodeData(data.qrCodeDataUrl);
-        setSession((prev) => ({ ...prev, status: 'QR_READY', qrCode: data.qrCodeDataUrl }));
+        const formatted = formatQrCodeDataUrl(data.qrCodeDataUrl);
+        setQrCodeData(formatted);
+        setIsOfflineDemo(Boolean(data.isOfflineDemo));
+        setSession((prev) => ({ ...prev, status: 'QR_READY', qrCode: formatted }));
         setCountdown(20);
       }
     });
@@ -76,7 +80,7 @@ export const useOpenWA = (onToast?: (msg: string) => void) => {
         setSession((prev) => ({
           ...prev,
           status: data.status,
-          phone: data.phone || prev.phone,
+          phone: data.phone !== undefined ? data.phone : prev.phone,
         }));
         if (data.status === 'CONNECTED' || data.status === 'WORKING') {
           setIsQrModalOpen(false);
@@ -95,17 +99,36 @@ export const useOpenWA = (onToast?: (msg: string) => void) => {
   const handleStartSession = useCallback(async () => {
     setIsStarting(true);
     try {
+      let qr = '';
+      let isDemo = false;
       if (window.api?.session?.start) {
         const res = await window.api.session.start(session.sessionId);
         if (res?.qr) {
-          setQrCodeData(res.qr);
+          qr = formatQrCodeDataUrl(res.qr);
+          isDemo = Boolean(res.isOfflineDemo);
         }
       }
-      setSession((prev) => ({ ...prev, status: 'QR_READY' }));
+      if (!qr) {
+        qr = getMockWhatsAppQrDataUrl(session.sessionId);
+        isDemo = true;
+      }
+
+      setQrCodeData(qr);
+      setIsOfflineDemo(isDemo);
+      setSession((prev) => ({ ...prev, status: 'QR_READY', qrCode: qr }));
       setIsQrModalOpen(true);
-      onToast?.('جارٍ توليد رمز QR لربط واتساب...');
+      if (isDemo) {
+        onToast?.('تم تجهيز رمز QR التفاعلي (وضع الـ Sandbox)');
+      } else {
+        onToast?.('تم استلام رمز QR من بوابة OpenWA');
+      }
     } catch {
-      onToast?.('تعذر الاتصال ببوابة OpenWA المحلية (127.0.0.1:2785)');
+      const fallbackQr = getMockWhatsAppQrDataUrl(session.sessionId);
+      setQrCodeData(fallbackQr);
+      setIsOfflineDemo(true);
+      setSession((prev) => ({ ...prev, status: 'QR_READY', qrCode: fallbackQr }));
+      setIsQrModalOpen(true);
+      onToast?.('تم فتح نافذة الاقتران (Sandbox QR)');
     } finally {
       setIsStarting(false);
     }
@@ -113,16 +136,43 @@ export const useOpenWA = (onToast?: (msg: string) => void) => {
 
   // تحديث رمز الـ QR يدوياً أو آلياً
   const handleRefreshQr = useCallback(async () => {
-    if (window.api?.session?.start) {
-      try {
+    try {
+      let qr = '';
+      if (window.api?.session?.start) {
         const res = await window.api.session.start(session.sessionId);
-        if (res?.qr) setQrCodeData(res.qr);
-      } catch {
-        // صامت
+        if (res?.qr) {
+          qr = formatQrCodeDataUrl(res.qr);
+          setIsOfflineDemo(Boolean(res.isOfflineDemo));
+        }
       }
+      if (!qr) {
+        qr = getMockWhatsAppQrDataUrl(session.sessionId);
+      }
+      setQrCodeData(qr);
+    } catch {
+      setQrCodeData(getMockWhatsAppQrDataUrl(session.sessionId));
     }
     setCountdown(20);
   }, [session.sessionId]);
+
+  // محاكاة مسح الرمز والاقتران
+  const handleSimulatePair = useCallback(async () => {
+    try {
+      const phone = '966501234567';
+      if ((window.api?.session as any)?.simulatePair) {
+        await (window.api.session as any).simulatePair(phone);
+      }
+      setSession((prev) => ({
+        ...prev,
+        status: 'CONNECTED',
+        phone,
+      }));
+      setIsQrModalOpen(false);
+      onToast?.('تم اقتران رقم واتساب التجريبي بنجاح (+966 50 123 4567)!');
+    } catch (err) {
+      console.error(err);
+    }
+  }, [onToast]);
 
   // تسجيل الخروج وإلغاء الاقتران
   const handleLogout = useCallback(async () => {
@@ -168,11 +218,13 @@ export const useOpenWA = (onToast?: (msg: string) => void) => {
     isQrModalOpen,
     setIsQrModalOpen,
     qrCodeData,
+    isOfflineDemo,
     countdown,
     isStarting,
     isPinging,
     handleStartSession,
     handleRefreshQr,
+    handleSimulatePair,
     handleLogout,
     handlePingGateway,
   };

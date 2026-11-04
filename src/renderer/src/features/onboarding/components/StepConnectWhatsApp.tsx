@@ -1,14 +1,25 @@
 import React from 'react';
-import { QrCode } from 'lucide-react';
+import { QrCode, ShieldCheck, Smartphone } from 'lucide-react';
+import { getMockWhatsAppQrDataUrl } from '../../../utils/qr.utils';
 
 export const StepConnectWhatsApp: React.FC = () => {
+  const sampleQr = getMockWhatsAppQrDataUrl('onboarding_setup');
+
   return (
     <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-[#1F293D] flex flex-col md:flex-row items-center gap-6">
-      <div className="w-48 h-48 bg-white p-3 rounded-2xl flex items-center justify-center shadow-md border border-slate-200 dark:border-slate-700 shrink-0">
-        <div className="border-4 border-dashed border-slate-300 dark:border-slate-400 w-full h-full rounded-xl flex flex-col items-center justify-center text-slate-800">
-          <QrCode className="w-16 h-16 text-[#128C7E] mb-2" />
-          <span className="text-[11px] font-bold">امسح الرمز من هاتفك</span>
-        </div>
+      <div className="w-48 h-48 bg-white p-3 rounded-2xl flex items-center justify-center shadow-md border border-slate-200 dark:border-slate-700 shrink-0 overflow-hidden">
+        {sampleQr ? (
+          <img
+            src={sampleQr}
+            alt="رمز الاستجابة السريعة لواتساب"
+            className="w-full h-full object-contain select-none"
+          />
+        ) : (
+          <div className="border-4 border-dashed border-slate-300 dark:border-slate-400 w-full h-full rounded-xl flex flex-col items-center justify-center text-slate-800">
+            <QrCode className="w-16 h-16 text-[#128C7E] mb-2" />
+            <span className="text-[11px] font-bold">امسح الرمز من هاتفك</span>
+          </div>
+        )}
       </div>
 
       <div className="space-y-3 flex-1 text-right">
@@ -22,8 +33,9 @@ export const StepConnectWhatsApp: React.FC = () => {
           <li>اختر <strong>الأجهزة المرتبطة</strong> ثم <strong>ربط جهاز</strong>.</li>
           <li>وجّه كاميرا الهاتف نحو الرمز المقابل للمزامنة المباشرة.</li>
         </ol>
-        <div className="p-2.5 rounded-xl bg-[#E7F6F2] dark:bg-[#128C7E]/20 border border-emerald-200 dark:border-emerald-800/60 text-[#075E54] dark:text-emerald-300 text-[11px] font-medium">
-          ✓ يتم تشغيل المحرك محلياً دون أي وسيط خارجي يحفظ محادثاتك.
+        <div className="p-2.5 rounded-xl bg-[#E7F6F2] dark:bg-[#128C7E]/20 border border-emerald-200 dark:border-emerald-800/60 text-[#075E54] dark:text-emerald-300 text-[11px] font-medium flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 shrink-0 text-[#128C7E]" />
+          <span>يتم تشغيل المحرك محلياً دون أي وسيط خارجي يحفظ محادثاتك.</span>
         </div>
       </div>
     </div>

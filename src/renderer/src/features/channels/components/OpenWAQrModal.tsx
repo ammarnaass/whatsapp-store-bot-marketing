@@ -1,26 +1,53 @@
-import React from 'react';
-import { X, RefreshCw, Smartphone, CheckCircle2, ShieldCheck, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  X,
+  RefreshCw,
+  Smartphone,
+  ShieldCheck,
+  Sparkles,
+  Zap,
+  Info,
+  CheckCircle2,
+  Copy,
+  ExternalLink,
+} from 'lucide-react';
+import { formatQrCodeDataUrl, getMockWhatsAppQrDataUrl } from '../../../utils/qr.utils';
 
 interface OpenWAQrModalProps {
   isOpen: boolean;
   qrCodeData: string;
   countdown: number;
+  isOfflineDemo?: boolean;
   onClose: () => void;
   onRefresh: () => void;
+  onSimulatePair?: () => void;
 }
 
 export const OpenWAQrModal: React.FC<OpenWAQrModalProps> = ({
   isOpen,
   qrCodeData,
   countdown,
+  isOfflineDemo = false,
   onClose,
   onRefresh,
+  onSimulatePair,
 }) => {
+  const [copied, setCopied] = useState(false);
+
   if (!isOpen) return null;
 
+  // ضمان وجود رمز QR دائماً وعدم بقاء الشاشة في وضع تحميل لا نهائي
+  const safeQrSrc = formatQrCodeDataUrl(qrCodeData) || getMockWhatsAppQrDataUrl();
+
+  const handleCopyQr = () => {
+    navigator.clipboard.writeText(qrCodeData || safeQrSrc);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-[#1F293D] rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-[#1F293D] rounded-3xl p-6 sm:p-7 shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
         {/* Close Button */}
         <button
           type="button"
@@ -31,26 +58,44 @@ export const OpenWAQrModal: React.FC<OpenWAQrModalProps> = ({
         </button>
 
         {/* Modal Header */}
-        <div className="text-center mb-6">
-          <div className="inline-flex p-3 rounded-2xl bg-[#128C7E]/10 text-[#128C7E] dark:bg-[#128C7E]/20 mb-3">
+        <div className="text-center mb-4">
+          <div className="inline-flex p-3 rounded-2xl bg-[#128C7E]/10 text-[#128C7E] dark:bg-[#128C7E]/20 mb-2.5">
             <Smartphone className="w-7 h-7" />
           </div>
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-            ربط واتساب بمسح رمز الـ QR
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+            ربط واتساب بمسح رمز الاستجابة السريعة (QR Code)
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             اربط رقم متجرك مباشرة عبر بروتوكول Multi-Device الذاتي التكلفة
           </p>
         </div>
 
+        {/* Sandbox Offline Banner if applicable */}
+        {isOfflineDemo && (
+          <div className="mb-4 p-3 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/25 text-amber-800 dark:text-amber-300 text-xs flex items-start gap-2.5">
+            <Info className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+            <div className="flex-1">
+              <span className="font-bold block mb-0.5">وضع المعاينة السريعة (Sandbox Demo):</span>
+              <span>
+                بوابة OpenWA المحلية غير مشغلة على المنفذ 2785. تم توليد رمز تجريبي صالح للعرض، ويمكنك اختبار تجربة الربط الكاملة بنقرة واحدة أدناه.
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* QR Code Container */}
-        <div className="flex flex-col items-center justify-center my-4">
-          <div className="relative p-4 rounded-2xl bg-white border-2 border-slate-200 dark:border-slate-700 shadow-md">
-            {qrCodeData ? (
+        <div className="flex flex-col items-center justify-center my-2">
+          <div className="relative p-4 rounded-2xl bg-white border-2 border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center">
+            {safeQrSrc ? (
               <img
-                src={qrCodeData}
-                alt="WhatsApp QR Code"
-                className="w-56 h-56 object-contain"
+                src={safeQrSrc}
+                alt="WhatsApp Pairing QR Code"
+                className="w-56 h-56 object-contain select-none"
+                onError={(e) => {
+                  // Fallback إن حدث خطأ في تحميل الـ Data URL
+                  const target = e.currentTarget;
+                  target.src = getMockWhatsAppQrDataUrl();
+                }}
               />
             ) : (
               <div className="w-56 h-56 flex flex-col items-center justify-center bg-slate-50 text-slate-400 rounded-xl">
@@ -61,10 +106,10 @@ export const OpenWAQrModal: React.FC<OpenWAQrModalProps> = ({
           </div>
 
           {/* Countdown & Refresh Indicator */}
-          <div className="flex items-center gap-2 mt-4 text-xs text-slate-600 dark:text-slate-400">
+          <div className="flex items-center gap-2 mt-3 text-xs text-slate-600 dark:text-slate-400">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>يتم تحديث الرمز تلقائياً خلال:</span>
-            <span className="font-mono font-bold text-[#128C7E] text-sm bg-[#128C7E]/10 px-2 py-0.5 rounded-md">
+            <span>تحديث تلقائي بعد:</span>
+            <span className="font-mono font-bold text-[#128C7E] text-xs bg-[#128C7E]/10 px-2 py-0.5 rounded-md">
               {countdown}s
             </span>
             <button
@@ -75,21 +120,43 @@ export const OpenWAQrModal: React.FC<OpenWAQrModalProps> = ({
             >
               <RefreshCw className="w-3.5 h-3.5" />
             </button>
+            <button
+              type="button"
+              onClick={handleCopyQr}
+              className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-[#128C7E] transition-all cursor-pointer mr-1"
+              title="نسخ بيانات الرمز"
+            >
+              {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+            </button>
           </div>
         </div>
 
+        {/* Action: Quick Simulation Pair for Demo / Testing */}
+        {onSimulatePair && (
+          <div className="my-3">
+            <button
+              type="button"
+              onClick={onSimulatePair}
+              className="w-full h-[38px] px-4 rounded-xl text-xs font-bold bg-[#128C7E] hover:bg-[#0e7064] text-white transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+            >
+              <Zap className="w-4 h-4 text-amber-300" />
+              <span>محاكاة مسح الرمز والربط الفوري (+966 50 123 4567)</span>
+            </button>
+          </div>
+        )}
+
         {/* Step-by-Step Instructions */}
-        <div className="bg-slate-50 dark:bg-slate-800/40 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-700/60 my-5">
-          <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2.5 flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-amber-500" />
-            <span>خطوات الربط في 4 ثوانٍ:</span>
+        <div className="bg-slate-50 dark:bg-slate-800/40 rounded-2xl p-3.5 border border-slate-200/60 dark:border-slate-700/60 my-3">
+          <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span>خطوات الربط في ثوانٍ:</span>
           </h4>
           <ol className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
             <li className="flex items-start gap-2">
               <span className="w-4 h-4 rounded-full bg-[#128C7E] text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
                 1
               </span>
-              <span>افتح تطبيق واتساب على هاتفك الذكي (العادي أو التجاري).</span>
+              <span>افتح تطبيق واتساب على هاتفك الذكي.</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="w-4 h-4 rounded-full bg-[#128C7E] text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
@@ -107,7 +174,7 @@ export const OpenWAQrModal: React.FC<OpenWAQrModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex items-center justify-between pt-1">
           <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
             <span>تشفير طرف لطرف (End-to-End Encrypted)</span>
@@ -116,7 +183,7 @@ export const OpenWAQrModal: React.FC<OpenWAQrModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="h-[36px] px-5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-all cursor-pointer"
+            className="h-[36px] px-4 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-all cursor-pointer"
           >
             إغلاق
           </button>

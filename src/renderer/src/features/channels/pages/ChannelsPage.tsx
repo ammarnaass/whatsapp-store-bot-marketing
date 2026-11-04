@@ -54,11 +54,13 @@ export const ChannelsPage: React.FC = () => {
     isQrModalOpen,
     setIsQrModalOpen,
     qrCodeData,
+    isOfflineDemo,
     countdown,
     isStarting: isOpenwaStarting,
     isPinging: isOpenwaPinging,
     handleStartSession: handleOpenwaStartSession,
     handleRefreshQr: handleOpenwaRefreshQr,
+    handleSimulatePair: handleOpenwaSimulatePair,
     handleLogout: handleOpenwaLogout,
     handlePingGateway: handleOpenwaPing,
   } = useOpenWA(showToast);
@@ -195,8 +197,10 @@ export const ChannelsPage: React.FC = () => {
         isOpen={isQrModalOpen}
         qrCodeData={qrCodeData}
         countdown={countdown}
+        isOfflineDemo={isOfflineDemo}
         onClose={() => setIsQrModalOpen(false)}
         onRefresh={handleOpenwaRefreshQr}
+        onSimulatePair={handleOpenwaSimulatePair}
       />
     </div>
   );

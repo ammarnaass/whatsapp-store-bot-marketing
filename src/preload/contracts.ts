@@ -14,10 +14,11 @@ export interface IElectronAPI {
   // Session & WhatsApp
   session: {
     getStatus: () => Promise<{ status: SessionStatus; phone?: string }>;
-    start: (sessionName?: string) => Promise<{ success: boolean; message: string; qr?: string }>;
+    start: (sessionName?: string) => Promise<{ success: boolean; message: string; qr?: string; isOfflineDemo?: boolean }>;
     logout: () => Promise<boolean>;
-    onQrCode: (callback: (data: { qrCodeDataUrl: string }) => void) => () => void;
-    onStatusChanged: (callback: (data: { status: SessionStatus }) => void) => () => void;
+    simulatePair?: (phone?: string) => Promise<{ success: boolean; phone: string }>;
+    onQrCode: (callback: (data: { qrCodeDataUrl: string; isOfflineDemo?: boolean }) => void) => () => void;
+    onStatusChanged: (callback: (data: { status: SessionStatus; phone?: string }) => void) => () => void;
   };
 
   // Catalog & Products

@@ -7,6 +7,7 @@ const api: IElectronAPI = {
     getStatus: () => ipcRenderer.invoke(IPC_CHANNELS.SESSION_GET_STATUS),
     start: (sessionName) => ipcRenderer.invoke(IPC_CHANNELS.SESSION_START, { sessionName }),
     logout: () => ipcRenderer.invoke(IPC_CHANNELS.SESSION_LOGOUT),
+    simulatePair: (phone) => ipcRenderer.invoke(IPC_CHANNELS.SESSION_SIMULATE_PAIR, { phone }),
     onQrCode: (callback) => {
       const handler = (_event: any, data: any) => callback(data);
       ipcRenderer.on(IPC_CHANNELS.SESSION_QR_EVENT, handler);

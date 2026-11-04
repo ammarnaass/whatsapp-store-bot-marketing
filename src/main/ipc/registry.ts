@@ -39,6 +39,10 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
     return await openwa.logout();
   });
 
+  ipcMain.handle(IPC_CHANNELS.SESSION_SIMULATE_PAIR, async (_event, { phone }) => {
+    return await openwa.simulatePair(phone || '966501234567');
+  });
+
   // ==========================================
   // 2. قنوات الكتالوج والمنتجات (Catalog)
   // ==========================================

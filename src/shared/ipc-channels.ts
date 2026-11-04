@@ -6,6 +6,7 @@ export const IPC_CHANNELS = {
   SESSION_GET_STATUS: 'session:get-status',
   SESSION_START: 'session:start',
   SESSION_LOGOUT: 'session:logout',
+  SESSION_SIMULATE_PAIR: 'session:simulate-pair',
   SESSION_QR_EVENT: 'session:qr-event',
   SESSION_STATUS_CHANGED: 'session:status-changed',
 
