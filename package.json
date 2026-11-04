@@ -1,0 +1,41 @@
+{
+  "name": "whatsapp-store-bot-marketing",
+  "version": "1.0.0",
+  "description": "منصة المتجر والرد على العملاء والتسويق مع وكيل الذكاء الاصطناعي عبر واتساب",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "build:css": "node scripts/build-css.mjs",
+    "build:renderer": "node scripts/build-css.mjs && vite build",
+    "build:main": "node scripts/build-electron.mjs",
+    "build": "npm run build:renderer && npm run build:main",
+    "dev:vite": "node scripts/build-css.mjs && vite",
+    "dev:electron": "node scripts/dev-electron.mjs",
+    "dev": "node scripts/dev-electron.mjs",
+    "start": "env -u ELECTRON_RUN_AS_NODE electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/genai": "^2.32.0",
+    "better-sqlite3": "^13.0.3",
+    "clsx": "^2.1.1",
+    "fastify": "^5.12.8",
+    "lucide-react": "^1.67.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tailwind-merge": "^3.7.0",
+    "zustand": "^5.0.16"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "autoprefixer": "^10.6.2",
+    "electron": "^35.0.0",
+    "postcss": "^8.5.32",
+    "tailwindcss": "^4.3.4",
+    "vite": "^8.3.5"
+  }
+}

@@ -1,0 +1,93 @@
+import { CatalogProduct } from '../types/data-management.types';
+
+export const INITIAL_PRODUCTS: CatalogProduct[] = [
+  {
+    id: 'p1',
+    name: 'عطر لافندر الملكي الفاخر (100 مل)',
+    sku: 'SKU-LAV-01',
+    category: 'عطور وباقات',
+    type: 'physical',
+    price: 285,
+    oldPrice: 340,
+    stock: 24,
+    image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300',
+    aiRecommended: true,
+    salesCount: 84,
+    conversionRate: 91,
+    description: 'مزيج استثنائي من أزهار اللافندر الطبيعية مع نفحات العود الأبيض الملكي، ثبات يدوم 48 ساعة مع ضمان ذهبي.'
+  },
+  {
+    id: 'p2',
+    name: 'عطر العود الملكي المعتّق (100 مل)',
+    sku: 'SKU-OUD-02',
+    category: 'عطور وباقات',
+    type: 'physical',
+    price: 380,
+    oldPrice: 450,
+    stock: 12,
+    image: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=300',
+    aiRecommended: true,
+    salesCount: 62,
+    conversionRate: 86,
+    description: 'دهن عود كلمنتان نقي مصفى بأعلى درجات النقاء لتقديم فوحان مميز في المناسبات الرسمية.'
+  },
+  {
+    id: 'p3',
+    name: 'مخلط العود النادر الصغير (30 مل)',
+    sku: 'SKU-MKH-03',
+    category: 'عطور وباقات',
+    type: 'physical',
+    price: 180,
+    stock: 6,
+    image: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=300',
+    aiRecommended: true,
+    salesCount: 45,
+    conversionRate: 82,
+    description: 'مخلط فاخر بحجم مدمج مناسب للتنقل والاستخدام اليومي، مع مسك الطهارة الطبيعي.'
+  },
+  {
+    id: 'p4',
+    name: 'ساعة ذكية ألترا بريميوم (GPS + Cellular)',
+    sku: 'SKU-WTC-04',
+    category: 'إلكترونيات وساعات',
+    type: 'physical',
+    price: 890,
+    oldPrice: 999,
+    stock: 18,
+    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300',
+    aiRecommended: true,
+    salesCount: 38,
+    conversionRate: 74,
+    description: 'هيكل تيتانيوم صلب مع شاشة أموليد ساطعة وتتبع نبضات القلب ونشاط الرياضة مع بطارية تدوم 7 أيام.'
+  },
+  {
+    id: 'p5',
+    name: 'سماعات بلوتوث عازلة للضوضاء برو',
+    sku: 'SKU-AUD-05',
+    category: 'إلكترونيات وساعات',
+    type: 'physical',
+    price: 420,
+    oldPrice: 480,
+    stock: 4,
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300',
+    aiRecommended: true,
+    salesCount: 52,
+    conversionRate: 79,
+    description: 'عزل ضوضاء فعال ANC مع صوت مكاني نقي وميكروفون ثلاثي لمكالمات فائقة الوضوح.'
+  },
+  {
+    id: 'p6',
+    name: 'اشتراك بريميوم سنوي رقمي (مفتاح فوري)',
+    sku: 'SKU-DIG-06',
+    category: 'منتجات رقمية وتراخيص',
+    type: 'digital',
+    price: 199,
+    stock: 50,
+    digitalKeysAvailable: 48,
+    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300',
+    aiRecommended: true,
+    salesCount: 71,
+    conversionRate: 94,
+    description: 'تسليم كود التفعيل الرقمي فورياً وتلقائياً عبر محادثة الواتساب خلال ثوانٍ من إتمام الدفع.'
+  }
+];
