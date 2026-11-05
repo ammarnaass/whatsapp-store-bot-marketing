@@ -36,16 +36,18 @@ export class AppDatabase {
   }
 
   private initializeSchema() {
-    const schemaPath = path.join(__dirname, 'schema.sql');
-    let schemaSql = '';
+    const candidatePaths = [
+      path.join(__dirname, 'schema.sql'),
+      (process as any).resourcesPath ? path.join((process as any).resourcesPath, 'schema.sql') : null,
+      path.join(process.cwd(), 'dist/main/schema.sql'),
+      path.join(process.cwd(), 'src/main/database/schema.sql'),
+    ];
 
-    if (fs.existsSync(schemaPath)) {
-      schemaSql = fs.readFileSync(schemaPath, 'utf-8');
-    } else {
-      // احتياطي في حال تم تجميع التطبيق أو مسار التطوير
-      const altPath = path.join(process.cwd(), 'src/main/database/schema.sql');
-      if (fs.existsSync(altPath)) {
-        schemaSql = fs.readFileSync(altPath, 'utf-8');
+    let schemaSql = '';
+    for (const p of candidatePaths) {
+      if (p && fs.existsSync(p)) {
+        schemaSql = fs.readFileSync(p, 'utf-8');
+        break;
       }
     }
 

@@ -1,0 +1,58 @@
+appId: store.wasell.app
+productName: WaSell AI Store
+copyright: Copyright © 2026 WaSell
+artifactName: ${productName}-${version}-${os}-${arch}.${ext}
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - dist/**/*
+  - node_modules/**/*
+  - package.json
+
+extraResources:
+  - from: dist/main/schema.sql
+    to: schema.sql
+
+asar: true
+asarUnpack:
+  - '**/node_modules/better-sqlite3/**'
+  - '**/node_modules/bindings/**'
+  - '**/node_modules/file-uri-to-path/**'
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+  icon: build/icon.ico
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  allowElevation: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: WaSell AI Store
+  runAfterFinish: true
+  deleteAppDataOnUninstall: false
+
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+  category: Office
+  icon: build/icon.png
+  description: منصة المتجر والرد على العملاء والتسويق مع وكيل الذكاء الاصطناعي عبر واتساب
+  synopsis: WaSell AI Store Desktop Application
+

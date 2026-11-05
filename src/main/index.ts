@@ -22,6 +22,7 @@ function createWindow(): void {
     minHeight: 450,
     title: 'منصة المتجر والرد على العملاء والتسويق عبر واتساب',
     backgroundColor: '#0B0F19',
+    icon: path.resolve(__dirname, process.platform === 'win32' ? '../../build/icon.ico' : '../../build/icon.png'),
     show: false,
     frame: false,
     autoHideMenuBar: true,

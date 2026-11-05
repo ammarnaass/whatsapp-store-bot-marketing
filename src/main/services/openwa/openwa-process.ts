@@ -6,35 +6,26 @@ import { OpenWAHttpClient } from './openwa-client';
 export class OpenWAProcessManager {
   private childProcess: ChildProcess | null = null;
   public isShuttingDown = false;
-  private client: OpenWAHttpClient;
-  private openwaPort: number;
 
-  constructor(client: OpenWAHttpClient, port: number = 2785) {
-    this.client = client;
-    this.openwaPort = port;
-  }
+  constructor(private client: OpenWAHttpClient, private openwaPort: number = 2785) {}
 
   public getOpenWaDir(): string {
     const candidates = [
       process.env.OPENWA_DIR,
+      (process as any).resourcesPath ? path.join((process as any).resourcesPath, 'OpenWA') : null,
+      path.resolve(process.cwd(), 'OpenWA'),
       path.resolve(__dirname, '../../OpenWA'),
       path.resolve(__dirname, '../../../OpenWA'),
-      path.resolve(__dirname, '../../../../OpenWA'),
-      path.resolve(process.cwd(), 'OpenWA'),
-      '/home/ammar/whatsapp-store-bot-marketing/OpenWA',
     ];
     for (const c of candidates) {
-      if (c && fs.existsSync(c)) {
-        return c;
-      }
+      if (c && fs.existsSync(c)) return c;
     }
-    return '/home/ammar/whatsapp-store-bot-marketing/OpenWA';
+    return path.resolve(process.cwd(), 'OpenWA');
   }
 
   public refreshApiKey(): string {
     try {
-      const openwaDir = this.getOpenWaDir();
-      const keyPath = path.join(openwaDir, 'data/.api-key');
+      const keyPath = path.join(this.getOpenWaDir(), 'data/.api-key');
       if (fs.existsSync(keyPath)) {
         const key = fs.readFileSync(keyPath, 'utf-8').trim();
         if (key) {
@@ -42,9 +33,7 @@ export class OpenWAProcessManager {
           return key;
         }
       }
-    } catch {
-      // صامت
-    }
+    } catch {}
     return this.client.apiKey;
   }
 
@@ -53,9 +42,7 @@ export class OpenWAProcessManager {
     try {
       await this.client.request('/api/health', 'GET', undefined, 1000);
       return true;
-    } catch {
-      // البوابة غير متصلة، نحاول تشغيلها
-    }
+    } catch {}
 
     const openwaDir = this.getOpenWaDir();
     const mainJs = path.join(openwaDir, 'dist/main.js');
@@ -64,7 +51,7 @@ export class OpenWAProcessManager {
       return false;
     }
 
-    console.log(`[OpenWA] Launching integrated OpenWA daemon from "${openwaDir}" on Port ${this.openwaPort}...`);
+    console.log(`[OpenWA] Launching integrated OpenWA daemon on Port ${this.openwaPort}...`);
     this.isShuttingDown = false;
     this.childProcess = spawn('node', ['dist/main.js'], {
       cwd: openwaDir,
@@ -89,29 +76,12 @@ export class OpenWAProcessManager {
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
-    this.childProcess.stdout?.on('data', (chunk) => {
-      const line = chunk.toString();
-      if (line.includes('OpenWA is running on') || line.includes('Nest application successfully started')) {
-        console.log(`[OpenWA-Stdout] ${line.trim()}`);
-      }
-    });
-
-    this.childProcess.stderr?.on('data', (chunk) => {
-      const line = chunk.toString();
-      if (line.includes('error') || line.includes('Error')) {
-        console.error(`[OpenWA-Stderr] ${line.trim()}`);
-      }
-    });
-
     this.childProcess.on('exit', (code, signal) => {
-      console.warn(`[OpenWA] Gateway child process exited with code ${code}, signal: ${signal}`);
+      console.warn(`[OpenWA] Gateway exited code: ${code}, signal: ${signal}`);
       this.childProcess = null;
       if (!this.isShuttingDown && code !== 0 && code !== null) {
-        console.log('[OpenWA] Gateway crashed unexpectedly. Attempting auto-recovery in 3s...');
         setTimeout(() => {
-          if (!this.isShuttingDown) {
-            this.ensureGatewayRunning().catch((err) => console.error('[OpenWA] Recovery error:', err));
-          }
+          if (!this.isShuttingDown) this.ensureGatewayRunning().catch(console.error);
         }, 3000);
       }
     });
@@ -121,11 +91,9 @@ export class OpenWAProcessManager {
       try {
         await this.client.request('/api/health', 'GET', undefined, 800);
         this.refreshApiKey();
-        console.log('[OpenWA] Integrated Gateway is now UP and responding in full harmony!');
+        console.log('[OpenWA] Integrated Gateway is UP and responding!');
         return true;
-      } catch {
-        // مواصلة الانتظار
-      }
+      } catch {}
     }
 
     return false;
@@ -134,22 +102,13 @@ export class OpenWAProcessManager {
   public stopGateway(): void {
     this.isShuttingDown = true;
     if (this.childProcess) {
-      console.log('[OpenWA] Gracefully shutting down OpenWA background process...');
+      console.log('[OpenWA] Gracefully shutting down OpenWA process...');
       const proc = this.childProcess;
       this.childProcess = null;
       try {
         proc.kill('SIGTERM');
-        setTimeout(() => {
-          try {
-            if (!proc.killed) proc.kill('SIGKILL');
-          } catch {
-            // صامت
-          }
-        }, 3000);
-      } catch {
-        // صامت
-      }
+        setTimeout(() => { try { if (!proc.killed) proc.kill('SIGKILL'); } catch {} }, 3000);
+      } catch {}
     }
   }
 }
-
