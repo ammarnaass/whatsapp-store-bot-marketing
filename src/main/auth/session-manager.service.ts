@@ -108,3 +108,4 @@ export class SessionManagerService {
     return { hasUsers: count > 0, count };
   }
 }
+

@@ -1,6 +1,8 @@
+import { CustomBrandPalette } from '../../design-system/types/tokens.types';
+
 export type ThemeMode = 'light' | 'dark' | 'system';
 
-export type AccentColor = 'emerald' | 'ocean' | 'indigo' | 'violet' | 'amber' | 'rose';
+export type AccentColor = 'emerald' | 'ocean' | 'indigo' | 'violet' | 'amber' | 'rose' | 'custom';
 
 export type DisplayDensity = 'compact' | 'standard' | 'comfortable';
 
@@ -22,6 +24,7 @@ export interface CustomizationSettings {
   surfaceStyle: SurfaceStyle;
   borderRadius: BorderRadius;
   fontFamily: ArabicFontFamily;
+  customPalette?: CustomBrandPalette;
 }
 
 export interface AccentColorMeta {

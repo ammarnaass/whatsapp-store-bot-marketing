@@ -73,6 +73,16 @@ export const ACCENT_PALETTES: Record<AccentColor, AccentColorMeta> = {
     darkBg: 'rgba(225, 29, 72, 0.15)',
     badge: 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300',
   },
+  custom: {
+    id: 'custom',
+    name: 'هوية مخصصة (Studio)',
+    primary: '#128C7E',
+    accent: '#25D366',
+    glow: 'rgba(18, 140, 126, 0.25)',
+    lightBg: '#E7F6F2',
+    darkBg: 'rgba(18, 140, 126, 0.15)',
+    badge: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300',
+  },
 };
 
 export const DENSITY_CONFIG: Record<DisplayDensity, { label: string; description: string; spacingClass: string }> = {

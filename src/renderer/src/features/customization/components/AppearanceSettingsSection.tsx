@@ -93,7 +93,7 @@ export const AppearanceSettingsSection: React.FC = () => {
       {/* Selectors Grid */}
       <div className="space-y-4">
         <ThemeModeSelector currentMode={settings.themeMode} onSelect={setThemeMode} />
-        <AccentColorPicker selectedColor={settings.accentColor} onSelect={setAccentColor} />
+        <AccentColorPicker selectedColor={settings.accentColor} onSelect={setAccentColor} onOpenStudio={() => setIsDsModalOpen(true)} />
         <FontScaleSelector currentScale={settings.zoomScale} onSelect={setZoomScale} />
         <TypographySelector currentFont={settings.fontFamily} onSelect={setFontFamily} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

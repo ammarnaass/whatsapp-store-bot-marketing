@@ -60,3 +60,4 @@ export function registerTeamHandlers(db: Database.Database): void {
     return { success: true };
   });
 }
+

@@ -1,14 +1,15 @@
 import React from 'react';
-import { Check } from 'lucide-react';
+import { Check, Sparkles } from 'lucide-react';
 import { AccentColor } from '../types/customization.types';
 import { ACCENT_PALETTES } from '../constants/customization.constants';
 
 interface AccentColorPickerProps {
   selectedColor: AccentColor;
   onSelect: (color: AccentColor) => void;
+  onOpenStudio?: () => void;
 }
 
-export const AccentColorPicker: React.FC<AccentColorPickerProps> = ({ selectedColor, onSelect }) => {
+export const AccentColorPicker: React.FC<AccentColorPickerProps> = ({ selectedColor, onSelect, onOpenStudio }) => {
   const palettes = Object.values(ACCENT_PALETTES);
 
   return (
@@ -18,19 +19,23 @@ export const AccentColorPicker: React.FC<AccentColorPickerProps> = ({ selectedCo
           لون هوية المتجر (Accent Color)
         </label>
         <span className="text-[11px] font-semibold text-slate-400">
-          {ACCENT_PALETTES[selectedColor]?.name}
+          {ACCENT_PALETTES[selectedColor]?.name || 'هوية مخصصة'}
         </span>
       </div>
 
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
         {palettes.map((p) => {
           const isSelected = selectedColor === p.id;
+          const isCustom = p.id === 'custom';
           return (
             <button
               key={p.id}
               type="button"
-              onClick={() => onSelect(p.id)}
-              className={`p-2.5 rounded-2xl border transition-all text-right flex flex-col items-center justify-center gap-1.5 cursor-pointer relative group ${
+              onClick={() => {
+                onSelect(p.id);
+                if (isCustom && onOpenStudio) onOpenStudio();
+              }}
+              className={`p-2 rounded-2xl border transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer relative group ${
                 isSelected
                   ? 'border-slate-900 dark:border-white shadow-md scale-102 bg-white dark:bg-slate-800'
                   : 'border-slate-200 dark:border-[#1F293D] hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50 dark:bg-slate-900/50'
@@ -38,13 +43,21 @@ export const AccentColorPicker: React.FC<AccentColorPickerProps> = ({ selectedCo
               title={p.name}
             >
               <div
-                className="w-7 h-7 rounded-full flex items-center justify-center shadow-xs transition-transform group-hover:scale-110"
-                style={{ backgroundColor: p.primary, boxShadow: isSelected ? `0 0 12px ${p.glow}` : undefined }}
+                className={`w-7 h-7 rounded-full flex items-center justify-center shadow-xs transition-transform group-hover:scale-110 ${
+                  isCustom
+                    ? 'bg-gradient-to-tr from-[#128C7E] via-sky-500 to-indigo-600 text-white'
+                    : ''
+                }`}
+                style={!isCustom ? { backgroundColor: p.primary, boxShadow: isSelected ? `0 0 12px ${p.glow}` : undefined } : undefined}
               >
-                {isSelected && <Check className="w-4 h-4 text-white stroke-[2.5]" />}
+                {isCustom ? (
+                  <Sparkles className="w-3.5 h-3.5" />
+                ) : isSelected ? (
+                  <Check className="w-4 h-4 text-white stroke-[2.5]" />
+                ) : null}
               </div>
               <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 truncate w-full text-center">
-                {p.name.split(' ')[0]}
+                {isCustom ? 'مخصص ✨' : p.name.split(' ')[0]}
               </span>
             </button>
           );
@@ -53,4 +66,3 @@ export const AccentColorPicker: React.FC<AccentColorPickerProps> = ({ selectedCo
     </div>
   );
 };
-

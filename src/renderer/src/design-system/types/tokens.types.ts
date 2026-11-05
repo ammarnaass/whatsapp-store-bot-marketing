@@ -1,6 +1,31 @@
 export type ThemeMode = 'light' | 'dark' | 'system';
 
-export type BrandPaletteId = 'emerald' | 'ocean' | 'indigo' | 'violet' | 'amber' | 'rose';
+export type BrandPaletteId = 'emerald' | 'ocean' | 'indigo' | 'violet' | 'amber' | 'rose' | 'custom';
+
+export interface CustomBrandPalette {
+  primary: string;
+  accent: string;
+  glow?: string;
+  dark?: string;
+  lightBg?: string;
+  darkBg?: string;
+  name?: string;
+}
+
+export interface ContrastRating {
+  ratio: number;
+  ratioText: string;
+  level: 'AAA' | 'AA' | 'FAIL';
+  isAccessible: boolean;
+  message: string;
+}
+
+export interface PaletteContrastCheck {
+  primaryOnWhite: ContrastRating;
+  primaryOnDark: ContrastRating;
+  accentOnDark: ContrastRating;
+  overallAccessible: boolean;
+}
 
 export interface ColorTokenMeta {
   name: string;
@@ -49,4 +74,3 @@ export interface ComponentSample {
   name: string;
   category: 'buttons' | 'badges' | 'cards' | 'inputs' | 'chat';
 }
-

@@ -122,3 +122,4 @@
 - [ ] Verify login flow, remember me, logout, and first-time registration without errors.
 - [ ] Commit with message `feat(auth): add secure user sessions, remember-me, and login/registration system`.
 - [ ] Push to `origin/main`.
+

@@ -9,6 +9,7 @@ import {
   ArabicFontFamily,
   ThemeMode,
 } from '../types/customization.types';
+import { CustomBrandPalette } from '../../../design-system/types/tokens.types';
 import { DEFAULT_CUSTOMIZATION } from '../constants/customization.constants';
 import {
   getStoredCustomization,
@@ -22,6 +23,7 @@ interface CustomizationState {
   setQuickModalOpen: (open: boolean) => void;
   setThemeMode: (mode: ThemeMode) => void;
   setAccentColor: (color: AccentColor) => void;
+  setCustomPalette: (palette: CustomBrandPalette) => void;
   setDensity: (density: DisplayDensity) => void;
   setZoomScale: (scale: ZoomScale) => void;
   setSurfaceStyle: (style: SurfaceStyle) => void;
@@ -50,6 +52,7 @@ export const useCustomizationStore = create<CustomizationState>((set, get) => ({
 
   setThemeMode: (mode) => get().updateSettings({ themeMode: mode }),
   setAccentColor: (color) => get().updateSettings({ accentColor: color }),
+  setCustomPalette: (palette) => get().updateSettings({ accentColor: 'custom', customPalette: palette }),
   setDensity: (density) => get().updateSettings({ density }),
   setZoomScale: (scale) => get().updateSettings({ zoomScale: scale }),
   setSurfaceStyle: (style) => get().updateSettings({ surfaceStyle: style }),

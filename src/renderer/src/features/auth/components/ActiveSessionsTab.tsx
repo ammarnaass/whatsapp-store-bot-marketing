@@ -104,3 +104,4 @@ export const ActiveSessionsTab: React.FC = () => {
     </div>
   );
 };
+

@@ -3,8 +3,12 @@ export * from './constants/colors.constants';
 export * from './constants/typography.constants';
 export * from './constants/elevation.constants';
 export * from './utils/color-utils';
+export * from './utils/color-converter.utils';
+export * from './utils/contrast-validator.utils';
 export { DesignSystemModal } from './components/DesignSystemModal';
 export { ColorPaletteSection } from './components/ColorPaletteSection';
 export { TypographyScaleSection } from './components/TypographyScaleSection';
 export { ComponentTokensSection } from './components/ComponentTokensSection';
-
+export { ContrastRatioBadge } from './components/ContrastRatioBadge';
+export { ThemeLivePreviewCard } from './components/ThemeLivePreviewCard';
+export { CustomThemeBuilder } from './components/CustomThemeBuilder';

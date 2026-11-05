@@ -4,6 +4,7 @@ import { ARABIC_FONT_FAMILIES } from '../constants/typography.constants';
 export const PALETTE_SHADES: Record<string, { dark: string }> = {
   emerald: { dark: '#075E54' }, ocean: { dark: '#0369A1' }, indigo: { dark: '#4338CA' },
   violet: { dark: '#5B21B6' }, amber: { dark: '#92400E' }, rose: { dark: '#9F1239' },
+  custom: { dark: '#075E54' },
 };
 
 export function injectDynamicAppStyles(palette: AccentColorMeta, fontFamily: ArabicFontFamily): void {
