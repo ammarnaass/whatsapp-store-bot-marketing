@@ -56,3 +56,4 @@ export function evaluatePaletteContrast(primaryHex: string, accentHex: string): 
     overallAccessible,
   };
 }
+

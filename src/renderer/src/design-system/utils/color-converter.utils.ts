@@ -58,3 +58,4 @@ export function generateDarkBackground(hex: string): string {
   const mix = (channel: number) => Math.round(channel * 0.25 + 15 * 0.75);
   return rgbToHex(mix(rgb.r), mix(rgb.g), mix(rgb.b));
 }
+

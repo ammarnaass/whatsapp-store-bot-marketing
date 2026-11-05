@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, MessageSquare, ShoppingBag, Package, Boxes, Truck,
-  Megaphone, Bot, Users, BarChart2, Settings, Network,
+  Megaphone, Bot, Users, BarChart2, Settings, Network, Send,
 } from 'lucide-react';
 import { SidebarNavItem, SidebarNavGroup } from './types';
 
@@ -86,6 +86,12 @@ export const SIDEBAR_NAV_GROUPS: SidebarNavGroup[] = [
         icon: Network, iconBgLight: 'bg-[#128C7E]/10 text-[#128C7E]',
         iconBgDark: 'dark:bg-[#128C7E]/20 dark:text-emerald-300',
         iconColorLight: 'text-[#128C7E]', iconColorDark: 'dark:text-emerald-300',
+      },
+      {
+        id: 'telegram', label: 'بوابة بوت تليغرام', description: 'ربط Telegram Bot API والرد الذكي',
+        icon: Send, iconBgLight: 'bg-blue-50 text-[#0088cc]',
+        iconBgDark: 'dark:bg-blue-950/40 dark:text-blue-400',
+        iconColorLight: 'text-[#0088cc]', iconColorDark: 'dark:text-blue-400',
       },
       {
         id: 'settings', label: 'الإعدادات والتكاملات', description: 'إعدادات المتجر والهوية والمظهر',

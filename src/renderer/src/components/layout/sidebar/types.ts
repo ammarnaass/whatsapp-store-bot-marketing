@@ -12,6 +12,7 @@ export type TabType =
   | 'customers'
   | 'analytics'
   | 'channels'
+  | 'telegram'
   | 'settings';
 
 export interface SidebarNavItem {

@@ -154,6 +154,7 @@
     --container-2xl: 42rem;
     --container-3xl: 48rem;
     --container-4xl: 56rem;
+    --container-6xl: 72rem;
     --text-xs: 0.75rem;
     --text-xs--line-height: calc(1 / 0.75);
     --text-sm: 0.875rem;
@@ -862,6 +863,9 @@
   }
   .max-w-4xl {
     max-width: var(--container-4xl);
+  }
+  .max-w-6xl {
+    max-width: var(--container-6xl);
   }
   .max-w-\[78\%\] {
     max-width: 78%;
@@ -2098,6 +2102,10 @@
     --tw-gradient-from: #7C3AED;
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
+  .from-\[\#0088cc\] {
+    --tw-gradient-from: #0088cc;
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+  }
   .from-\[\#128C7E\] {
     --tw-gradient-from: var(--color-brand-primary, #128C7E);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
@@ -2154,6 +2162,10 @@
   }
   .to-\[\#8B5CF6\] {
     --tw-gradient-to: #8B5CF6;
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+  }
+  .to-\[\#38bdf8\] {
+    --tw-gradient-to: #38bdf8;
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
   .to-\[\#075E54\] {
@@ -2877,6 +2889,12 @@
     --tw-shadow-color: color-mix(in srgb, #7C3AED 25%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       --tw-shadow-color: color-mix(in oklab, color-mix(in oklab, #7C3AED 25%, transparent) var(--tw-shadow-alpha), transparent);
+    }
+  }
+  .shadow-\[\#0088cc\]\/25 {
+    --tw-shadow-color: color-mix(in srgb, #0088cc 25%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-shadow-color: color-mix(in oklab, color-mix(in oklab, #0088cc 25%, transparent) var(--tw-shadow-alpha), transparent);
     }
   }
   .shadow-\[\#128C7E\] {

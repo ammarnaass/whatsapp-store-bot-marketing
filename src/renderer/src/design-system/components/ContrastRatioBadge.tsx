@@ -38,3 +38,4 @@ export const ContrastRatioBadge: React.FC<ContrastRatioBadgeProps> = ({ label, r
     </div>
   );
 };
+

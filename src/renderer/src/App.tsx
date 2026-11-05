@@ -11,6 +11,7 @@ import { CustomersPage } from './features/customers';
 import { AnalyticsPage } from './features/analytics';
 import { SettingsPage } from './features/settings';
 import { ChannelsPage } from './features/channels';
+import { TelegramPage } from './features/telegram';
 import { SetupWizardModal } from './features/onboarding';
 import { NotificationDrawer, NotificationToastContainer, useNotificationEvents } from './features/notifications';
 import { useTheme } from './features/theme';
@@ -27,7 +28,6 @@ export const App: React.FC = () => {
   const [globalSearch, setGlobalSearch] = useState<string>('');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
   const [isAgentStopped, setIsAgentStopped] = useState<boolean>(true);
-
   const { isAuthenticated, isLoading } = useAuthStore();
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
@@ -71,12 +71,10 @@ export const App: React.FC = () => {
         setIsAgentStopped(false);
         alert('تم تشغيل الوكيل الذكي بنجاح.');
       }
-    } else {
-      if (confirm('تأكيد إيقاف الوكيل الذكي؟ سيتم تجميد الردود الآلية وتحويل كافة المحادثات للإشراف البشري.')) {
-        await api.agent.emergencyStop();
-        setIsAgentStopped(true);
-        alert('تم إيقاف الوكيل الذكي بنجاح.');
-      }
+    } else if (confirm('تأكيد إيقاف الوكيل الذكي؟ سيتم تجميد الردود الآلية وتحويل كافة المحادثات للإشراف البشري.')) {
+      await api.agent.emergencyStop();
+      setIsAgentStopped(true);
+      alert('تم إيقاف الوكيل الذكي بنجاح.');
     }
   };
 
@@ -133,6 +131,7 @@ export const App: React.FC = () => {
             {currentTab === 'customers' && <CustomersPage />}
             {currentTab === 'analytics' && <AnalyticsPage />}
             {currentTab === 'channels' && <ChannelsPage />}
+            {currentTab === 'telegram' && <TelegramPage />}
             {currentTab === 'settings' && <SettingsPage />}
           </ErrorBoundary>
         </div>
