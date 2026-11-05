@@ -62,9 +62,16 @@ export class AIAgentEngine {
    * تجميع بنك المعرفة وسياق المتجر في الذاكرة
    */
   private buildKnowledgeContext(contactPhone: string): string {
-    // 1. سياسات المتجر والأسئلة الشائعة
-    const kbItems = this.db.prepare('SELECT title, content FROM knowledge_items WHERE active = 1').all() as any[];
-    const kbText = kbItems.map((k) => `[معلومة: ${k.title}]\n${k.content}`).join('\n\n');
+    // 1. سياسات المتجر والأسئلة الشائعة مرتبة حسب الأولوية
+    const kbItems = this.db.prepare('SELECT id, title, content, priority FROM knowledge_items WHERE active = 1 ORDER BY priority DESC').all() as any[];
+    const kbText = kbItems.map((k) => `[وثيقة: ${k.title}]\n${k.content}`).join('\n\n');
+
+    // تسجيل استخدام مصادر المعرفة
+    try {
+      this.db.prepare('UPDATE knowledge_items SET hit_count = hit_count + 1, last_used_at = CURRENT_TIMESTAMP WHERE active = 1').run();
+    } catch {
+      // تجاهل إذا كانت المعاملة مقفلة
+    }
 
     // 2. ذاكرة العميل وبياناته
     const contact = this.db.prepare('SELECT name, tags, memory_summary FROM contacts WHERE phone = ?').get(contactPhone) as any;

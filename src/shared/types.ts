@@ -216,16 +216,45 @@ export interface AgentConfig {
   updated_at: string;
 }
 
-// 11. بنك المعرفة (Knowledge Base)
+// 11. بنك وكتالوج المعرفة (Knowledge Base & Catalog)
+export type KnowledgeSourceType = 'text_faq' | 'document' | 'url' | 'custom_rule';
+export type KnowledgeCategory = 'shipping' | 'returns_warranty' | 'payment_bank' | 'products_offers' | 'hours_locations' | 'faq' | 'general';
+
 export interface KnowledgeItem {
   id: string;
   title: string;
-  category: 'faq' | 'shipping' | 'return_policy' | 'product_guide' | 'general';
+  category: KnowledgeCategory | string;
+  source_type?: KnowledgeSourceType;
   content: string;
-  source: string;
+  summary?: string;
+  source_url?: string;
+  file_path?: string;
+  tokens_count?: number;
+  priority?: number; // 1 (منخفض) إلى 5 (حرج جداً)
+  source?: string;
   active: boolean;
+  hit_count?: number;
+  last_used_at?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface KnowledgeStats {
+  totalItems: number;
+  activeItems: number;
+  totalTokens: number;
+  totalHits: number;
+  byCategory: Record<string, number>;
+}
+
+export interface KnowledgeRetrievalTestResult {
+  query: string;
+  matchedItems: Array<{
+    item: KnowledgeItem;
+    score: number;
+    matchSnippet?: string;
+  }>;
+  suggestedAnswer?: string;
 }
 
 // 12. سجل قرارات وتشغيل الوكيل (Agent Runs & Review)

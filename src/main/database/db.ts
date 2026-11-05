@@ -159,6 +159,26 @@ export class AppDatabase {
         }
       }
 
+      // ترقية جدول بنك المعرفة ومصادر المعرفة
+      const kbInfo = this.db.prepare('PRAGMA table_info(knowledge_items)').all() as any[];
+      const kbCols = new Set(kbInfo.map((c) => c.name));
+      const newKbCols: [string, string][] = [
+        ['source_type', "TEXT DEFAULT 'text_faq'"],
+        ['summary', 'TEXT'],
+        ['source_url', 'TEXT'],
+        ['file_path', 'TEXT'],
+        ['tokens_count', 'INTEGER DEFAULT 0'],
+        ['priority', 'INTEGER DEFAULT 3'],
+        ['hit_count', 'INTEGER DEFAULT 0'],
+        ['last_used_at', 'DATETIME'],
+      ];
+      for (const [colName, colDef] of newKbCols) {
+        if (!kbCols.has(colName)) {
+          this.db.exec(`ALTER TABLE knowledge_items ADD COLUMN ${colName} ${colDef}`);
+          console.log(`[Database] Migrated: added knowledge_items.${colName}`);
+        }
+      }
+
       // تهيئة جدول الفئات والتصنيفات
       this.db.exec(`
         CREATE TABLE IF NOT EXISTS categories (
@@ -512,39 +532,70 @@ export class AppDatabase {
       console.log('[Database] Seeded default agent_config.');
     }
 
-    // 2. التحقق من بنك المعرفة الافتراضي
+    // 2. التحقق من بنك المعرفة الافتراضي وتهيئته
     const kbCount = (this.db.prepare('SELECT count(*) as cnt FROM knowledge_items').get() as { cnt: number }).cnt;
     if (kbCount === 0) {
       const insertKb = this.db.prepare(`
-        INSERT INTO knowledge_items (id, title, category, content, source)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO knowledge_items (id, title, category, source_type, content, summary, priority, tokens_count, active, source)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 'STORE_POLICY')
       `);
 
       insertKb.run(
-        'kb_1',
-        'سياسة الشحن والتوصيل',
+        'kb_shipping_sa',
+        'سياسة الشحن والتوصيل لجميع مناطق المملكة',
         'shipping',
-        'الشحن متوفر لجميع المدن الرئيسية. مدة التوصيل داخل العاصمة 24-48 ساعة، وباقي المدن من 2 إلى 4 أيام عمل. الشحن مجاني للطلبات التي تزيد عن 50 دولار.',
-        'OWNER_INPUT'
+        'text_faq',
+        'نوفر الشحن السريع لكافة مناطق ومدن المملكة العربية السعودية عبر شركائنا المعتمدين (سمسا، أرامكس، سبل). مدة التوصيل داخل الرياض والمدن الكبرى 24-48 ساعة عمل، ولباقي المناطق من 2 إلى 4 أيام عمل. رسوم الشحن 25 ر.س للمنطقة الوسطى، 28 ر.س للمنطقة الغربية والشرقية، و35 ر.س للمناطق الأخرى. الشحن مجاني لجميع الطلبات التي تتجاوز 200 ر.س.',
+        'تفاصيل رسوم ومدد الشحن للمدن السعودية وحد الشحن المجاني (200 ر.س)',
+        5,
+        135
       );
 
       insertKb.run(
-        'kb_2',
-        'سياسة الاسترجاع والاستبدال',
-        'return_policy',
-        'يمكن استرجاع أو استبدال المنتجات الفيزيائية خلال 14 يوماً من تاريخ الاستلام بشرط أن تكون في حالتها وتغليفها الأصلي. المنتجات الرقمية والتراخيص المفعلة غير قابلة للاسترجاع بعد التسليم.',
-        'OWNER_INPUT'
+        'kb_returns_warranty',
+        'سياسة الاستبدال والاسترجاع والضمان الذهبي',
+        'returns_warranty',
+        'text_faq',
+        'نلتزم بنظام التجارة الإلكترونية السعودي. يحق للعميل استرجاع المنتج خلال 7 أيام أو استبداله خلال 14 يوماً من الاستلام بشرط بقاء المنتج بغلافه الأصلي غير مفتوح أو مستخدم. يتحمل المتجر كافة تكاليف الإرجاع في حال وجود عيب مصنعي أو خطأ بالطلب. المنتجات الرقمية والتراخيص المفعلة لا يمكن استرجاعها بعد التسليم.',
+        'مدة الاسترجاع 7 أيام والاستبدال 14 يوماً وشروط الضمان الذهبي',
+        5,
+        120
       );
 
       insertKb.run(
-        'kb_3',
-        'طرق الدفع المتاحة',
-        'faq',
-        'نوفر الدفع عبر روابط الدفع الإلكترونية السريعة والآمنة (Custom Payment Link) التي نرسلها لك مباشرة في المحادثة، إضافة إلى التحويل البنكي المباشر والدفع عند الاستلام للمنتجات الفيزيائية.',
-        'OWNER_INPUT'
+        'kb_payments_sa',
+        'طرق الدفع والتحصيل المعتمدة',
+        'payment_bank',
+        'text_faq',
+        'نقبل جميع وسائل الدفع المعتمدة في السعودية: بطاقات مدى، Apple Pay، فيزا وماستركارد عبر روابط الدفع الإلكتروني المباشرة والآمنة 100%. كما نوفر خيار التقسيط الميسر عبر تابي وتمارا (4 دفعات بدون فوائد)، إضافة إلى خيار التحويل البنكي المباشر لحساب المتجر في مصرف الراجحي والبنك الأهلي.',
+        'وسائل الدفع: مدى، Apple Pay، البطاقات، تابي، تمارا، والتحويل البنكي',
+        4,
+        110
       );
 
-      console.log('[Database] Seeded initial knowledge items.');
+      insertKb.run(
+        'kb_work_hours',
+        'ساعات العمل وأوقات خدمة العملاء',
+        'hours_locations',
+        'text_faq',
+        'فريق خدمة العملاء متاح للرد على محادثات واتساب يومياً من السبت إلى الخميس من الساعة 9:00 صباحاً حتى 11:00 مساءً، ويوم الجمعة من 2:00 ظهراً حتى 11:00 مساءً. الطلبات المسجلة قبل الساعة 3:00 عصراً يتم تجهيزها وتسليمها لشركة الشحن في نفس اليوم.',
+        'مواعيد خدمة العملاء بالواتساب ومواعيد الشحن الفوري بنفس اليوم',
+        4,
+        95
+      );
+
+      insertKb.run(
+        'kb_order_tracking',
+        'كيفية تتبع الشحنة وتعديل العنوان',
+        'general',
+        'text_faq',
+        'بمجرد شحن طلبك، ستصلك رسالة واتساب آلية تحتوي على رقم التتبع ورابط مباشر لمتابعة مسار الشحنة. إذا كنت ترغب في تعديل عنوان التوصيل أو رقم المستلم، يمكنك إرسال العنوان الجديد في هذه المحادثة فوراً قبل تسليم الطلب لمندوب التوصيل.',
+        'آلية تتبع الشحنات وتعديل بيانات العنوان قبل خروج الشحنة',
+        3,
+        90
+      );
+
+      console.log('[Database] Seeded initial advanced knowledge items.');
     }
 
     // 3. التحقق من مناطق الشحن الافتراضية

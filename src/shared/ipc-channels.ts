@@ -93,11 +93,15 @@ export const IPC_CHANNELS = {
   AGENT_LIST_RUNS: 'agent:list-runs',
   AGENT_REVIEW_RUN: 'agent:review-run',
 
-  // Knowledge Base
+  // Knowledge Base & Catalog
   KNOWLEDGE_LIST: 'knowledge:list',
+  KNOWLEDGE_GET: 'knowledge:get',
   KNOWLEDGE_CREATE: 'knowledge:create',
   KNOWLEDGE_UPDATE: 'knowledge:update',
   KNOWLEDGE_DELETE: 'knowledge:delete',
+  KNOWLEDGE_TOGGLE_ACTIVE: 'knowledge:toggle-active',
+  KNOWLEDGE_TEST_RETRIEVAL: 'knowledge:test-retrieval',
+  KNOWLEDGE_GET_STATS: 'knowledge:get-stats',
 
   // Authentication & Account Management
   AUTH_LOGIN: 'auth:login',

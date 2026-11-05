@@ -6,6 +6,8 @@ import {
   Message,
   AgentConfig,
   KnowledgeItem,
+  KnowledgeStats,
+  KnowledgeRetrievalTestResult,
   Campaign,
   CampaignRecipient,
   Coupon,
@@ -123,11 +125,16 @@ export interface IElectronAPI {
     listRuns: () => Promise<any[]>;
   };
 
-  // Knowledge Base
+  // Knowledge Base & Catalog
   knowledge: {
-    list: () => Promise<KnowledgeItem[]>;
+    list: (filters?: { category?: string; source_type?: string; search?: string }) => Promise<KnowledgeItem[]>;
+    get?: (params: { id: string }) => Promise<KnowledgeItem | null>;
     create: (item: Partial<KnowledgeItem>) => Promise<{ success: boolean; id: string }>;
+    update?: (item: Partial<KnowledgeItem>) => Promise<{ success: boolean }>;
     delete: (id: string) => Promise<{ success: boolean }>;
+    toggleActive?: (params: { id: string; active: boolean }) => Promise<{ success: boolean }>;
+    getStats?: () => Promise<KnowledgeStats>;
+    testRetrieval?: (params: { query: string }) => Promise<KnowledgeRetrievalTestResult>;
   };
 
   // Authentication & Account Management

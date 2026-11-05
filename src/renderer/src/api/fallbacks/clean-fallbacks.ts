@@ -85,8 +85,13 @@ export const cleanFallbackApi: IElectronAPI = {
   },
   knowledge: {
     list: async () => [],
+    get: async () => null,
     create: async () => ({ success: true, id: `kb_${Date.now()}` }),
+    update: async () => ({ success: true }),
     delete: async () => ({ success: true }),
+    toggleActive: async () => ({ success: true }),
+    getStats: async () => ({ totalItems: 0, activeItems: 0, totalTokens: 0, totalHits: 0, byCategory: {} }),
+    testRetrieval: async ({ query }) => ({ query, matchedItems: [], suggestedAnswer: '' }),
   },
   auth: {
     login: async () => ({ success: true, user: { id: 'usr_owner', name: 'مدير المتجر', role: 'owner' } }),

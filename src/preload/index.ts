@@ -98,9 +98,14 @@ const api: IElectronAPI = {
   },
 
   knowledge: {
-    list: () => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_LIST),
+    list: (filters) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_LIST, filters),
+    get: (params) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_GET, params),
     create: (item) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_CREATE, item),
+    update: (item) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_UPDATE, item),
     delete: (id) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_DELETE, { id }),
+    toggleActive: (params) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_TOGGLE_ACTIVE, params),
+    getStats: () => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_GET_STATS),
+    testRetrieval: (params) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_TEST_RETRIEVAL, params),
   },
 
   auth: {

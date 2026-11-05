@@ -76,9 +76,16 @@ CREATE TABLE IF NOT EXISTS knowledge_items (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     category TEXT DEFAULT 'general',
+    source_type TEXT DEFAULT 'text_faq',
     content TEXT NOT NULL,
-    source TEXT DEFAULT 'OWNER_INPUT',
+    summary TEXT,
+    source_url TEXT,
+    file_path TEXT,
+    tokens_count INTEGER DEFAULT 0,
+    priority INTEGER DEFAULT 3,
     active INTEGER DEFAULT 1,
+    hit_count INTEGER DEFAULT 0,
+    last_used_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
