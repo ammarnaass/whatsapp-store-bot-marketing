@@ -1,2 +1,11 @@
 export { AnalyticsPage } from './pages/AnalyticsPage';
 export * from './types/analytics.types';
+export * from './services/analytics.service';
+export * from './hooks/useAnalytics';
+export * from './utils/analytics-export.utils';
+export * from './components/AnalyticsHeader';
+export * from './components/AnalyticsKpiCards';
+export * from './components/FunnelConversionCard';
+export * from './components/ConversationIntelligenceCard';
+export * from './components/PeakHoursHeatmapCard';
+export * from './components/SmartActionableInsights';

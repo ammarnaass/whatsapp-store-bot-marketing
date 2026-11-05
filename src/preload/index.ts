@@ -160,6 +160,11 @@ const api: IElectronAPI = {
 
   analytics: {
     getKPIs: () => ipcRenderer.invoke(IPC_CHANNELS.ANALYTICS_GET_KPIS),
+    getSummary: (period?: string) => ipcRenderer.invoke(IPC_CHANNELS.ANALYTICS_GET_SUMMARY, period),
+    getFunnel: (period?: string) => ipcRenderer.invoke(IPC_CHANNELS.ANALYTICS_GET_FUNNEL, period),
+    getIntelligence: (period?: string) => ipcRenderer.invoke(IPC_CHANNELS.ANALYTICS_GET_INTELLIGENCE, period),
+    getPeakHours: () => ipcRenderer.invoke(IPC_CHANNELS.ANALYTICS_GET_PEAK_HOURS),
+    getInsights: () => ipcRenderer.invoke(IPC_CHANNELS.ANALYTICS_GET_INSIGHTS),
   },
 
   settings: {

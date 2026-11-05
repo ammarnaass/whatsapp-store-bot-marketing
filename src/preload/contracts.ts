@@ -201,6 +201,11 @@ export interface IElectronAPI {
   // Dashboard & Analytics
   analytics: {
     getKPIs: () => Promise<DashboardKPIs>;
+    getSummary: (period?: string) => Promise<any>;
+    getFunnel: (period?: string) => Promise<any[]>;
+    getIntelligence: (period?: string) => Promise<any>;
+    getPeakHours: () => Promise<any>;
+    getInsights: () => Promise<any[]>;
   };
 
   // Store & App Settings

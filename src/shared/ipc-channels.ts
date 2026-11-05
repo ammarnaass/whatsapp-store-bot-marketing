@@ -144,6 +144,11 @@ export const IPC_CHANNELS = {
   CUSTOMERS_UPDATE_NOTES: 'customers:update-notes',
   CUSTOMERS_UPDATE_TAGS: 'customers:update-tags',
   ANALYTICS_GET_KPIS: 'analytics:get-kpis',
+  ANALYTICS_GET_SUMMARY: 'analytics:get-summary',
+  ANALYTICS_GET_FUNNEL: 'analytics:get-funnel',
+  ANALYTICS_GET_INTELLIGENCE: 'analytics:get-intelligence',
+  ANALYTICS_GET_PEAK_HOURS: 'analytics:get-peak-hours',
+  ANALYTICS_GET_INSIGHTS: 'analytics:get-insights',
 
   // Store & Application Settings
   SETTINGS_GET_STORE_SETTINGS: 'settings:get-store-settings',

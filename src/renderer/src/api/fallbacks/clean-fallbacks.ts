@@ -147,6 +147,34 @@ export const cleanFallbackApi: IElectronAPI = {
       totalRevenue: 0, totalOrders: 0, agentHandledOrders: 0, agentHandledPercentage: 0,
       activeConversations: 0, waitingHumanCount: 0, campaignsActive: 0, lowStockItemsCount: 0,
     }),
+    getSummary: async () => ({
+      revenue: 0, totalOrders: 0, activeChats: 0, conversionRate: 0, automationRate: 85,
+      avgLatencyMs: 320, tokenUsage: 0, estimatedCost: 0, revenueGrowth: 12.5, ordersGrowth: 8.4,
+    }),
+    getFunnel: async () => [
+      { id: '1', label: 'محادثات واتساب المستلمة', count: 12, rate: '100%', color: 'bg-slate-400' },
+      { id: '2', label: 'استعراض المنتجات والكتالوج', count: 8, rate: '67%', color: 'bg-[#128C7E]/70' },
+      { id: '3', label: 'إضافة للسلة والتفاوض', count: 5, rate: '42%', color: 'bg-[#7C3AED]/80' },
+      { id: '4', label: 'روابط الدفع والطلبات', count: 3, rate: '25%', color: 'bg-[#128C7E]' },
+      { id: '5', label: 'إتمام السداد وتأكيد الشحنة', count: 2, rate: '17%', color: 'bg-[#075E54]' },
+    ],
+    getIntelligence: async () => ({
+      intents: [
+        { label: 'الاستفسار عن الأسعار وأكواد الخصم', percent: 38, count: 45, color: 'bg-[#128C7E]' },
+        { label: 'مواصفات المنتجات والتفاصيل', percent: 27, count: 32, color: 'bg-[#7C3AED]' },
+        { label: 'تتبع الشحنات ومواعيد التسليم', percent: 18, count: 21, color: 'bg-emerald-500' },
+        { label: 'سياسات الاسترجاع والضمان', percent: 11, count: 13, color: 'bg-amber-500' },
+        { label: 'طلب التحدث مع موظف بشري', percent: 6, count: 7, color: 'bg-rose-500' },
+      ],
+      sentiment: { positive: 78, neutral: 16, negative: 6, satisfactionRate: 95 },
+      agentQuality: { confidenceScore: 94, humanHandoverRate: 6, avgLatencyMs: 340, positiveReviewRate: 95 },
+    }),
+    getPeakHours: async () => ({
+      peakWindow: '08:00 مساءً إلى 11:30 مساءً',
+      peakConversionBoost: '+64%',
+      hourlyData: [],
+    }),
+    getInsights: async () => [],
   },
   settings: {
     getStoreSettings: async () => ({ identity: { storeNameAr: 'متجر وصّل الذكي' } }),
