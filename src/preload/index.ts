@@ -127,6 +127,12 @@ const api: IElectronAPI = {
     listUsers: () => ipcRenderer.invoke(IPC_CHANNELS.AUTH_LIST_USERS),
     createUser: (data) => ipcRenderer.invoke(IPC_CHANNELS.AUTH_CREATE_USER, data),
     deleteUser: (params) => ipcRenderer.invoke(IPC_CHANNELS.AUTH_DELETE_USER, params),
+    validateSession: (params) => ipcRenderer.invoke(IPC_CHANNELS.AUTH_VALIDATE_SESSION, params),
+    logout: (params) => ipcRenderer.invoke(IPC_CHANNELS.AUTH_LOGOUT, params),
+    checkHasUsers: () => ipcRenderer.invoke(IPC_CHANNELS.AUTH_CHECK_HAS_USERS),
+    listSessions: (params) => ipcRenderer.invoke(IPC_CHANNELS.AUTH_LIST_SESSIONS, params),
+    revokeSession: (params) => ipcRenderer.invoke(IPC_CHANNELS.AUTH_REVOKE_SESSION, params),
+    revokeAllSessions: (params) => ipcRenderer.invoke(IPC_CHANNELS.AUTH_REVOKE_ALL_SESSIONS, params),
   },
 
   campaigns: {

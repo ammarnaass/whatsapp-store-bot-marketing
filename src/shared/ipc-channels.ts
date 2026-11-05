@@ -121,6 +121,12 @@ export const IPC_CHANNELS = {
   AUTH_LIST_USERS: 'auth:list-users',
   AUTH_CREATE_USER: 'auth:create-user',
   AUTH_DELETE_USER: 'auth:delete-user',
+  AUTH_VALIDATE_SESSION: 'auth:validate-session',
+  AUTH_LOGOUT: 'auth:logout',
+  AUTH_LIST_SESSIONS: 'auth:list-sessions',
+  AUTH_REVOKE_SESSION: 'auth:revoke-session',
+  AUTH_REVOKE_ALL_SESSIONS: 'auth:revoke-all-sessions',
+  AUTH_CHECK_HAS_USERS: 'auth:check-has-users',
 
   // Telegram Bot Gateway
   TELEGRAM_GET_CONFIG: 'telegram:get-config',

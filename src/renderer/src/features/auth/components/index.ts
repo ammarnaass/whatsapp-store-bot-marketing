@@ -5,4 +5,4 @@ export { UserProfileMenu } from './UserProfileMenu';
 export { AccountManagementModal } from './AccountManagementModal';
 export { ProfileSettingsTab } from './ProfileSettingsTab';
 export { TeamManagementTab } from './TeamManagementTab';
-
+export { ActiveSessionsTab } from './ActiveSessionsTab';

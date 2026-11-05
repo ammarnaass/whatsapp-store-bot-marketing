@@ -2,98 +2,115 @@ import { create } from 'zustand';
 import { api } from '../../../api-bridge';
 import { User } from '../types/auth.types';
 
-const AUTH_STORAGE_KEY = 'wasell_active_user_v1';
+const SESSION_TOKEN_KEY = 'wasell_session_token_v1';
 
 interface AuthState {
   currentUser: User | null;
+  sessionToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isFirstTimeSetup: boolean;
   error: string | null;
   isAccountModalOpen: boolean;
   setAccountModalOpen: (open: boolean) => void;
+  clearError: () => void;
   initAuth: () => Promise<void>;
-  login: (email: string, password: string) => Promise<boolean>;
-  quickAdminLogin: () => Promise<boolean>;
-  register: (data: { email: string; name: string; password: string; phone?: string }) => Promise<boolean>;
-  logout: () => void;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<boolean>;
+  register: (data: { email: string; name: string; password: string; phone?: string; storeName?: string }) => Promise<boolean>;
+  logout: () => Promise<void>;
   updateProfile: (data: { name?: string; phone?: string; avatar?: string }) => Promise<boolean>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   currentUser: null,
+  sessionToken: null,
   isAuthenticated: false,
   isLoading: true,
+  isFirstTimeSetup: false,
   error: null,
   isAccountModalOpen: false,
 
   setAccountModalOpen: (open) => set({ isAccountModalOpen: open }),
+  clearError: () => set({ error: null }),
 
   initAuth: async () => {
     set({ isLoading: true, error: null });
     try {
-      const cached = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        const liveUser = await api.auth.getCurrentUser({ userId: parsed.id });
-        if (liveUser && liveUser.status !== 'suspended') {
-          set({ currentUser: liveUser, isAuthenticated: true, isLoading: false });
-          return;
-        }
+      const usersCheck = await api.auth.checkHasUsers();
+      if (!usersCheck?.hasUsers) {
+        set({ isFirstTimeSetup: true, isAuthenticated: false, currentUser: null, sessionToken: null, isLoading: false });
+        return;
       }
-      // إذا لم يكن هناك تخزين سابق، جلب المدير الافتراضي
-      const defaultUser = await api.auth.getCurrentUser();
-      if (defaultUser) {
-        set({ currentUser: defaultUser, isAuthenticated: true, isLoading: false });
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(defaultUser));
+
+      const token = localStorage.getItem(SESSION_TOKEN_KEY) || sessionStorage.getItem(SESSION_TOKEN_KEY);
+      if (!token) {
+        set({ isFirstTimeSetup: false, isAuthenticated: false, currentUser: null, sessionToken: null, isLoading: false });
+        return;
+      }
+
+      const res = await api.auth.validateSession({ sessionToken: token });
+      if (res.valid && res.user && res.user.status !== 'suspended') {
+        set({ currentUser: res.user, sessionToken: token, isAuthenticated: true, isFirstTimeSetup: false, isLoading: false });
       } else {
-        set({ currentUser: null, isAuthenticated: false, isLoading: false });
+        localStorage.removeItem(SESSION_TOKEN_KEY);
+        sessionStorage.removeItem(SESSION_TOKEN_KEY);
+        set({ currentUser: null, sessionToken: null, isAuthenticated: false, isFirstTimeSetup: false, isLoading: false });
       }
     } catch {
-      set({ currentUser: null, isAuthenticated: false, isLoading: false });
+      set({ currentUser: null, sessionToken: null, isAuthenticated: false, isLoading: false });
     }
   },
 
-  login: async (email, password) => {
+  login: async (email, password, rememberMe = true) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await api.auth.login({ email, password });
-      if (res.success && res.user) {
-        set({ currentUser: res.user, isAuthenticated: true, isLoading: false });
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(res.user));
+      const res = await api.auth.login({ email, password, rememberMe });
+      if (res.success && res.user && res.sessionToken) {
+        if (rememberMe) {
+          localStorage.setItem(SESSION_TOKEN_KEY, res.sessionToken);
+          sessionStorage.removeItem(SESSION_TOKEN_KEY);
+        } else {
+          sessionStorage.setItem(SESSION_TOKEN_KEY, res.sessionToken);
+          localStorage.removeItem(SESSION_TOKEN_KEY);
+        }
+        set({ currentUser: res.user, sessionToken: res.sessionToken, isAuthenticated: true, isFirstTimeSetup: false, isLoading: false });
         return true;
       }
-      set({ error: res.error || 'فشل تسجيل الدخول', isLoading: false });
+      set({ error: res.error || 'فشل تسجيل الدخول، تأكد من بياناتك', isLoading: false });
       return false;
     } catch (err: any) {
-      set({ error: err.message || 'حدث خطأ في الاتصال', isLoading: false });
+      set({ error: err.message || 'حدث خطأ في الاتصال بالخادم', isLoading: false });
       return false;
     }
-  },
-
-  quickAdminLogin: async () => {
-    return await get().login('admin@wasell.store', 'admin123');
   },
 
   register: async (data) => {
     set({ isLoading: true, error: null });
     try {
       const res = await api.auth.register(data);
-      if (res.success && res.user) {
-        set({ currentUser: res.user, isAuthenticated: true, isLoading: false });
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(res.user));
+      if (res.success && res.user && res.sessionToken) {
+        localStorage.setItem(SESSION_TOKEN_KEY, res.sessionToken);
+        set({ currentUser: res.user, sessionToken: res.sessionToken, isAuthenticated: true, isFirstTimeSetup: false, isLoading: false });
         return true;
       }
-      set({ error: res.error || 'فشل إنشاء الحساب', isLoading: false });
+      set({ error: res.error || 'فشل إنشاء الحساب، يرجى المحاولة لاحقاً', isLoading: false });
       return false;
     } catch (err: any) {
-      set({ error: err.message || 'حدث خطأ أثناء التسجيل', isLoading: false });
+      set({ error: err.message || 'حدث خطأ أثناء إنشاء الحساب', isLoading: false });
       return false;
     }
   },
 
-  logout: () => {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    set({ currentUser: null, isAuthenticated: false });
+  logout: async () => {
+    const token = get().sessionToken;
+    try {
+      if (token) await api.auth.logout({ sessionToken: token });
+    } catch {
+      // تجاهل الأخطاء أثناء تسجيل الخروج لضمان تنظيف الواجهة
+    }
+    localStorage.removeItem(SESSION_TOKEN_KEY);
+    sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    set({ currentUser: null, sessionToken: null, isAuthenticated: false });
   },
 
   updateProfile: async (data) => {
@@ -103,7 +120,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const res = await api.auth.updateProfile({ userId: user.id, ...data });
       if (res.success && res.user) {
         set({ currentUser: res.user });
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(res.user));
         return true;
       }
       return false;
@@ -112,4 +128,3 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 }));
-

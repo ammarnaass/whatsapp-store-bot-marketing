@@ -15,10 +15,16 @@ export function useAppLifecycle({
   setIsSidebarCollapsed,
 }: UseAppLifecycleProps) {
   const [sessionStatus, setSessionStatus] = useState<string>('CONNECTED');
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
-    // 1. مزامنة قاعدة البيانات والتحقق من جلسة المستخدم
-    useDataStore.getState().hydrateFromApi();
+    if (isAuthenticated) {
+      useDataStore.getState().hydrateFromApi();
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    // 1. بدء فحص المصادقة والجلسة الأولية
     useAuthStore.getState().initAuth();
 
     // 2. الاستماع لوصول الرسائل الحية عبر Webhook

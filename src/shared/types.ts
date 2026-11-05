@@ -424,3 +424,50 @@ export interface TelegramSendOptions {
   text: string;
   parseMode?: 'Markdown' | 'HTML';
 }
+
+// 18. جلسات المستخدمين والمصادقة (User Sessions & Authentication)
+export type UserRole = 'owner' | 'admin' | 'sales' | 'support';
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  phone?: string;
+  avatar?: string;
+  status: 'active' | 'suspended';
+  last_login_at?: string;
+  created_at?: string;
+}
+
+export interface UserSession {
+  id: string;
+  userId: string;
+  sessionToken: string;
+  deviceName?: string;
+  ipAddress?: string;
+  expiresAt: string;
+  isActive: boolean;
+  lastActiveAt?: string;
+  createdAt: string;
+  isCurrent?: boolean;
+}
+
+export interface AuthSessionValidationResult {
+  valid: boolean;
+  user?: User;
+  sessionToken?: string;
+  error?: string;
+}
+
+export interface LoginResult {
+  success: boolean;
+  user?: User;
+  sessionToken?: string;
+  error?: string;
+}
+
+export interface CheckUsersResult {
+  hasUsers: boolean;
+  count: number;
+}

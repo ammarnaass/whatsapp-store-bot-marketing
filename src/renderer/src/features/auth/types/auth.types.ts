@@ -12,6 +12,38 @@ export interface User {
   created_at?: string;
 }
 
+export interface UserSession {
+  id: string;
+  userId: string;
+  sessionToken: string;
+  deviceName?: string;
+  ipAddress?: string;
+  expiresAt: string;
+  isActive: boolean;
+  lastActiveAt?: string;
+  createdAt: string;
+  isCurrent?: boolean;
+}
+
+export interface AuthSessionValidationResult {
+  valid: boolean;
+  user?: User;
+  sessionToken?: string;
+  error?: string;
+}
+
+export interface LoginResult {
+  success: boolean;
+  user?: User;
+  sessionToken?: string;
+  error?: string;
+}
+
+export interface CheckUsersResult {
+  hasUsers: boolean;
+  count: number;
+}
+
 export const ROLE_LABELS: Record<UserRole, { label: string; badgeColor: string; description: string }> = {
   owner: {
     label: 'مالك المتجر',
@@ -34,4 +66,3 @@ export const ROLE_LABELS: Record<UserRole, { label: string; badgeColor: string; 
     description: 'الرد على الاستفسارات وحل الشكاوى',
   },
 };
-

@@ -94,3 +94,4 @@ export function useTelegramBot(onToast?: (msg: string) => void) {
     sendMessage: telegramService.sendMessage,
   };
 }
+

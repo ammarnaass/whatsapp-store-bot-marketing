@@ -89,3 +89,4 @@ export function registerTelegramHandlers(mainWindow: BrowserWindow, db: Database
     return botService.sendMessage(chatId, text, parseMode);
   });
 }
+

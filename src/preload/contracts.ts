@@ -156,14 +156,20 @@ export interface IElectronAPI {
 
   // Authentication & Account Management
   auth: {
-    login: (credentials: { email: string; password: string }) => Promise<{ success: boolean; user?: any; error?: string }>;
-    register: (data: { email: string; name: string; password: string; phone?: string; storeName?: string }) => Promise<{ success: boolean; user?: any; error?: string }>;
+    login: (credentials: { email: string; password: string; rememberMe?: boolean; deviceName?: string }) => Promise<{ success: boolean; user?: any; sessionToken?: string; error?: string }>;
+    register: (data: { email: string; name: string; password: string; phone?: string; storeName?: string; deviceName?: string }) => Promise<{ success: boolean; user?: any; sessionToken?: string; error?: string }>;
     getCurrentUser: (params?: { userId?: string }) => Promise<any>;
     updateProfile: (data: { userId: string; name?: string; phone?: string; avatar?: string }) => Promise<{ success: boolean; user?: any; error?: string }>;
     changePassword: (data: { userId: string; oldPassword: string; newPassword: string }) => Promise<{ success: boolean; error?: string }>;
     listUsers: () => Promise<any[]>;
     createUser: (data: { email: string; name: string; password: string; role?: string; phone?: string }) => Promise<{ success: boolean; id?: string; error?: string }>;
     deleteUser: (params: { userId: string }) => Promise<{ success: boolean; error?: string }>;
+    validateSession: (params: { sessionToken: string }) => Promise<{ valid: boolean; user?: any; sessionToken?: string; error?: string }>;
+    logout: (params: { sessionToken?: string }) => Promise<{ success: boolean }>;
+    checkHasUsers: () => Promise<{ hasUsers: boolean; count: number }>;
+    listSessions: (params: { userId: string; currentToken?: string }) => Promise<any[]>;
+    revokeSession: (params: { sessionToken: string }) => Promise<{ success: boolean }>;
+    revokeAllSessions: (params: { userId: string; keepCurrentToken?: string }) => Promise<{ success: boolean }>;
   };
 
   // Campaigns

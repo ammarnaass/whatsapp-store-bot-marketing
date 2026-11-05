@@ -96,6 +96,20 @@ export class AppDatabase {
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
         CREATE INDEX IF NOT EXISTS idx_inventory_logs_variant ON inventory_logs(variant_id, created_at DESC);
+
+        CREATE TABLE IF NOT EXISTS user_sessions (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          session_token TEXT UNIQUE NOT NULL,
+          device_name TEXT,
+          ip_address TEXT,
+          expires_at DATETIME NOT NULL,
+          is_active INTEGER DEFAULT 1,
+          last_active_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions(session_token);
+        CREATE INDEX IF NOT EXISTS idx_user_sessions_user ON user_sessions(user_id, is_active);
       `);
 
       const userCount = (this.db.prepare('SELECT count(*) as count FROM users').get() as any)?.count || 0;

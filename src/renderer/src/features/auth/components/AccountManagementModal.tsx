@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { X, User, Users, Shield } from 'lucide-react';
+import { X, User, Users, Shield, Laptop } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { ProfileSettingsTab } from './ProfileSettingsTab';
 import { TeamManagementTab } from './TeamManagementTab';
+import { ActiveSessionsTab } from './ActiveSessionsTab';
 
 export const AccountManagementModal: React.FC = () => {
   const { isAccountModalOpen, setAccountModalOpen, currentUser } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'profile' | 'team'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'team' | 'sessions'>('profile');
 
   if (!isAccountModalOpen || !currentUser) return null;
 
@@ -22,8 +23,8 @@ export const AccountManagementModal: React.FC = () => {
               <Shield className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">إدارة الحساب وفريق العمل</h3>
-              <p className="text-[11px] text-slate-400">تخصيص البيانات الشخصية والصلاحيات والوصول</p>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">إدارة الحساب والأجهزة وفريق العمل</h3>
+              <p className="text-[11px] text-slate-400">تخصيص البيانات الشخصية والجلسات والصلاحيات</p>
             </div>
           </div>
           <button
@@ -50,6 +51,19 @@ export const AccountManagementModal: React.FC = () => {
             <span>الملف الشخصي</span>
           </button>
 
+          <button
+            onClick={() => setActiveTab('sessions')}
+            type="button"
+            className={`flex items-center gap-2 pb-2.5 px-3 text-xs font-bold border-b-2 transition-all cursor-pointer ${
+              activeTab === 'sessions'
+                ? 'border-[#128C7E] text-[#128C7E] dark:text-emerald-400'
+                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <Laptop className="w-4 h-4" />
+            <span>الجلسات والأجهزة</span>
+          </button>
+
           {canManageTeam && (
             <button
               onClick={() => setActiveTab('team')}
@@ -69,10 +83,10 @@ export const AccountManagementModal: React.FC = () => {
         {/* Content Body */}
         <div className="p-6 overflow-y-auto">
           {activeTab === 'profile' && <ProfileSettingsTab />}
+          {activeTab === 'sessions' && <ActiveSessionsTab />}
           {activeTab === 'team' && canManageTeam && <TeamManagementTab />}
         </div>
       </div>
     </div>
   );
 };
-

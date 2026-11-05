@@ -404,8 +404,23 @@ CREATE TABLE IF NOT EXISTS inventory_logs (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 29. جلسات دخول المستخدمين وتأمين الحسابات
+CREATE TABLE IF NOT EXISTS user_sessions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    session_token TEXT UNIQUE NOT NULL,
+    device_name TEXT,
+    ip_address TEXT,
+    expires_at DATETIME NOT NULL,
+    is_active INTEGER DEFAULT 1,
+    last_active_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- الفهارس
 CREATE INDEX IF NOT EXISTS idx_inventory_logs_variant ON inventory_logs(variant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions(session_token);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_user ON user_sessions(user_id, is_active);
 CREATE INDEX IF NOT EXISTS idx_contacts_phone ON contacts(phone);
 CREATE INDEX IF NOT EXISTS idx_messages_conv_ts ON messages(conversation_id, ts DESC);
 CREATE INDEX IF NOT EXISTS idx_orders_status_date ON orders(status, created_at DESC);

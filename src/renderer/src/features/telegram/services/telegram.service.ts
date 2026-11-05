@@ -38,3 +38,4 @@ export const telegramService = {
     return window.electronAPI.telegram.sendMessage(options);
   },
 };
+

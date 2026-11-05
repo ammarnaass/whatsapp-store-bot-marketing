@@ -13,3 +13,4 @@ export interface TelegramTestState {
   error?: string | null;
   botInfo?: TelegramBotInfo | null;
 }
+
