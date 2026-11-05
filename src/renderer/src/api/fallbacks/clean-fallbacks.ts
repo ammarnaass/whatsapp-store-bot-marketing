@@ -21,6 +21,21 @@ export const cleanFallbackApi: IElectronAPI = {
     toggleAi: async () => ({ success: true }),
     importKeys: async (_id, keys) => ({ inserted: keys.length }),
   },
+  categories: {
+    listCategories: async () => [
+      { id: 'cat_perfumes', name: 'عطور وباقات', slug: 'perfumes', icon: 'Sparkles', color: '#10B981', sort_order: 1, active: true, products_count: 0, created_at: new Date().toISOString() },
+      { id: 'cat_electronics', name: 'إلكترونيات وساعات', slug: 'electronics', icon: 'Watch', color: '#3B82F6', sort_order: 2, active: true, products_count: 0, created_at: new Date().toISOString() },
+      { id: 'cat_fashion', name: 'أزياء وإكسسوارات', slug: 'fashion', icon: 'Shirt', color: '#EC4899', sort_order: 3, active: true, products_count: 0, created_at: new Date().toISOString() },
+      { id: 'cat_digital', name: 'منتجات رقمية وتراخيص', slug: 'digital', icon: 'Key', color: '#8B5CF6', sort_order: 4, active: true, products_count: 0, created_at: new Date().toISOString() },
+      { id: 'cat_home', name: 'مستلزمات منزلية', slug: 'home', icon: 'Home', color: '#F59E0B', sort_order: 5, active: true, products_count: 0, created_at: new Date().toISOString() },
+      { id: 'cat_beauty', name: 'صحة وجمال', slug: 'beauty', icon: 'Heart', color: '#06B6D4', sort_order: 6, active: true, products_count: 0, created_at: new Date().toISOString() },
+    ],
+    getCategory: async () => null,
+    createCategory: async () => ({ success: true, id: `cat_${Date.now()}` }),
+    updateCategory: async () => ({ success: true }),
+    deleteCategory: async () => ({ success: true }),
+    reorderCategories: async () => ({ success: true }),
+  },
   inventory: {
     getStockSummary: async () => ({
       totalSkus: 0, totalQuantity: 0, reservedQuantity: 0, availableQuantity: 0, lowStockCount: 0, outOfStockCount: 0,

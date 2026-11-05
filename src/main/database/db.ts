@@ -149,6 +149,7 @@ export class AppDatabase {
         ['whatsapp_short_desc', 'TEXT'],
         ['is_featured', 'INTEGER DEFAULT 0'],
         ['allow_backorders', 'INTEGER DEFAULT 0'],
+        ['category_id', 'TEXT REFERENCES categories(id) ON DELETE SET NULL'],
       ];
 
       for (const [colName, colDef] of newProdCols) {
@@ -157,6 +158,59 @@ export class AppDatabase {
           console.log(`[Database] Migrated: added products.${colName}`);
         }
       }
+
+      // تهيئة جدول الفئات والتصنيفات
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS categories (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          slug TEXT UNIQUE NOT NULL,
+          description TEXT,
+          icon TEXT DEFAULT 'Folder',
+          color TEXT DEFAULT '#128C7E',
+          parent_id TEXT REFERENCES categories(id) ON DELETE SET NULL,
+          sort_order INTEGER DEFAULT 0,
+          active INTEGER DEFAULT 1,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);
+        CREATE INDEX IF NOT EXISTS idx_categories_parent ON categories(parent_id);
+      `);
+
+      // تهيئة الفئات الافتراضية إذا كان الجدول فارغاً
+      const catCount = (this.db.prepare('SELECT count(*) as count FROM categories').get() as any)?.count || 0;
+      if (catCount === 0) {
+        const insertCat = this.db.prepare(`
+          INSERT INTO categories (id, name, slug, description, icon, color, sort_order, active)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+        `);
+        const initialCategories = [
+          ['cat_perfumes', 'عطور وباقات', 'perfumes', 'عطور فاخرة، دهن عود، وباقات هدايا منسقة', 'Sparkles', '#10B981', 1],
+          ['cat_electronics', 'إلكترونيات وساعات', 'electronics', 'ساعات ذكية، أجهزة ذكية وملحقات رقمية', 'Watch', '#3B82F6', 2],
+          ['cat_fashion', 'أزياء وإكسسوارات', 'fashion', 'أزياء عصرية، حقائب جلدية وإكسسوارات متميزة', 'Shirt', '#EC4899', 3],
+          ['cat_digital', 'منتجات رقمية وتراخيص', 'digital', 'اشتراكات برمجية، تراخيص رقمية وبطاقات إلكترونية', 'Key', '#8B5CF6', 4],
+          ['cat_home', 'مستلزمات منزلية', 'home', 'ديكورات ومستلزمات منزلية ومباخر فاخرة', 'Home', '#F59E0B', 5],
+          ['cat_beauty', 'صحة وجمال', 'beauty', 'مستحضرات عناية بالبشرة ومستلزمات العناية الشخصية', 'Heart', '#06B6D4', 6],
+        ];
+        for (const cat of initialCategories) {
+          insertCat.run(...cat);
+        }
+        console.log('[Database] Seeded initial categories.');
+      }
+
+      // ربط المنتجات الحالية بمعرفات الفئات تلقائياً
+      this.db.exec(`
+        UPDATE products SET category_id = (
+          SELECT id FROM categories WHERE categories.name = products.category LIMIT 1
+        ) WHERE category_id IS NULL AND category IS NOT NULL;
+        UPDATE products SET category_id = 'cat_electronics', category = 'إلكترونيات وساعات' WHERE category LIKE '%إلكترونيات%' AND (category_id IS NULL OR category_id = '');
+        UPDATE products SET category_id = 'cat_digital', category = 'منتجات رقمية وتراخيص' WHERE (category LIKE '%رقمية%' OR category LIKE '%برمجيات%' OR category LIKE '%تراخيص%') AND (category_id IS NULL OR category_id = '');
+        UPDATE products SET category_id = 'cat_perfumes', category = 'عطور وباقات' WHERE (category LIKE '%عطور%' OR category LIKE '%باقات%') AND (category_id IS NULL OR category_id = '');
+        UPDATE products SET category_id = 'cat_fashion', category = 'أزياء وإكسسوارات' WHERE (category LIKE '%أزياء%' OR category LIKE '%ملابس%' OR category LIKE '%إكسسوارات%') AND (category_id IS NULL OR category_id = '');
+        UPDATE products SET category_id = 'cat_home', category = 'مستلزمات منزلية' WHERE (category LIKE '%منزل%' OR category LIKE '%ديكور%') AND (category_id IS NULL OR category_id = '');
+        UPDATE products SET category_id = 'cat_beauty', category = 'صحة وجمال' WHERE (category LIKE '%صحة%' OR category LIKE '%جمال%' OR category LIKE '%عناية%') AND (category_id IS NULL OR category_id = '');
+      `);
 
       // تهيئة مناطق الشحن الافتراضية إذا كان الجدول فارغاً
       const zonesCount = (this.db.prepare('SELECT count(*) as count FROM shipping_zones').get() as any)?.count || 0;

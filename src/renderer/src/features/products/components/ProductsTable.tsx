@@ -3,6 +3,7 @@ import { Smartphone, Package, Edit2, Trash2 } from 'lucide-react';
 import { CatalogProduct } from '../types/products.types';
 import { EmptyState } from '../../data-management';
 import { StockStatusBadge } from './badges/StockStatusBadge';
+import { CategoryBadge } from '../../categories';
 
 interface ProductsTableProps {
   products: CatalogProduct[];
@@ -69,8 +70,8 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <span className="text-slate-700 dark:text-slate-300 font-bold block">{prod.category}</span>
-                      <span className="text-[10px] text-slate-400">{prod.type === 'physical' ? '📦 فيزيائي (شحن)' : '🔑 رقمي'}</span>
+                      <CategoryBadge name={prod.category} size="sm" />
+                      <span className="text-[10px] text-slate-400 block mt-1">{prod.type === 'physical' ? '📦 فيزيائي (شحن)' : '🔑 رقمي'}</span>
                     </td>
                     <td className="py-3 px-4 text-center">
                       <div className="font-bold text-slate-900 dark:text-white font-mono">{prod.price} ر.س</div>

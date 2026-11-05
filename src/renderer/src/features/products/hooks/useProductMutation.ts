@@ -30,6 +30,7 @@ export function useProductMutation(showToast: (msg: string) => void) {
       type: formData.type,
       description: formData.description,
       category: formData.category,
+      category_id: formData.category_id,
       price: formData.price,
       stock: formData.stock,
       cost_price: formData.cost_price,

@@ -1,10 +1,11 @@
 import React from 'react';
-import { Download, RefreshCw, Plus } from 'lucide-react';
+import { Download, RefreshCw, Plus, Layers } from 'lucide-react';
 
 interface ProductsHeaderProps {
   onExport: () => void;
   onSync: () => void;
   onAddNew: () => void;
+  onOpenCategories?: () => void;
   totalCount: number;
 }
 
@@ -12,7 +13,8 @@ export const ProductsHeader: React.FC<ProductsHeaderProps> = ({
   onExport,
   onSync,
   onAddNew,
-  totalCount
+  onOpenCategories,
+  totalCount,
 }) => {
   return (
     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-[#111827] p-6 rounded-2xl border border-slate-200 dark:border-[#1F293D] elevation-1">
@@ -48,6 +50,18 @@ export const ProductsHeader: React.FC<ProductsHeaderProps> = ({
           <Download className="w-4 h-4 text-slate-400" />
           <span>تصدير الكتالوج</span>
         </button>
+
+        {onOpenCategories && (
+          <button
+            onClick={onOpenCategories}
+            type="button"
+            className="h-[38px] inline-flex items-center gap-2 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-100 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer elevation-1"
+          >
+            <Layers className="w-4 h-4 text-[#128C7E]" />
+            <span>إدارة الفئات</span>
+          </button>
+        )}
+
         <button
           onClick={onSync}
           type="button"
@@ -56,6 +70,7 @@ export const ProductsHeader: React.FC<ProductsHeaderProps> = ({
           <RefreshCw className="w-4 h-4" />
           <span>مزامنة فورية (سلة / زد)</span>
         </button>
+
         <button
           onClick={onAddNew}
           type="button"

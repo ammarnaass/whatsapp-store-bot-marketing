@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ProductFormData, ProductFormErrors } from '../../types/products.types';
-import { PRODUCT_CATEGORIES } from '../../constants/products.constants';
+import { CategorySelector, CategoryFormModal, useCategories } from '../../../categories';
 
 interface ProductBasicSectionProps {
   formData: ProductFormData;
@@ -13,6 +13,8 @@ export const ProductBasicSection: React.FC<ProductBasicSectionProps> = ({
   errors,
   onChange,
 }) => {
+  const { categories, saveCategory } = useCategories();
+  const [isAddCatOpen, setIsAddCatOpen] = useState(false);
   return (
     <div className="space-y-3.5 text-xs">
       <div>
@@ -53,18 +55,15 @@ export const ProductBasicSection: React.FC<ProductBasicSectionProps> = ({
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <div>
-          <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">التصنيف</label>
-          <select
-            value={formData.category}
-            onChange={(e) => onChange('category', e.target.value)}
-            className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-          >
-            {PRODUCT_CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
-        </div>
+        <CategorySelector
+          value={formData.category}
+          categories={categories}
+          onChange={(catName, catId) => {
+            onChange('category', catName);
+            if (catId) onChange('category_id', catId);
+          }}
+          onOpenCreate={() => setIsAddCatOpen(true)}
+        />
         <div>
           <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">نوع المنتج</label>
           <select
@@ -119,6 +118,18 @@ export const ProductBasicSection: React.FC<ProductBasicSectionProps> = ({
           <span className="font-medium text-slate-700 dark:text-slate-300">تمييز المنتج في كروت واتساب (Featured)</span>
         </label>
       </div>
+      {/* نافذة إضافة فئة سريعة من داخل النموذج */}
+      <CategoryFormModal
+        isOpen={isAddCatOpen}
+        onClose={() => setIsAddCatOpen(false)}
+        onSave={async (newCat) => {
+          const ok = await saveCategory(newCat);
+          if (ok) {
+            onChange('category', newCat.name);
+          }
+          return ok;
+        }}
+      />
     </div>
   );
 };

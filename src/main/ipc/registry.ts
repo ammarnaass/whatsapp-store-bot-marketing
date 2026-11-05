@@ -7,6 +7,7 @@ import { WebhookServerService } from '../services/webhook-server.service';
 import { registerSessionHandlers } from './handlers/session.handler';
 import { registerChatHandlers } from './handlers/chat.handler';
 import { registerCatalogHandlers } from './handlers/catalog.handler';
+import { registerCategoriesHandlers } from './handlers/categories.handler';
 import { registerInventoryHandlers } from './handlers/inventory.handler';
 import { registerOrdersHandlers } from './handlers/orders.handler';
 import { registerShippingHandlers } from './handlers/shipping.handler';
@@ -33,6 +34,7 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
   registerSessionHandlers(mainWindow, openwa);
   registerChatHandlers(mainWindow, db, openwa, webhook);
   registerCatalogHandlers(db);
+  registerCategoriesHandlers(db);
   registerInventoryHandlers(db);
   registerOrdersHandlers(db, openwa);
   registerShippingHandlers(db, openwa);

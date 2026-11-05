@@ -12,6 +12,7 @@ export interface ProductFormData {
   id?: string;
   name: string;
   category: string;
+  category_id?: string;
   type: 'physical' | 'digital';
   description: string;
   sku: string;

@@ -46,20 +46,20 @@ export function registerCatalogHandlers(db: Database.Database): void {
     const createTx = db.transaction(() => {
       db.prepare(`
         INSERT INTO products (
-          id, name, type, description, media, category, active,
+          id, name, type, description, media, category, category_id, active,
           cost_price, compare_at_price, barcode, sku, brand,
           weight, length, width, height, shipping_type, shipping_fee,
           low_stock_threshold, tax_rate, is_tax_inclusive, tags,
           whatsapp_short_desc, is_featured, allow_backorders
         ) VALUES (
-          ?, ?, ?, ?, ?, ?, ?,
+          ?, ?, ?, ?, ?, ?, ?, ?,
           ?, ?, ?, ?, ?,
           ?, ?, ?, ?, ?, ?,
           ?, ?, ?, ?,
           ?, ?, ?
         )
       `).run(
-        id, data.name, data.type || 'physical', data.description || '', JSON.stringify(data.media || []), data.category || '', 1,
+        id, data.name, data.type || 'physical', data.description || '', JSON.stringify(data.media || []), data.category || '', data.category_id || null, 1,
         data.cost_price || 0, data.compare_at_price || 0, data.barcode || null, sku, data.brand || null,
         data.weight || 0, data.length || 0, data.width || 0, data.height || 0, data.shipping_type || 'default', data.shipping_fee || 0,
         data.low_stock_threshold || 5, data.tax_rate ?? 15, data.is_tax_inclusive ? 1 : 0, JSON.stringify(data.tags || []),
@@ -82,14 +82,14 @@ export function registerCatalogHandlers(db: Database.Database): void {
     const updateTx = db.transaction(() => {
       db.prepare(`
         UPDATE products SET
-          name = ?, type = ?, description = ?, category = ?, media = ?,
+          name = ?, type = ?, description = ?, category = ?, category_id = COALESCE(?, category_id), media = ?,
           cost_price = ?, compare_at_price = ?, barcode = ?, sku = ?, brand = ?,
           weight = ?, length = ?, width = ?, height = ?, shipping_type = ?, shipping_fee = ?,
           low_stock_threshold = ?, tax_rate = ?, is_tax_inclusive = ?, tags = ?,
           whatsapp_short_desc = ?, is_featured = ?, allow_backorders = ?
         WHERE id = ?
       `).run(
-        data.name, data.type, data.description || '', data.category || '', JSON.stringify(data.media || []),
+        data.name, data.type, data.description || '', data.category || '', data.category_id || null, JSON.stringify(data.media || []),
         data.cost_price || 0, data.compare_at_price || 0, data.barcode || null, data.sku || null, data.brand || null,
         data.weight || 0, data.length || 0, data.width || 0, data.height || 0, data.shipping_type || 'default', data.shipping_fee || 0,
         data.low_stock_threshold || 5, data.tax_rate ?? 15, data.is_tax_inclusive ? 1 : 0, JSON.stringify(data.tags || []),

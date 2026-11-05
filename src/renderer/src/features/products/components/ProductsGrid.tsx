@@ -2,6 +2,7 @@ import React from 'react';
 import { Sparkles, Smartphone, Package, Edit2, Trash2 } from 'lucide-react';
 import { CatalogProduct } from '../types/products.types';
 import { EmptyState } from '../../data-management';
+import { CategoryBadge } from '../../categories';
 
 interface ProductsGridProps {
   products: CatalogProduct[];
@@ -29,9 +30,9 @@ export const ProductsGrid: React.FC<ProductsGridProps> = ({
         <div key={prod.id} className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200 dark:border-[#1F293D] shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-all">
           <div className="relative h-44 overflow-hidden bg-slate-100 dark:bg-slate-800">
             <img src={prod.image} alt={prod.name} className="w-full h-full object-cover" />
-            <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white shadow-xs">
-              {prod.category}
-            </span>
+            <div className="absolute top-3 right-3 shadow-xs">
+              <CategoryBadge name={prod.category} size="sm" />
+            </div>
             {prod.aiRecommended && (
               <span className="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#7C3AED] text-white flex items-center gap-1 shadow-xs">
                 <Sparkles className="w-3 h-3" />

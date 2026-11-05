@@ -20,6 +20,14 @@ export const IPC_CHANNELS = {
   CATALOG_TOGGLE_AI: 'catalog:toggle-ai',
   CATALOG_IMPORT_KEYS: 'catalog:import-keys',
 
+  // Categories & Product Classification
+  CATEGORIES_LIST: 'categories:list',
+  CATEGORIES_GET: 'categories:get',
+  CATEGORIES_CREATE: 'categories:create',
+  CATEGORIES_UPDATE: 'categories:update',
+  CATEGORIES_DELETE: 'categories:delete',
+  CATEGORIES_REORDER: 'categories:reorder',
+
   // Smart Inventory
   INVENTORY_GET_STOCK_SUMMARY: 'inventory:get-stock-summary',
   INVENTORY_ADJUST_STOCK: 'inventory:adjust-stock',

@@ -110,6 +110,24 @@ CREATE TABLE IF NOT EXISTS agent_reviews (
     reviewed_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 8.5. فئات وتصنيفات المنتجات
+CREATE TABLE IF NOT EXISTS categories (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    description TEXT,
+    icon TEXT DEFAULT 'Folder',
+    color TEXT DEFAULT '#128C7E',
+    parent_id TEXT REFERENCES categories(id) ON DELETE SET NULL,
+    sort_order INTEGER DEFAULT 0,
+    active INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);
+CREATE INDEX IF NOT EXISTS idx_categories_parent ON categories(parent_id);
+
 -- 9. المنتجات
 CREATE TABLE IF NOT EXISTS products (
     id TEXT PRIMARY KEY,
@@ -118,6 +136,7 @@ CREATE TABLE IF NOT EXISTS products (
     description TEXT,
     media TEXT DEFAULT '[]',
     category TEXT,
+    category_id TEXT REFERENCES categories(id) ON DELETE SET NULL,
     active INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

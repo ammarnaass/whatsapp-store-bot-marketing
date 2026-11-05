@@ -65,8 +65,23 @@ export interface Message {
   ts: string;
 }
 
-// 5. الكتالوج والمنتجات
+// 5. الكتالوج والمنتجات والفئات
 export type ProductType = 'physical' | 'digital';
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  parent_id?: string | null;
+  sort_order: number;
+  active: boolean;
+  products_count?: number;
+  created_at: string;
+  updated_at?: string;
+}
 
 export interface ProductVariant {
   id: string;
@@ -86,6 +101,7 @@ export interface Product {
   description?: string;
   media: string[]; // Array of image URLs/paths
   category?: string;
+  category_id?: string;
   active: boolean;
   cost_price?: number;
   compare_at_price?: number;
