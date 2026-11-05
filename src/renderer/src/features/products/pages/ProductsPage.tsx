@@ -10,14 +10,17 @@ import { WhatsAppCardPreviewModal } from '../components/WhatsAppCardPreviewModal
 import { AddProductModal } from '../components/AddProductModal';
 import { EditProductModal } from '../components/EditProductModal';
 import { CategoryFilterChips, CategoriesManagerModal } from '../../categories';
+import { CollectionsFilterBar, CollectionsManagerModal, CollectionWhatsAppShareModal } from '../../collections';
 
 export const ProductsPage: React.FC = () => {
   const {
-    products, filteredProducts, categories, categoriesHook, viewMode, setViewMode,
-    activeTab, setActiveTab, selectedCategoryId, setSelectedCategoryId,
-    searchQuery, setSearchQuery, previewProduct, setPreviewProduct, editingProduct,
-    setEditingProduct, showAddModal, setShowAddModal, showCategoriesModal,
-    setShowCategoriesModal, toastMessage, handleSync, handleExport, handleToggleAi,
+    products, filteredProducts, categories, categoriesHook, collections, collectionsHook,
+    viewMode, setViewMode, activeTab, setActiveTab, selectedCategoryId, setSelectedCategoryId,
+    selectedCollectionId, setSelectedCollectionId, searchQuery, setSearchQuery,
+    previewProduct, setPreviewProduct, editingProduct, setEditingProduct,
+    showAddModal, setShowAddModal, showCategoriesModal, setShowCategoriesModal,
+    showCollectionsModal, setShowCollectionsModal, sharingCollection, setSharingCollection,
+    toastMessage, handleSync, handleExport, handleToggleAi,
     handleCreateProduct, handleUpdateProduct, handleDeleteProduct,
   } = useProducts();
 
@@ -29,7 +32,7 @@ export const ProductsPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col w-full space-y-4 animate-in fade-in duration-200">
+    <div className="flex flex-col w-full space-y-3.5 animate-in fade-in duration-200">
       {toastMessage && (
         <div className="fixed bottom-6 left-6 z-50 bg-[#128C7E] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
           <CheckCircle2 className="w-5 h-5 text-emerald-200 shrink-0" />
@@ -57,6 +60,7 @@ export const ProductsPage: React.FC = () => {
         counts={counts}
       />
 
+      {/* شريط الفئات الهرمية */}
       <CategoryFilterChips
         categories={categories}
         selectedId={selectedCategoryId}
@@ -64,6 +68,16 @@ export const ProductsPage: React.FC = () => {
         totalProductsCount={products.length}
         onOpenManageModal={() => setShowCategoriesModal(true)}
       />
+
+      {/* شريط المجموعات التسويقية والذكية */}
+      {collections.length > 0 && (
+        <CollectionsFilterBar
+          collections={collections}
+          selectedId={selectedCollectionId}
+          onSelect={setSelectedCollectionId}
+          onManage={() => setShowCollectionsModal(true)}
+        />
+      )}
 
       {viewMode === 'table' ? (
         <ProductsTable
@@ -109,6 +123,25 @@ export const ProductsPage: React.FC = () => {
         onDeleteCategory={categoriesHook.removeCategory}
         onReorder={categoriesHook.reorder}
         onRefresh={categoriesHook.refreshCategories}
+      />
+
+      <CollectionsManagerModal
+        isOpen={showCollectionsModal}
+        collections={collections}
+        allProducts={products as any}
+        isLoading={collectionsHook.isLoading}
+        onClose={() => setShowCollectionsModal(false)}
+        onSave={async (data) => collectionsHook.createCollection(data)}
+        onDelete={async (id) => collectionsHook.deleteCollection(id)}
+        onShare={(coll) => setSharingCollection(coll)}
+        onRefresh={collectionsHook.refresh}
+      />
+
+      <CollectionWhatsAppShareModal
+        isOpen={Boolean(sharingCollection)}
+        collection={sharingCollection}
+        products={products as any}
+        onClose={() => setSharingCollection(null)}
       />
     </div>
   );

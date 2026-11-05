@@ -94,3 +94,4 @@ export const KnowledgeFilterBar: React.FC<KnowledgeFilterBarProps> = ({
     </div>
   );
 };
+

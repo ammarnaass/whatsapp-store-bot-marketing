@@ -28,6 +28,15 @@ export const IPC_CHANNELS = {
   CATEGORIES_DELETE: 'categories:delete',
   CATEGORIES_REORDER: 'categories:reorder',
 
+  // Collections & Marketing Curations
+  COLLECTIONS_LIST: 'collections:list',
+  COLLECTIONS_GET: 'collections:get',
+  COLLECTIONS_CREATE: 'collections:create',
+  COLLECTIONS_UPDATE: 'collections:update',
+  COLLECTIONS_DELETE: 'collections:delete',
+  COLLECTIONS_ASSIGN_PRODUCTS: 'collections:assign-products',
+  COLLECTIONS_GET_PRODUCTS: 'collections:get-products',
+
   // Smart Inventory
   INVENTORY_GET_STOCK_SUMMARY: 'inventory:get-stock-summary',
   INVENTORY_ADJUST_STOCK: 'inventory:adjust-stock',

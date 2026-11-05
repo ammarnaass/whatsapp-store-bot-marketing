@@ -232,6 +232,69 @@ export class AppDatabase {
         UPDATE products SET category_id = 'cat_beauty', category = 'صحة وجمال' WHERE (category LIKE '%صحة%' OR category LIKE '%جمال%' OR category LIKE '%عناية%') AND (category_id IS NULL OR category_id = '');
       `);
 
+      // تهيئة المجموعات التسويقية والذكية
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS collections (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          slug TEXT UNIQUE NOT NULL,
+          description TEXT,
+          banner_url TEXT,
+          icon TEXT DEFAULT 'Sparkles',
+          color TEXT DEFAULT '#7C3AED',
+          is_smart INTEGER DEFAULT 0,
+          rules_json TEXT DEFAULT '{}',
+          active INTEGER DEFAULT 1,
+          sort_order INTEGER DEFAULT 0,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE IF NOT EXISTS product_collections (
+          product_id TEXT REFERENCES products(id) ON DELETE CASCADE,
+          collection_id TEXT REFERENCES collections(id) ON DELETE CASCADE,
+          added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (product_id, collection_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_collections_slug ON collections(slug);
+        CREATE INDEX IF NOT EXISTS idx_prod_collections_prod ON product_collections(product_id);
+        CREATE INDEX IF NOT EXISTS idx_prod_collections_coll ON product_collections(collection_id);
+      `);
+
+      // تهيئة المجموعات التسويقية الافتراضية
+      const collCount = (this.db.prepare('SELECT count(*) as count FROM collections').get() as any)?.count || 0;
+      if (collCount === 0) {
+        const insertColl = this.db.prepare(`
+          INSERT INTO collections (id, name, slug, description, icon, color, sort_order, active)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+        `);
+        insertColl.run('col_best_sellers', 'الأكثر مبيعاً بالواتساب', 'best-sellers', 'المنتجات الأعلى طلباً ومعدل إغلاق صفقات بالمحادثات', 'Flame', '#F59E0B', 1);
+        insertColl.run('col_special_offers', 'عروض وتخفيضات خاصة', 'special-offers', 'خصومات وباقات ترويجية حصرية لمستخدمي واتساب', 'Tag', '#EC4899', 2);
+        insertColl.run('col_new_arrivals', 'وصل حديثاً', 'new-arrivals', 'أحدث المنتجات والتراخيص المضافة للمتجر مؤخراً', 'Sparkles', '#10B981', 3);
+        console.log('[Database] Seeded initial collections.');
+
+        // ربط تلقائي لبعض المنتجات بالمجموعات
+        this.db.exec(`
+          INSERT OR IGNORE INTO product_collections (product_id, collection_id)
+          SELECT id, 'col_best_sellers' FROM products WHERE active = 1 LIMIT 3;
+          INSERT OR IGNORE INTO product_collections (product_id, collection_id)
+          SELECT id, 'col_new_arrivals' FROM products WHERE active = 1 LIMIT 2;
+        `);
+      }
+
+      // إضافة فئات فرعية هرمية نموذجية إذا لم تكن موجودة
+      const existingSub = this.db.prepare('SELECT count(*) as cnt FROM categories WHERE parent_id IS NOT NULL').get() as any;
+      if ((existingSub?.cnt || 0) === 0) {
+        const insertSub = this.db.prepare(`
+          INSERT OR IGNORE INTO categories (id, name, slug, description, icon, color, parent_id, sort_order, active)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+        `);
+        insertSub.run('cat_smart_watches', 'ساعات ذكية وأساور', 'smart-watches', 'ساعات ذكية، ملحقاتها وأساور سيليكون', 'Watch', '#3B82F6', 'cat_electronics', 1);
+        insertSub.run('cat_audio', 'سماعات وصوتيات', 'audio-headphones', 'سماعات لاسلكية ومكبرات صوت بلوتوث', 'Headphones', '#6366F1', 'cat_electronics', 2);
+        insertSub.run('cat_oud', 'دهن عود ومباخر فاخرة', 'oud-incense', 'مباخر ذكية، رقائق عود ودهن كمبودي', 'Sparkles', '#10B981', 'cat_perfumes', 1);
+        insertSub.run('cat_french_perfumes', 'عطور فرنسية نسائية ورجالية', 'french-perfumes', 'عطور مستوحاة وباقات فاخرة', 'Gift', '#059669', 'cat_perfumes', 2);
+        console.log('[Database] Seeded initial hierarchical subcategories.');
+      }
+
       // تهيئة مناطق الشحن الافتراضية إذا كان الجدول فارغاً
       const zonesCount = (this.db.prepare('SELECT count(*) as count FROM shipping_zones').get() as any)?.count || 0;
       if (zonesCount === 0) {

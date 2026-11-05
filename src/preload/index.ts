@@ -40,6 +40,16 @@ const api: IElectronAPI = {
     reorderCategories: (ids) => ipcRenderer.invoke(IPC_CHANNELS.CATEGORIES_REORDER, { ids }),
   },
 
+  collections: {
+    list: () => ipcRenderer.invoke(IPC_CHANNELS.COLLECTIONS_LIST),
+    get: (params) => ipcRenderer.invoke(IPC_CHANNELS.COLLECTIONS_GET, params),
+    create: (data) => ipcRenderer.invoke(IPC_CHANNELS.COLLECTIONS_CREATE, data),
+    update: (data) => ipcRenderer.invoke(IPC_CHANNELS.COLLECTIONS_UPDATE, data),
+    delete: (params) => ipcRenderer.invoke(IPC_CHANNELS.COLLECTIONS_DELETE, params),
+    assignProducts: (params) => ipcRenderer.invoke(IPC_CHANNELS.COLLECTIONS_ASSIGN_PRODUCTS, params),
+    getProducts: (params) => ipcRenderer.invoke(IPC_CHANNELS.COLLECTIONS_GET_PRODUCTS, params),
+  },
+
   inventory: {
     getStockSummary: () => ipcRenderer.invoke(IPC_CHANNELS.INVENTORY_GET_STOCK_SUMMARY),
     adjustStock: (data) => ipcRenderer.invoke(IPC_CHANNELS.INVENTORY_ADJUST_STOCK, data),

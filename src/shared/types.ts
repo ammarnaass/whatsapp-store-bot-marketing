@@ -127,6 +127,44 @@ export interface Product {
   created_at: string;
 }
 
+// 5.5. المجموعات التسويقية والذكية (Collections & Marketing Curations)
+export interface Collection {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  banner_url?: string;
+  icon?: string;
+  color?: string;
+  is_smart: boolean;
+  rules_json?: string;
+  active: boolean;
+  sort_order: number;
+  products_count?: number;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface ProductCollection {
+  product_id: string;
+  collection_id: string;
+  added_at: string;
+}
+
+export interface CollectionFormData {
+  name: string;
+  slug?: string;
+  description?: string;
+  banner_url?: string;
+  icon?: string;
+  color?: string;
+  is_smart?: boolean;
+  rules_json?: string;
+  active?: boolean;
+  sort_order?: number;
+  product_ids?: string[];
+}
+
 // 6. الأصول الرقمية ومفاتيح التراخيص
 export interface DigitalAsset {
   id: string;

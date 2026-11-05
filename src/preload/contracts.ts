@@ -1,6 +1,8 @@
 import {
   Product,
   Category,
+  Collection,
+  CollectionFormData,
   Order,
   Conversation,
   Message,
@@ -47,6 +49,17 @@ export interface IElectronAPI {
     updateCategory: (data: Partial<Category>) => Promise<{ success: boolean }>;
     deleteCategory: (params: { id: string; reassignToId?: string }) => Promise<{ success: boolean }>;
     reorderCategories: (ids: string[]) => Promise<{ success: boolean }>;
+  };
+
+  // Collections & Marketing Curations
+  collections: {
+    list: () => Promise<Collection[]>;
+    get: (params: { id: string }) => Promise<(Collection & { product_ids: string[] }) | null>;
+    create: (data: CollectionFormData) => Promise<{ success: boolean; id: string }>;
+    update: (data: Partial<Collection> & { id: string; product_ids?: string[] }) => Promise<{ success: boolean }>;
+    delete: (params: { id: string }) => Promise<{ success: boolean }>;
+    assignProducts: (params: { collectionId: string; productIds: string[] }) => Promise<{ success: boolean }>;
+    getProducts: (params: { collectionId: string }) => Promise<Product[]>;
   };
 
   // Smart Inventory

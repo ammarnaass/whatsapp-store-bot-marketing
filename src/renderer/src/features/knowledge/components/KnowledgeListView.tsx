@@ -68,3 +68,4 @@ export const KnowledgeListView: React.FC<KnowledgeListViewProps> = ({
     </div>
   );
 };
+

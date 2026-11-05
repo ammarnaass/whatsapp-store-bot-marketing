@@ -19,4 +19,9 @@ export interface CategoryFormErrors {
   slug?: string;
 }
 
+export interface CategoryNode extends Category {
+  children: CategoryNode[];
+  level: number;
+}
+
 export type CategoryFilterId = 'all' | string;

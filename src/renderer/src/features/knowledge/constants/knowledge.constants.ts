@@ -26,3 +26,4 @@ export const DEFAULT_KNOWLEDGE_FORM: KnowledgeFormData = {
   priority: 3,
   active: true,
 };
+

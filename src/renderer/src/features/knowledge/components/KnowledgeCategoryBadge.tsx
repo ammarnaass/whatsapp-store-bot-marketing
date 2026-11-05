@@ -51,3 +51,4 @@ export const KnowledgeCategoryBadge: React.FC<KnowledgeCategoryBadgeProps> = ({
     </div>
   );
 };
+

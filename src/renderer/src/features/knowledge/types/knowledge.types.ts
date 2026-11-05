@@ -37,3 +37,4 @@ export interface KnowledgeFilterState {
   source_type: 'all' | KnowledgeSourceType;
   search: string;
 }
+

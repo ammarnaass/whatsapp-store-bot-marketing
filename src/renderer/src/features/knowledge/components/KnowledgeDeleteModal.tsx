@@ -70,3 +70,4 @@ export const KnowledgeDeleteModal: React.FC<KnowledgeDeleteModalProps> = ({
     </div>
   );
 };
+

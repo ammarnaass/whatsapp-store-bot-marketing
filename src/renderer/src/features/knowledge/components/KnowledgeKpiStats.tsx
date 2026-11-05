@@ -59,3 +59,4 @@ export const KnowledgeKpiStats: React.FC<KnowledgeKpiStatsProps> = ({ stats }) =
     </div>
   );
 };
+

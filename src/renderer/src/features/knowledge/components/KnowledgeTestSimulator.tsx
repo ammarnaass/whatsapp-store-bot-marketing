@@ -115,3 +115,4 @@ export const KnowledgeTestSimulator: React.FC = () => {
     </div>
   );
 };
+

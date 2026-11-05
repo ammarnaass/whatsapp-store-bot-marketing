@@ -1,4 +1,15 @@
+import {
+  Folder, Sparkles, Watch, Shirt, Key, Home, Heart,
+  Package, ShoppingBag, Tag, Gift, Coffee, Headphones,
+  Smartphone, Laptop, Camera, LucideIcon
+} from 'lucide-react';
 import { CategoryFormData } from '../types/category.types';
+
+export const CATEGORY_ICONS_MAP: Record<string, LucideIcon> = {
+  Folder, Sparkles, Watch, Shirt, Key, Home, Heart,
+  Package, ShoppingBag, Tag, Gift, Coffee, Headphones,
+  Smartphone, Laptop, Camera,
+};
 
 export const CATEGORY_ICONS = [
   'Folder',

@@ -4,16 +4,18 @@ import { Category, CategoryFormData } from '../types/category.types';
 import { CATEGORY_COLORS, CATEGORY_ICONS } from '../constants/category.constants';
 import { useCategoryForm } from '../hooks/useCategoryForm';
 import { CategoryBadge } from './CategoryBadge';
+import { CategoryParentSelector } from './CategoryParentSelector';
 
 interface CategoryFormModalProps {
   isOpen: boolean;
   initialCategory?: Category | null;
+  categories?: Category[];
   onClose: () => void;
   onSave: (data: CategoryFormData) => Promise<boolean>;
 }
 
 export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
-  isOpen, initialCategory, onClose, onSave,
+  isOpen, initialCategory, categories = [], onClose, onSave,
 }) => {
   const { formData, errors, handleChange, validate, resetForm } = useCategoryForm(initialCategory);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -106,6 +108,15 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
               ))}
             </div>
           </div>
+
+          {categories.length > 0 && (
+            <CategoryParentSelector
+              value={formData.parent_id}
+              onChange={(pId) => handleChange('parent_id', pId)}
+              currentCategoryId={formData.id}
+              categories={categories}
+            />
+          )}
 
           <div>
             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">الوصف (اختياري)</label>

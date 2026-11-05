@@ -160,6 +160,34 @@ CREATE TABLE IF NOT EXISTS variants (
     reserved_qty INTEGER NOT NULL DEFAULT 0
 );
 
+-- 10.5. المجموعات التسويقية والذكية
+CREATE TABLE IF NOT EXISTS collections (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    description TEXT,
+    banner_url TEXT,
+    icon TEXT DEFAULT 'Sparkles',
+    color TEXT DEFAULT '#7C3AED',
+    is_smart INTEGER DEFAULT 0,
+    rules_json TEXT DEFAULT '{}',
+    active INTEGER DEFAULT 1,
+    sort_order INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS product_collections (
+    product_id TEXT REFERENCES products(id) ON DELETE CASCADE,
+    collection_id TEXT REFERENCES collections(id) ON DELETE CASCADE,
+    added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (product_id, collection_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_collections_slug ON collections(slug);
+CREATE INDEX IF NOT EXISTS idx_prod_collections_prod ON product_collections(product_id);
+CREATE INDEX IF NOT EXISTS idx_prod_collections_coll ON product_collections(collection_id);
+
 -- 11. الأصول والتراخيص الرقمية
 CREATE TABLE IF NOT EXISTS digital_assets (
     id TEXT PRIMARY KEY,

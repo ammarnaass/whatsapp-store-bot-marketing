@@ -8,6 +8,7 @@ import { registerSessionHandlers } from './handlers/session.handler';
 import { registerChatHandlers } from './handlers/chat.handler';
 import { registerCatalogHandlers } from './handlers/catalog.handler';
 import { registerCategoriesHandlers } from './handlers/categories.handler';
+import { registerCollectionsHandlers } from './handlers/collections.handler';
 import { registerInventoryHandlers } from './handlers/inventory.handler';
 import { registerOrdersHandlers } from './handlers/orders.handler';
 import { registerShippingHandlers } from './handlers/shipping.handler';
@@ -35,6 +36,7 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
   registerChatHandlers(mainWindow, db, openwa, webhook);
   registerCatalogHandlers(db);
   registerCategoriesHandlers(db);
+  registerCollectionsHandlers(db);
   registerInventoryHandlers(db);
   registerOrdersHandlers(db, openwa);
   registerShippingHandlers(db, openwa);

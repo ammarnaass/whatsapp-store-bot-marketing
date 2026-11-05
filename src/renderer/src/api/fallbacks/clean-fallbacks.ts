@@ -36,6 +36,19 @@ export const cleanFallbackApi: IElectronAPI = {
     deleteCategory: async () => ({ success: true }),
     reorderCategories: async () => ({ success: true }),
   },
+  collections: {
+    list: async () => [
+      { id: 'col_best_sellers', name: 'الأكثر مبيعاً بالواتساب', slug: 'best-sellers', description: 'المنتجات الأعلى طلباً', icon: 'Flame', color: '#F59E0B', is_smart: false, active: true, sort_order: 1, products_count: 3, created_at: new Date().toISOString() },
+      { id: 'col_special_offers', name: 'عروض وتخفيضات خاصة', slug: 'special-offers', description: 'خصومات وباقات ترويجية حصرية', icon: 'Tag', color: '#EC4899', is_smart: false, active: true, sort_order: 2, products_count: 0, created_at: new Date().toISOString() },
+      { id: 'col_new_arrivals', name: 'وصل حديثاً', slug: 'new-arrivals', description: 'أحدث المنتجات والتراخيص المضافة', icon: 'Sparkles', color: '#10B981', is_smart: false, active: true, sort_order: 3, products_count: 2, created_at: new Date().toISOString() },
+    ],
+    get: async () => null,
+    create: async () => ({ success: true, id: `col_${Date.now()}` }),
+    update: async () => ({ success: true }),
+    delete: async () => ({ success: true }),
+    assignProducts: async () => ({ success: true }),
+    getProducts: async () => [],
+  },
   inventory: {
     getStockSummary: async () => ({
       totalSkus: 0, totalQuantity: 0, reservedQuantity: 0, availableQuantity: 0, lowStockCount: 0, outOfStockCount: 0,

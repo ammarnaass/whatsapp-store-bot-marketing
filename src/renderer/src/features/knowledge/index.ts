@@ -12,3 +12,4 @@ export * from './components/KnowledgeListView';
 export * from './components/KnowledgeFormModal';
 export * from './components/KnowledgeDeleteModal';
 export * from './components/KnowledgeTestSimulator';
+
