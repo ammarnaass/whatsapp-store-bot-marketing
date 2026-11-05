@@ -6,6 +6,7 @@ export type { WebhookLog, HsmTemplate };
 export type ChannelSubTab =
   | 'api'
   | 'openwa'
+  | 'telegram'
   | 'swagger_docs'
   | 'ai_engine'
   | 'templates'

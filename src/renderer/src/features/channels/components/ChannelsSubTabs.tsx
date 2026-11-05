@@ -7,6 +7,7 @@ import {
   Server,
   Smartphone,
   FileCode2,
+  Send,
 } from 'lucide-react';
 import { ChannelSubTab } from '../types/channels.types';
 
@@ -48,6 +49,22 @@ export const ChannelsSubTabs: React.FC<ChannelsSubTabsProps> = ({
         <span>بوابة OpenWA الذاتية (QR Gateway)</span>
         <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
           مجاني
+        </span>
+      </button>
+
+      <button
+        onClick={() => onSubtabChange('telegram')}
+        type="button"
+        className={`h-[38px] flex items-center gap-2 px-3.5 sm:px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+          activeSubtab === 'telegram'
+            ? 'bg-white dark:bg-[#111827] text-[#0088cc] elevation-1'
+            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+        }`}
+      >
+        <Send className="w-4 h-4 text-[#0088cc] -rotate-45" />
+        <span>بوابة بوت تليغرام (Telegram Gateway)</span>
+        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-500/10 text-[#0088cc]">
+          جديد
         </span>
       </button>
 

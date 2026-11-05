@@ -16,6 +16,10 @@ import {
   BlocklistEntry,
   DashboardKPIs,
   SessionStatus,
+  TelegramConfig,
+  TelegramBotInfo,
+  TelegramStatusResult,
+  TelegramSendOptions,
 } from '../shared/types';
 
 export interface IElectronAPI {
@@ -201,6 +205,18 @@ export interface IElectronAPI {
     createBackup: () => Promise<{ success: boolean; record?: any; error?: string }>;
     listBackups: () => Promise<any[]>;
     deleteBackup: (params: { filename: string }) => Promise<{ success: boolean; error?: string }>;
+  };
+
+  // Telegram Bot Gateway
+  telegram: {
+    getConfig: () => Promise<TelegramConfig | null>;
+    saveConfig: (data: Partial<TelegramConfig>) => Promise<{ success: boolean }>;
+    testToken: (token: string) => Promise<{ success: boolean; botInfo?: TelegramBotInfo; error?: string }>;
+    start: (token?: string) => Promise<{ success: boolean; error?: string }>;
+    stop: () => Promise<{ success: boolean }>;
+    getStatus: () => Promise<TelegramStatusResult>;
+    sendMessage: (options: TelegramSendOptions) => Promise<{ success: boolean; messageId?: number; error?: string }>;
+    onMessageReceived: (callback: (data: any) => void) => () => void;
   };
 
   // Window Controls & Fullscreen

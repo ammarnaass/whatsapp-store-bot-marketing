@@ -385,3 +385,42 @@ export interface DashboardKPIs {
   campaignsActive: number;
   lowStockItemsCount: number;
 }
+
+// 17. إعدادات وبوابة بوت تليغرام (Telegram Bot Gateway)
+export interface TelegramConfig {
+  id: string;
+  bot_token?: string;
+  bot_username?: string;
+  bot_first_name?: string;
+  is_active: boolean;
+  auto_reply: boolean;
+  webhook_mode: boolean;
+  webhook_url?: string;
+  last_sync_at?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface TelegramBotInfo {
+  id: number;
+  is_bot: boolean;
+  first_name: string;
+  username?: string;
+  can_join_groups?: boolean;
+  can_read_all_group_messages?: boolean;
+  supports_inline_queries?: boolean;
+}
+
+export interface TelegramStatusResult {
+  isConnected: boolean;
+  isPolling: boolean;
+  botInfo?: TelegramBotInfo | null;
+  error?: string | null;
+  lastSyncAt?: string | null;
+}
+
+export interface TelegramSendOptions {
+  chatId: string | number;
+  text: string;
+  parseMode?: 'Markdown' | 'HTML';
+}

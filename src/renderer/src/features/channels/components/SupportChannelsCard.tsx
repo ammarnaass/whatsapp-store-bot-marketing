@@ -6,13 +6,15 @@ interface SupportChannelsCardProps {
   onToggleSmsFallback: (active: boolean) => void;
   instagramConnected: boolean;
   onToggleInstagram: () => void;
+  onOpenTelegram?: () => void;
 }
 
 export const SupportChannelsCard: React.FC<SupportChannelsCardProps> = ({
   smsFallbackActive,
   onToggleSmsFallback,
   instagramConnected,
-  onToggleInstagram
+  onToggleInstagram,
+  onOpenTelegram,
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -86,6 +88,17 @@ export const SupportChannelsCard: React.FC<SupportChannelsCardProps> = ({
             {instagramConnected ? 'متصل: @wasell.saudi' : 'ربط حساب Instagram Business'}
           </span>
         </button>
+
+        {onOpenTelegram && (
+          <button
+            onClick={onOpenTelegram}
+            type="button"
+            className="w-full py-1.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 bg-blue-50 dark:bg-blue-950/40 text-[#0088cc] hover:bg-blue-100 transition-colors cursor-pointer border border-blue-200/60 dark:border-blue-900/40"
+          >
+            <Send className="w-3.5 h-3.5 -rotate-45" />
+            <span>إعدادات بوابة بوت تليغرام ↗</span>
+          </button>
+        )}
       </div>
 
       {/* Security & PDPL Compliance */}

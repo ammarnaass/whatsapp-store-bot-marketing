@@ -122,6 +122,16 @@ export const IPC_CHANNELS = {
   AUTH_CREATE_USER: 'auth:create-user',
   AUTH_DELETE_USER: 'auth:delete-user',
 
+  // Telegram Bot Gateway
+  TELEGRAM_GET_CONFIG: 'telegram:get-config',
+  TELEGRAM_SAVE_CONFIG: 'telegram:save-config',
+  TELEGRAM_TEST_TOKEN: 'telegram:test-token',
+  TELEGRAM_START: 'telegram:start',
+  TELEGRAM_STOP: 'telegram:stop',
+  TELEGRAM_GET_STATUS: 'telegram:get-status',
+  TELEGRAM_SEND_MESSAGE: 'telegram:send-message',
+  TELEGRAM_MESSAGE_RECEIVED_EVENT: 'telegram:message-received-event',
+
   // Customers & Analytics
   CUSTOMERS_LIST: 'customers:list',
   CUSTOMERS_GET: 'customers:get',

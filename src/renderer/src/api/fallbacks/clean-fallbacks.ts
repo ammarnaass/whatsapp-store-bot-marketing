@@ -153,6 +153,16 @@ export const cleanFallbackApi: IElectronAPI = {
     ],
     deleteBackup: async () => ({ success: true }),
   },
+  telegram: {
+    getConfig: async () => ({ id: 'default', bot_token: '', is_active: false, auto_reply: true, webhook_mode: false }),
+    saveConfig: async () => ({ success: true }),
+    testToken: async (token) => ({ success: Boolean(token), botInfo: { id: 123456789, is_bot: true, first_name: 'Wasell Bot', username: 'wasell_demo_bot' } }),
+    start: async () => ({ success: true }),
+    stop: async () => ({ success: true }),
+    getStatus: async () => ({ isConnected: false, isPolling: false }),
+    sendMessage: async () => ({ success: true, messageId: Date.now() }),
+    onMessageReceived: () => () => {},
+  },
   window: {
     minimize: async () => {}, maximize: async () => {}, unmaximize: async () => {},
     toggleMaximize: async () => true, isMaximized: async () => true,

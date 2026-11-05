@@ -165,6 +165,21 @@ const api: IElectronAPI = {
     deleteBackup: (params: { filename: string }) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_DELETE_BACKUP, params),
   },
 
+  telegram: {
+    getConfig: () => ipcRenderer.invoke(IPC_CHANNELS.TELEGRAM_GET_CONFIG),
+    saveConfig: (data) => ipcRenderer.invoke(IPC_CHANNELS.TELEGRAM_SAVE_CONFIG, data),
+    testToken: (token) => ipcRenderer.invoke(IPC_CHANNELS.TELEGRAM_TEST_TOKEN, { token }),
+    start: (token) => ipcRenderer.invoke(IPC_CHANNELS.TELEGRAM_START, { token }),
+    stop: () => ipcRenderer.invoke(IPC_CHANNELS.TELEGRAM_STOP),
+    getStatus: () => ipcRenderer.invoke(IPC_CHANNELS.TELEGRAM_GET_STATUS),
+    sendMessage: (options) => ipcRenderer.invoke(IPC_CHANNELS.TELEGRAM_SEND_MESSAGE, options),
+    onMessageReceived: (callback) => {
+      const handler = (_event: any, data: any) => callback(data);
+      ipcRenderer.on(IPC_CHANNELS.TELEGRAM_MESSAGE_RECEIVED_EVENT, handler);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.TELEGRAM_MESSAGE_RECEIVED_EVENT, handler);
+    },
+  },
+
   window: {
     minimize: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_MINIMIZE),
     maximize: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_MAXIMIZE),

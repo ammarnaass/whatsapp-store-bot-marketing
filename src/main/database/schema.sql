@@ -188,6 +188,21 @@ CREATE INDEX IF NOT EXISTS idx_collections_slug ON collections(slug);
 CREATE INDEX IF NOT EXISTS idx_prod_collections_prod ON product_collections(product_id);
 CREATE INDEX IF NOT EXISTS idx_prod_collections_coll ON product_collections(collection_id);
 
+-- 10.6. إعدادات وبوابة بوت تليغرام
+CREATE TABLE IF NOT EXISTS telegram_config (
+    id TEXT PRIMARY KEY DEFAULT 'default',
+    bot_token TEXT,
+    bot_username TEXT,
+    bot_first_name TEXT,
+    is_active INTEGER DEFAULT 0,
+    auto_reply INTEGER DEFAULT 1,
+    webhook_mode INTEGER DEFAULT 0,
+    webhook_url TEXT,
+    last_sync_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 11. الأصول والتراخيص الرقمية
 CREATE TABLE IF NOT EXISTS digital_assets (
     id TEXT PRIMARY KEY,

@@ -15,6 +15,7 @@ import { LiveWebhookStreamCard } from '../components/LiveWebhookStreamCard';
 import { HsmTemplatesCard } from '../components/HsmTemplatesCard';
 import { SupportChannelsCard } from '../components/SupportChannelsCard';
 import { AiChannelEngineCard } from '../components/AiChannelEngineCard';
+import { TelegramBotCard } from '../../telegram';
 
 export const ChannelsPage: React.FC = () => {
   const {
@@ -185,6 +186,11 @@ export const ChannelsPage: React.FC = () => {
         <SwaggerDocsCard />
       )}
 
+      {/* 5c. Telegram Bot Gateway Card */}
+      {(activeSubtab === 'api' || activeSubtab === 'telegram') && (
+        <TelegramBotCard onToast={showToast} />
+      )}
+
       {/* 6. Meta Cloud Credentials & Webhooks Grid */}
       {(activeSubtab === 'api' || activeSubtab === 'compliance') && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -247,6 +253,7 @@ export const ChannelsPage: React.FC = () => {
                 : 'تم ربط حساب Instagram Business بنجاح'
             );
           }}
+          onOpenTelegram={() => setActiveSubtab('telegram')}
         />
       )}
 

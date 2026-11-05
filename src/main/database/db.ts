@@ -295,6 +295,27 @@ export class AppDatabase {
         console.log('[Database] Seeded initial hierarchical subcategories.');
       }
 
+      // تهيئة إعدادات وبوابة تليغرام
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS telegram_config (
+          id TEXT PRIMARY KEY DEFAULT 'default',
+          bot_token TEXT,
+          bot_username TEXT,
+          bot_first_name TEXT,
+          is_active INTEGER DEFAULT 0,
+          auto_reply INTEGER DEFAULT 1,
+          webhook_mode INTEGER DEFAULT 0,
+          webhook_url TEXT,
+          last_sync_at DATETIME,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      this.db.prepare(`
+        INSERT OR IGNORE INTO telegram_config (id, is_active, auto_reply, webhook_mode)
+        VALUES ('default', 0, 1, 0)
+      `).run();
+
       // تهيئة مناطق الشحن الافتراضية إذا كان الجدول فارغاً
       const zonesCount = (this.db.prepare('SELECT count(*) as count FROM shipping_zones').get() as any)?.count || 0;
       if (zonesCount === 0) {
