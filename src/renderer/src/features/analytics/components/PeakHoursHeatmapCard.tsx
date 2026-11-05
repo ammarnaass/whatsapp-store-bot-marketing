@@ -60,3 +60,4 @@ export const PeakHoursHeatmapCard: React.FC<PeakHoursHeatmapCardProps> = ({ peak
     </div>
   );
 };
+

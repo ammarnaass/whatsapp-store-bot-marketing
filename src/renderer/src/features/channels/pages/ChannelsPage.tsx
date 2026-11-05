@@ -32,27 +32,22 @@ export const ChannelsPage: React.FC = () => {
     callbackUrl,
     verifyToken,
     setVerifyToken,
+    activeProvider,
+    handleProviderChange,
     isPingingWebhook,
-    isPingingServer,
-    smsFallbackActive,
-    setSmsFallbackActive,
-    instagramConnected,
-    setInstagramConnected,
+    isTestingApi,
     toastMessage,
     showToast,
     copyToClipboard,
-    handleTestPing,
-    handleWebhookPing,
-    handleTokenRegenerate,
     handleSaveSettings,
+    handleTestCloudApi,
+    handleWebhookPing,
     webhookLogs,
     templates,
   } = useChannels();
 
   const {
     session: openwaSession,
-    activeProvider,
-    setActiveProvider,
     isQrModalOpen,
     setIsQrModalOpen,
     qrCodeData,
@@ -157,16 +152,7 @@ export const ChannelsPage: React.FC = () => {
       {/* 4. Dual-Engine Architecture Selector */}
       <ProviderSelectorCard
         activeProvider={activeProvider}
-        onProviderChange={(prov) => {
-          setActiveProvider(prov);
-          showToast(
-            prov === 'openwa_gateway'
-              ? 'تم تفعيل بوابة OpenWA المفتوحة (مجاني - QR)'
-              : prov === 'meta_cloud'
-              ? 'تم تفعيل سحابة Meta Cloud API الرسمية'
-              : 'تم تفعيل المحرك الهجين الذكي'
-          );
-        }}
+        onProviderChange={handleProviderChange}
       />
 
       {/* 5. OpenWA Gateway QR Connection Card */}
@@ -204,6 +190,9 @@ export const ChannelsPage: React.FC = () => {
             onAccessTokenChange={setAccessToken}
             onToggleShowAccessToken={() => setShowAccessToken(!showAccessToken)}
             onCopy={copyToClipboard}
+            onSave={handleSaveSettings}
+            onTestApi={handleTestCloudApi}
+            isTestingApi={isTestingApi}
           />
 
           <WebhookConfigCard

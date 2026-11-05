@@ -61,3 +61,4 @@ export const SmartActionableInsights: React.FC<SmartActionableInsightsProps> = (
     </div>
   );
 };
+

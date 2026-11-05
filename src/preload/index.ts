@@ -191,6 +191,15 @@ const api: IElectronAPI = {
     },
   },
 
+  channels: {
+    getConfig: () => ipcRenderer.invoke(IPC_CHANNELS.CHANNELS_GET_CONFIG),
+    saveConfig: (config) => ipcRenderer.invoke(IPC_CHANNELS.CHANNELS_SAVE_CONFIG, config),
+    setActiveProvider: (provider) => ipcRenderer.invoke(IPC_CHANNELS.CHANNELS_SET_ACTIVE_PROVIDER, provider),
+    testCloudApi: (params) => ipcRenderer.invoke(IPC_CHANNELS.CHANNELS_TEST_CLOUD_API, params),
+    testWebhook: () => ipcRenderer.invoke(IPC_CHANNELS.CHANNELS_TEST_WEBHOOK),
+    getWebhookLogs: () => ipcRenderer.invoke(IPC_CHANNELS.CHANNELS_GET_WEBHOOK_LOGS),
+  },
+
   window: {
     minimize: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_MINIMIZE),
     maximize: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_MAXIMIZE),

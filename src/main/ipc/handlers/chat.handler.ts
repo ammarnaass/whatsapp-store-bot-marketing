@@ -3,6 +3,7 @@ import Database from 'better-sqlite3';
 import { IPC_CHANNELS } from '../../../shared/ipc-channels';
 import { OpenWAManager } from '../../services/openwa-manager.service';
 import { WebhookServerService } from '../../services/webhook-server.service';
+import { WhatsAppCloudClient } from '../../services/whatsapp-cloud-client';
 
 export function registerChatHandlers(
   mainWindow: BrowserWindow,
@@ -58,9 +59,17 @@ export function registerChatHandlers(
     `).all(conversationId);
   });
 
-  // إرسال رسالة نصية
+  // إرسال رسالة نصية عبر المزود النشط (OpenWA أو Meta Cloud API)
   ipcMain.handle(IPC_CHANNELS.CHAT_SEND_MESSAGE, async (_event, { conversationId, phone, body }) => {
-    const isSent = await openwa.sendTextMessage(phone, body);
+    const cloudRow = db.prepare("SELECT active_provider, phone_number_id, access_token FROM whatsapp_cloud_config WHERE id = 'default'").get() as any;
+    let isSent = false;
+    if (cloudRow?.active_provider === 'meta_cloud' && cloudRow?.phone_number_id && cloudRow?.access_token) {
+      const res = await WhatsAppCloudClient.getInstance().sendTextMessage(cloudRow.phone_number_id, cloudRow.access_token, phone, body);
+      isSent = res.success;
+    } else {
+      isSent = await openwa.sendTextMessage(phone, body);
+    }
+
     const msgId = `out_${Date.now()}`;
     const status = isSent ? 'SENT' : 'FAILED';
 

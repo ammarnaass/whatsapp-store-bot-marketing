@@ -48,3 +48,4 @@ export function exportAnalyticsToCsv(
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+

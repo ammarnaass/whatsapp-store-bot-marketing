@@ -23,6 +23,7 @@ import { registerBackupHandlers } from './handlers/backup.handler';
 import { registerWindowHandlers } from './handlers/window.handler';
 import { registerAuthHandlers } from './handlers/auth.handler';
 import { registerTelegramHandlers } from './handlers/telegram.handler';
+import { registerChannelsHandlers } from './handlers/channels.handler';
 
 /**
  * تسجيل كافة قنوات الـ IPC بشكل معياري ومنظم وفق مبادئ الهيكلية المعيارية
@@ -51,5 +52,6 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
   registerBackupHandlers(db);
   registerAuthHandlers(db);
   registerTelegramHandlers(mainWindow, db);
+  registerChannelsHandlers(db);
   registerWindowHandlers(mainWindow);
 }

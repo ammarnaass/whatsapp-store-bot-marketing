@@ -230,6 +230,16 @@ export interface IElectronAPI {
     onMessageReceived: (callback: (data: any) => void) => () => void;
   };
 
+  // Channels & WhatsApp Cloud API
+  channels: {
+    getConfig: () => Promise<any>;
+    saveConfig: (config: any) => Promise<{ success: boolean }>;
+    setActiveProvider: (provider: string) => Promise<{ success: boolean; activeProvider: string }>;
+    testCloudApi: (params: { phoneNumberId: string; accessToken: string }) => Promise<{ success: boolean; data?: any; error?: string }>;
+    testWebhook: () => Promise<{ success: boolean; data?: any; error?: string }>;
+    getWebhookLogs: () => Promise<any[]>;
+  };
+
   // Window Controls & Fullscreen
   window: {
     minimize: () => Promise<void>;

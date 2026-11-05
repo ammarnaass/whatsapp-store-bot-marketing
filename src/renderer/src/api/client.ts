@@ -32,5 +32,7 @@ export const api: IElectronAPI = {
   get blocklist() { return getLive().blocklist; },
   get analytics() { return getLive().analytics; },
   get settings() { return getLive().settings; },
+  get telegram() { return getLive().telegram; },
+  get channels() { return getLive().channels; },
   get window() { return getLive().window; },
 };

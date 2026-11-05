@@ -332,6 +332,26 @@ export class AppDatabase {
         VALUES ('default', 0, 1, 0)
       `).run();
 
+      // تهيئة إعدادات وبوابة واتساب السحابية الرسمية (Meta WhatsApp Cloud API)
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS whatsapp_cloud_config (
+          id TEXT PRIMARY KEY DEFAULT 'default',
+          phone_number_id TEXT,
+          wbaid TEXT,
+          access_token TEXT,
+          verify_token TEXT DEFAULT 'wasell_webhook_token_2026',
+          webhook_url TEXT DEFAULT 'http://127.0.0.1:3005/webhook/whatsapp',
+          active_provider TEXT DEFAULT 'openwa_gateway',
+          is_active INTEGER DEFAULT 0,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      this.db.prepare(`
+        INSERT OR IGNORE INTO whatsapp_cloud_config (id, verify_token, webhook_url, active_provider, is_active)
+        VALUES ('default', 'wasell_webhook_token_2026', 'http://127.0.0.1:3005/webhook/whatsapp', 'openwa_gateway', 0)
+      `).run();
+
       // تهيئة مناطق الشحن الافتراضية إذا كان الجدول فارغاً
       const zonesCount = (this.db.prepare('SELECT count(*) as count FROM shipping_zones').get() as any)?.count || 0;
       if (zonesCount === 0) {

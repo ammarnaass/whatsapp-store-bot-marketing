@@ -150,6 +150,14 @@ export const IPC_CHANNELS = {
   ANALYTICS_GET_PEAK_HOURS: 'analytics:get-peak-hours',
   ANALYTICS_GET_INSIGHTS: 'analytics:get-insights',
 
+  // Channels & WhatsApp Cloud API
+  CHANNELS_GET_CONFIG: 'channels:get-config',
+  CHANNELS_SAVE_CONFIG: 'channels:save-config',
+  CHANNELS_TEST_CLOUD_API: 'channels:test-cloud-api',
+  CHANNELS_TEST_WEBHOOK: 'channels:test-webhook',
+  CHANNELS_GET_WEBHOOK_LOGS: 'channels:get-webhook-logs',
+  CHANNELS_SET_ACTIVE_PROVIDER: 'channels:set-active-provider',
+
   // Store & Application Settings
   SETTINGS_GET_STORE_SETTINGS: 'settings:get-store-settings',
   SETTINGS_SAVE_STORE_SETTINGS: 'settings:save-store-settings',

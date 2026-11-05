@@ -197,6 +197,22 @@ export const cleanFallbackApi: IElectronAPI = {
     sendMessage: async () => ({ success: true, messageId: Date.now() }),
     onMessageReceived: () => () => {},
   },
+  channels: {
+    getConfig: async () => ({
+      phoneNumberId: '',
+      wbaid: '',
+      accessToken: '',
+      verifyToken: 'wasell_webhook_token_2026',
+      webhookUrl: 'http://127.0.0.1:3005/webhook/whatsapp',
+      activeProvider: 'openwa_gateway',
+      isActive: false,
+    }),
+    saveConfig: async () => ({ success: true }),
+    setActiveProvider: async (provider: string) => ({ success: true, activeProvider: provider }),
+    testCloudApi: async () => ({ success: true, data: { displayPhoneNumber: '+966500000000', verifiedName: 'متجر وصّل التجريبي' } }),
+    testWebhook: async () => ({ success: true, data: { status: 'online' } }),
+    getWebhookLogs: async () => [],
+  },
   window: {
     minimize: async () => {}, maximize: async () => {}, unmaximize: async () => {},
     toggleMaximize: async () => true, isMaximized: async () => true,

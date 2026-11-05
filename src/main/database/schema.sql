@@ -203,6 +203,20 @@ CREATE TABLE IF NOT EXISTS telegram_config (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 10.7. إعدادات وبوابة واتساب السحابية الرسمية (Meta WhatsApp Cloud API)
+CREATE TABLE IF NOT EXISTS whatsapp_cloud_config (
+    id TEXT PRIMARY KEY DEFAULT 'default',
+    phone_number_id TEXT,
+    wbaid TEXT,
+    access_token TEXT,
+    verify_token TEXT DEFAULT 'wasell_webhook_token_2026',
+    webhook_url TEXT DEFAULT 'http://127.0.0.1:3005/webhook/whatsapp',
+    active_provider TEXT DEFAULT 'openwa_gateway',
+    is_active INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 11. الأصول والتراخيص الرقمية
 CREATE TABLE IF NOT EXISTS digital_assets (
     id TEXT PRIMARY KEY,

@@ -4,6 +4,8 @@ import { AppDatabase } from '../database/db';
 import { AIAgentEngine } from '../agent/agent-engine';
 import { OpenWAManager } from './openwa-manager.service';
 import { EventEmitter } from 'events';
+import { MetaWebhookParser } from './meta-webhook-parser';
+import { WhatsAppCloudClient } from './whatsapp-cloud-client';
 
 export class WebhookServerService extends EventEmitter {
   private static instance: WebhookServerService;
@@ -106,9 +108,64 @@ export class WebhookServerService extends EventEmitter {
               res.end(JSON.stringify({ error: err.message }));
             }
           });
+        } else if (req.method === 'GET' && req.url?.startsWith('/webhook/whatsapp')) {
+          const parsedUrl = new URL(req.url, `http://127.0.0.1:${this.port}`);
+          const mode = parsedUrl.searchParams.get('hub.mode');
+          const token = parsedUrl.searchParams.get('hub.verify_token');
+          const challenge = parsedUrl.searchParams.get('hub.challenge');
+
+          let configuredToken = 'wasell_webhook_token_2026';
+          try {
+            const row = this.db.prepare("SELECT verify_token FROM whatsapp_cloud_config WHERE id = 'default'").get() as any;
+            if (row?.verify_token) configuredToken = row.verify_token;
+          } catch {}
+
+          if (mode === 'subscribe' && token === configuredToken && challenge) {
+            console.log('[WebhookServer] Meta Webhook verified successfully!');
+            res.writeHead(200, { 'Content-Type': 'text/plain' });
+            res.end(challenge);
+          } else {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Verification token mismatch' }));
+          }
+        } else if (req.method === 'POST' && req.url === '/webhook/whatsapp') {
+          let body = '';
+          req.on('data', (chunk) => { body += chunk; });
+          req.on('end', async () => {
+            try {
+              const payload = JSON.parse(body || '{}');
+              const eventId = `meta_ev_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+              try {
+                this.db.prepare('INSERT INTO inbound_events_queue (id, event_type, payload_json) VALUES (?, ?, ?)')
+                  .run(eventId, 'meta_whatsapp', body);
+              } catch {}
+
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ status: 'success', eventId }));
+
+              setImmediate(async () => {
+                try {
+                  await this.handleMetaWebhookPayload(payload);
+                  this.db.prepare('UPDATE inbound_events_queue SET processed = 1 WHERE id = ?').run(eventId);
+                } catch (procErr) {
+                  console.error('[WebhookServer] Error processing Meta webhook:', procErr);
+                }
+              });
+            } catch (err: any) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+        } else if (req.method === 'GET' && (req.url === '/webhook/status' || req.url === '/status')) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            status: 'online',
+            port: this.port,
+            endpoints: ['/webhook/openwa', '/webhook/whatsapp', '/webhook/payment-success', '/webhook/status'],
+          }));
         } else {
           res.writeHead(200, { 'Content-Type': 'text/plain' });
-          res.end('OpenWA Local Webhook Receiver Active (127.0.0.1)');
+          res.end('WaSell Multi-Channel Webhook Receiver Active (127.0.0.1)');
         }
       });
 
@@ -302,6 +359,66 @@ export class WebhookServerService extends EventEmitter {
   }
 
   /**
+   * معالجة حزم الـ Webhook الواردة رسمياً من Meta WhatsApp Cloud API
+   */
+  private async handleMetaWebhookPayload(payload: any): Promise<void> {
+    const parsed = MetaWebhookParser.parse(payload);
+    if (!parsed || !parsed.isMessage) return;
+
+    const phone = parsed.phone;
+    const pushName = parsed.name || `عميل واتساب (${phone.slice(-4)})`;
+    const body = parsed.body;
+    const msgId = parsed.messageId;
+
+    if (!phone || !body) return;
+
+    console.log(`[WebhookServer] Meta Inbound message from ${phone} (${pushName}): "${body}"`);
+
+    // 1. جهة الاتصال
+    const contactId = `cnt_${phone}`;
+    this.db.prepare(`
+      INSERT INTO contacts (id, phone, name, source)
+      VALUES (?, ?, ?, 'WHATSAPP_CLOUD')
+      ON CONFLICT(phone) DO UPDATE SET name = coalesce(nullif(excluded.name, ''), contacts.name)
+    `).run(contactId, phone, pushName);
+
+    const contact = this.db.prepare('SELECT id FROM contacts WHERE phone = ?').get(phone) as any;
+    const actualContactId = contact ? contact.id : contactId;
+
+    // 2. المحادثة
+    const convId = `conv_${phone}`;
+    this.db.prepare(`
+      INSERT INTO conversations (id, session_id, contact_id, handler, state, last_message_at, unread_count)
+      VALUES (?, 'wasell-cloud-store', ?, 'agent', 'open', CURRENT_TIMESTAMP, 0)
+      ON CONFLICT(id) DO UPDATE SET last_message_at = CURRENT_TIMESTAMP
+    `).run(convId, actualContactId);
+
+    // 3. الرسالة
+    this.db.prepare(`
+      INSERT INTO messages (id, conversation_id, direction, type, body, status, ts)
+      VALUES (?, ?, 'INBOUND', 'text', ?, 'DELIVERED', CURRENT_TIMESTAMP)
+      ON CONFLICT(id) DO UPDATE SET status = excluded.status
+    `).run(msgId, convId, body);
+
+    this.db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP, unread_count = unread_count + 1 WHERE id = ?').run(convId);
+
+    // 4. بث الحدث للواجهة فورياً
+    this.emit('new-message', {
+      id: msgId,
+      conversationId: convId,
+      phone,
+      body,
+      direction: 'INBOUND',
+      channel: 'whatsapp_cloud',
+    });
+
+    const conv = this.db.prepare('SELECT id, handler, state FROM conversations WHERE id = ?').get(convId) as any;
+    if (conv?.handler !== 'human') {
+      this.enqueueForAgentResponse(phone, convId, body);
+    }
+  }
+
+  /**
    * تجميع الرسائل المتتالية من العميل خلال نافذة قصيرة ثم الرد عليها معاً
    */
   private enqueueForAgentResponse(phone: string, conversationId: string, messageText: string) {
@@ -350,11 +467,14 @@ export class WebhookServerService extends EventEmitter {
       // تأخير زمني بشري عشوائي خفيف (1.5 إلى 3 ثوانٍ) قبل الإرسال الفعلي
       const humanDelay = 1500 + Math.floor(Math.random() * 1500);
       setTimeout(async () => {
-        // إيقاف مؤشر الكتابة
-        await OpenWAManager.getInstance().setChatState(phone, 'paused');
-
-        // إرسال الرد للعميل عبر OpenWA
-        await OpenWAManager.getInstance().sendTextMessage(phone, result.replyText);
+        // إرسال الرد للعميل حسب المحرك النشط (OpenWA أو Meta Cloud API)
+        const cloudRow = this.db.prepare("SELECT active_provider, phone_number_id, access_token FROM whatsapp_cloud_config WHERE id = 'default'").get() as any;
+        if (cloudRow?.active_provider === 'meta_cloud' && cloudRow?.phone_number_id && cloudRow?.access_token) {
+          await WhatsAppCloudClient.getInstance().sendTextMessage(cloudRow.phone_number_id, cloudRow.access_token, phone, result.replyText);
+        } else {
+          await OpenWAManager.getInstance().setChatState(phone, 'paused').catch(() => {});
+          await OpenWAManager.getInstance().sendTextMessage(phone, result.replyText);
+        }
 
         // حفظ الرسالة الصادرة في قاعدة البيانات
         const outMsgId = `out_${Date.now()}`;
