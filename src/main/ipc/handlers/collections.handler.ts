@@ -130,3 +130,4 @@ export function registerCollectionsHandlers(db: Database.Database): void {
     }));
   });
 }
+

@@ -97,3 +97,4 @@ export const CollectionProductPicker: React.FC<CollectionProductPickerProps> = (
     </div>
   );
 };
+

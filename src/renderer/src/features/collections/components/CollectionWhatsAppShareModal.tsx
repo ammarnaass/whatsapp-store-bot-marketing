@@ -125,3 +125,4 @@ export const CollectionWhatsAppShareModal: React.FC<CollectionWhatsAppShareModal
     </div>
   );
 };
+

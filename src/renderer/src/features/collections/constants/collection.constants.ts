@@ -69,3 +69,4 @@ export const DEFAULT_COLLECTION_FORM: CollectionFormData = {
   sort_order: 1,
   product_ids: [],
 };
+

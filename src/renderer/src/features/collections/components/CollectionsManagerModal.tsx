@@ -110,3 +110,4 @@ export const CollectionsManagerModal: React.FC<CollectionsManagerModalProps> = (
     </div>
   );
 };
+

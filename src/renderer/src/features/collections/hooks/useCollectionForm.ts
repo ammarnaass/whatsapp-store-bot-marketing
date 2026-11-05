@@ -70,3 +70,4 @@ export function useCollectionForm(initialData?: Partial<CollectionFormData> | nu
     setFormData,
   };
 }
+

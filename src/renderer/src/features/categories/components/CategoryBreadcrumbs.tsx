@@ -48,3 +48,4 @@ export const CategoryBreadcrumbs: React.FC<CategoryBreadcrumbsProps> = ({
     </nav>
   );
 };
+

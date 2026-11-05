@@ -132,3 +132,4 @@ export const CollectionFormModal: React.FC<CollectionFormModalProps> = ({
     </div>
   );
 };
+

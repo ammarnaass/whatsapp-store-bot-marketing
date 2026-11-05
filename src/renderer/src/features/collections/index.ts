@@ -10,3 +10,4 @@ export * from './components/CollectionProductPicker';
 export * from './components/CollectionFormModal';
 export * from './components/CollectionsManagerModal';
 export * from './components/CollectionWhatsAppShareModal';
+

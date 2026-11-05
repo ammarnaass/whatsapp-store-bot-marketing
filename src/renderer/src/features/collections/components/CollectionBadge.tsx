@@ -60,3 +60,4 @@ export const CollectionBadge: React.FC<CollectionBadgeProps> = ({
     </span>
   );
 };
+

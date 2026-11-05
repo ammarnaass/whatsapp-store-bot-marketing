@@ -80,3 +80,4 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
     </div>
   );
 };
+

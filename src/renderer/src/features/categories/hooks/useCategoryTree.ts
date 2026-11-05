@@ -76,3 +76,4 @@ export function useCategoryTree(categories: Category[]) {
     getBreadcrumbs: (id: string) => getCategoryBreadcrumbPath(id, categories),
   };
 }
+

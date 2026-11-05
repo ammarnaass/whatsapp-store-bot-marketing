@@ -44,3 +44,4 @@ export const collectionsService = {
     return window.electronAPI.collections.getProducts({ collectionId });
   },
 };
+
