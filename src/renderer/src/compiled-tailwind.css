@@ -4218,6 +4218,9 @@
       border-color: color-mix(in oklab, var(--color-rose-800) 80%, transparent);
     }
   }
+  .dark\:border-rose-900:where(.dark, .dark *) {
+    border-color: var(--color-rose-900);
+  }
   .dark\:border-rose-900\/40:where(.dark, .dark *) {
     border-color: color-mix(in srgb, oklch(41% 0.159 10.272) 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {

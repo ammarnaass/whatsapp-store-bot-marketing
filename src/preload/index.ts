@@ -103,6 +103,8 @@ const api: IElectronAPI = {
     updateConfig: (config) => ipcRenderer.invoke(IPC_CHANNELS.AGENT_UPDATE_CONFIG, config),
     testApiConnection: (params) => ipcRenderer.invoke(IPC_CHANNELS.AGENT_TEST_API_CONNECTION, params),
     emergencyStop: () => ipcRenderer.invoke(IPC_CHANNELS.AGENT_EMERGENCY_STOP),
+    setMode: (params) => ipcRenderer.invoke(IPC_CHANNELS.AGENT_SET_MODE, params),
+    getMode: () => ipcRenderer.invoke(IPC_CHANNELS.AGENT_GET_MODE),
     testSandbox: (prompt) => ipcRenderer.invoke(IPC_CHANNELS.AGENT_SANDBOX_TEST, { prompt }),
     listRuns: () => ipcRenderer.invoke(IPC_CHANNELS.AGENT_LIST_RUNS),
   },

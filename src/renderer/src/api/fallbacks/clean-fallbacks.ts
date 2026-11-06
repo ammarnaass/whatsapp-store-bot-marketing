@@ -93,6 +93,8 @@ export const cleanFallbackApi: IElectronAPI = {
     updateConfig: async () => ({ success: true }),
     testApiConnection: async () => ({ success: true, latencyMs: 120, modelName: 'gemini-2.5-flash' }),
     emergencyStop: async () => ({ stopped: true }),
+    setMode: async (p) => ({ success: true, mode: p.mode }),
+    getMode: async () => ({ mode: 'AUTONOMOUS' }),
     testSandbox: async () => ({ replyText: 'الوكيل متوقف حالياً.', toolsCalled: [], handoffTriggered: false, latencyMs: 150 }),
     listRuns: async () => [],
   },

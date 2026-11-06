@@ -138,6 +138,8 @@ export interface IElectronAPI {
       error?: string;
     }>;
     emergencyStop: () => Promise<{ stopped: boolean }>;
+    setMode: (params: { mode: 'AUTONOMOUS' | 'DISABLED' | 'COPILOT'; resetConversations?: boolean }) => Promise<{ success: boolean; mode: string }>;
+    getMode: () => Promise<{ mode: string }>;
     testSandbox: (prompt: string) => Promise<{ replyText: string; toolsCalled: any[]; handoffTriggered: boolean; latencyMs: number }>;
     listRuns: () => Promise<any[]>;
   };

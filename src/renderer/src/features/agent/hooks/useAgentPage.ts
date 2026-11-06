@@ -15,14 +15,16 @@ export function useAgentPage() {
   const [toastMessage, setToastMessage] = useState('');
   const [isSimLoading, setIsSimLoading] = useState(false);
   const [simMessages, setSimMessages] = useState<SimMessage[]>(INITIAL_SIM_MESSAGES);
-
-  const [guardrails, setGuardrails] = useState<GuardrailsState>({
-    negativeSentiment: true, explicitHumanRequest: true, discountOverLimit: true, paymentDisputes: true,
-  });
+  const [guardrails, setGuardrails] = useState<GuardrailsState>({ negativeSentiment: true, explicitHumanRequest: true, discountOverLimit: true, paymentDisputes: true });
+  const [isAgentActive, setIsAgentActive] = useState(true);
 
   const loadAgentConfig = useCallback(async () => {
     try {
-      const cfg = await api.agent.getConfig();
+      const [cfg, modeRes] = await Promise.all([
+        api.agent.getConfig(),
+        api.agent.getMode?.().catch(() => ({ mode: 'AUTONOMOUS' })),
+      ]);
+      if (modeRes?.mode) setIsAgentActive(modeRes.mode !== 'DISABLED');
       if (cfg) {
         if (cfg.persona_name) setAgentName(cfg.persona_name);
         if (cfg.max_discount_percent !== undefined) setDiscountLimit(cfg.max_discount_percent);
@@ -37,6 +39,15 @@ export function useAgentPage() {
 
   useEffect(() => { loadAgentConfig(); }, [loadAgentConfig]);
 
+  const handleToggleAgentActive = async () => {
+    const next = isAgentActive ? 'DISABLED' : 'AUTONOMOUS';
+    await api.agent.setMode({ mode: next, resetConversations: next === 'AUTONOMOUS' });
+    setIsAgentActive(next === 'AUTONOMOUS');
+    setToastMessage(next === 'AUTONOMOUS' ? 'تم تفعيل الوكيل للرد الفوري على واتساب!' : 'تم إيقاف الوكيل وتحويل المحادثات لبشري.');
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 4000);
+  };
+
   const handleSaveDeploy = async () => {
     try {
       const tone = selectedPersona === 'formal' ? 'formal' : selectedPersona === 'expert_trader' ? 'sales_focused' : 'friendly';
@@ -45,7 +56,9 @@ export function useAgentPage() {
         tone: tone as any,
         max_discount_percent: discountLimit,
       });
-      setToastMessage('تم حفظ وتحديث نموذج الوكيل بنجاح ونشره على واتساب!');
+      await api.agent.setMode({ mode: 'AUTONOMOUS', resetConversations: true });
+      setIsAgentActive(true);
+      setToastMessage('تم حفظ إعدادات الوكيل بنجاح وتفعيله للرد الفوري على واتساب!');
     } catch {
       setToastMessage('فشل حفظ الإعدادات، يرجى إعادة المحاولة.');
     }
@@ -97,6 +110,7 @@ export function useAgentPage() {
     autoDiscountOnHesitation, setAutoDiscountOnHesitation,
     retryLimit, setRetryLimit, guardrails, setGuardrails,
     simMessages, isSimLoading, showToast, toastMessage,
+    isAgentActive, handleToggleAgentActive,
     handleSaveDeploy, handleSendSimMessage,
     handleResetChat: () => setSimMessages(RESET_SIM_MESSAGES),
   };

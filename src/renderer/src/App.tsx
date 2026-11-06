@@ -27,8 +27,16 @@ export const App: React.FC = () => {
   const [showWizardModal, setShowWizardModal] = useState<boolean>(false);
   const [globalSearch, setGlobalSearch] = useState<string>('');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
-  const [isAgentStopped, setIsAgentStopped] = useState<boolean>(true);
+  const [isAgentStopped, setIsAgentStopped] = useState<boolean>(false);
   const { isAuthenticated, isLoading } = useAuthStore();
+
+  useEffect(() => {
+    api.agent.getMode?.().then((res) => {
+      if (res?.mode) {
+        setIsAgentStopped(res.mode === 'DISABLED');
+      }
+    }).catch(() => {});
+  }, []);
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
     try {

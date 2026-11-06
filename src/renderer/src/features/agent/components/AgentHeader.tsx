@@ -4,11 +4,15 @@ import { Sparkles, Shield, Zap } from 'lucide-react';
 interface AgentHeaderProps {
   onOpenGuardrails: () => void;
   onSaveDeploy: () => void;
+  isAgentActive?: boolean;
+  onToggleAgentActive?: () => void;
 }
 
 export const AgentHeader: React.FC<AgentHeaderProps> = ({
   onOpenGuardrails,
-  onSaveDeploy
+  onSaveDeploy,
+  isAgentActive = true,
+  onToggleAgentActive,
 }) => {
   return (
     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-[#111827] p-6 rounded-2xl border border-slate-200 dark:border-[#1F293D] elevation-1">
@@ -17,13 +21,25 @@ export const AgentHeader: React.FC<AgentHeaderProps> = ({
           <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             إعدادات وتدريب وكيل الذكاء الاصطناعي
           </h1>
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-[#128C7E]/20 text-[#075E54] dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          {isAgentActive ? (
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-[#128C7E]/20 text-[#075E54] dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              الوكيل نشط وجاهز للرد الفوري على واتساب
             </span>
-            الوكيل نشط وجاهز للرد الفوري على واتساب
-          </span>
+          ) : (
+            <button
+              type="button"
+              onClick={onToggleAgentActive}
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-bold border border-rose-200 dark:border-rose-900 cursor-pointer hover:bg-rose-100 transition-all"
+              title="انقر لتفعيل الوكيل الذكي على واتساب فورياً"
+            >
+              <span className="h-2 w-2 rounded-full bg-rose-500"></span>
+              الوكيل متوقف (انقر لتشغيله الآن)
+            </button>
+          )}
         </div>
         <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-[#7C3AED]" />

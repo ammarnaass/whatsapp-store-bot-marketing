@@ -96,6 +96,7 @@ export const IPC_CHANNELS = {
   AGENT_GET_CONFIG: 'agent:get-config',
   AGENT_UPDATE_CONFIG: 'agent:update-config',
   AGENT_TEST_API_CONNECTION: 'agent:test-api-connection',
+  AGENT_GET_MODE: 'agent:get-mode',
   AGENT_SET_MODE: 'agent:set-mode',
   AGENT_EMERGENCY_STOP: 'agent:emergency-stop',
   AGENT_SANDBOX_TEST: 'agent:sandbox-test',

@@ -57,6 +57,28 @@ export function registerAgentHandlers(db: Database.Database, agent: AIAgentEngin
     };
   });
 
+  // جلب وضع تشغيل الوكيل الحالي
+  ipcMain.handle(IPC_CHANNELS.AGENT_GET_MODE, async () => {
+    const row = db.prepare(`SELECT agent_mode FROM sessions WHERE id = 'wasell-main-store' LIMIT 1`).get() as any;
+    return { mode: row?.agent_mode || 'AUTONOMOUS' };
+  });
+
+  // تغيير وضع الوكيل (AUTONOMOUS / DISABLED) وإعادة توجيه المحادثات
+  ipcMain.handle(IPC_CHANNELS.AGENT_SET_MODE, async (_event, { mode, resetConversations }: { mode: 'AUTONOMOUS' | 'DISABLED' | 'COPILOT'; resetConversations?: boolean }) => {
+    const validMode = mode === 'AUTONOMOUS' || mode === 'COPILOT' ? mode : 'DISABLED';
+    db.prepare(`UPDATE sessions SET agent_mode = ?`).run(validMode);
+    if (validMode === 'AUTONOMOUS') {
+      if (resetConversations !== false) {
+        db.prepare(`UPDATE conversations SET handler = 'agent', state = 'open' WHERE handler = 'human'`).run();
+      }
+      console.log(`[IPC] Agent mode set to ${validMode}. Conversations restored to agent.`);
+    } else {
+      db.prepare(`UPDATE conversations SET handler = 'human', state = 'waiting_human' WHERE handler = 'agent'`).run();
+      console.log(`[IPC] Agent mode set to ${validMode}. Conversations switched to human.`);
+    }
+    return { success: true, mode: validMode };
+  });
+
   // الإيقاف الطارئ الفوري للوكيل وتحويل كافة المحادثات إلى بشري
   ipcMain.handle(IPC_CHANNELS.AGENT_EMERGENCY_STOP, async () => {
     db.prepare(`UPDATE sessions SET agent_mode = 'DISABLED'`).run();

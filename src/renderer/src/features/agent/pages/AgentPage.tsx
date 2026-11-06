@@ -18,6 +18,7 @@ export const AgentPage: React.FC = () => {
     autoDiscountOnHesitation, setAutoDiscountOnHesitation,
     retryLimit, setRetryLimit, guardrails, setGuardrails,
     simMessages, isSimLoading, showToast, toastMessage,
+    isAgentActive, handleToggleAgentActive,
     handleSaveDeploy, handleSendSimMessage, handleResetChat,
   } = useAgentPage();
 
@@ -25,7 +26,12 @@ export const AgentPage: React.FC = () => {
 
   return (
     <div className="flex flex-col w-full space-y-6">
-      <AgentHeader onOpenGuardrails={() => setActiveTab('guardrails')} onSaveDeploy={handleSaveDeploy} />
+      <AgentHeader
+        onOpenGuardrails={() => setActiveTab('guardrails')}
+        onSaveDeploy={handleSaveDeploy}
+        isAgentActive={isAgentActive}
+        onToggleAgentActive={handleToggleAgentActive}
+      />
       <AgentNavTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">

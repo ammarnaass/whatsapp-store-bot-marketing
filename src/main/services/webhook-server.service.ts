@@ -346,6 +346,12 @@ export class WebhookServerService extends EventEmitter {
       // إذا كانت الرسالة من أنفسنا، لا داعي لإطلاق رد الوكيل
       if (isFromMe) return;
 
+      const session = this.db.prepare("SELECT agent_mode FROM sessions WHERE id = 'wasell-main-store' LIMIT 1").get() as any;
+      if (session?.agent_mode === 'DISABLED') {
+        console.log(`[WebhookServer] Agent mode is DISABLED across the store. Skipping auto-reply for ${phone}.`);
+        return;
+      }
+
       const conv = this.db.prepare('SELECT id, handler, state FROM conversations WHERE id = ?').get(convId) as any;
       // إذا كانت المحادثة تحت تصرف موظف بشري (human)، لا يتدخل الوكيل إطلاقاً
       if (conv?.handler === 'human') {
@@ -411,6 +417,12 @@ export class WebhookServerService extends EventEmitter {
       direction: 'INBOUND',
       channel: 'whatsapp_cloud',
     });
+
+    const session = this.db.prepare("SELECT agent_mode FROM sessions WHERE id = 'wasell-main-store' LIMIT 1").get() as any;
+    if (session?.agent_mode === 'DISABLED') {
+      console.log(`[WebhookServer] Agent mode is DISABLED across the store. Skipping auto-reply for ${phone}.`);
+      return;
+    }
 
     const conv = this.db.prepare('SELECT id, handler, state FROM conversations WHERE id = ?').get(convId) as any;
     if (conv?.handler !== 'human') {

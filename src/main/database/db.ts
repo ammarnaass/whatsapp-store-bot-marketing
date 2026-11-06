@@ -633,7 +633,13 @@ export class AppDatabase {
       this.db.prepare("ALTER TABLE agent_config ADD COLUMN api_keys_json TEXT DEFAULT '{}'").run();
     } catch {}
     try {
-      this.db.prepare("UPDATE agent_config SET model_name = 'gemini-2.5-flash' WHERE model_name = 'gemini-3.8-flash'").run();
+      this.db.prepare("UPDATE agent_config SET model_name = 'gemini-3.5-flash' WHERE model_name = 'gemini-3.8-flash' OR model_name = 'gemini-2.5-flash'").run();
+    } catch {}
+    try {
+      this.db.prepare("UPDATE sessions SET agent_mode = 'AUTONOMOUS' WHERE agent_mode IS NULL OR agent_mode = 'DISABLED'").run();
+    } catch {}
+    try {
+      this.db.prepare("UPDATE conversations SET handler = 'agent', state = 'open' WHERE handler = 'human' AND (assignee IS NULL OR assignee = '')").run();
     } catch {}
 
     // 1. التحقق من إعدادات الوكيل
