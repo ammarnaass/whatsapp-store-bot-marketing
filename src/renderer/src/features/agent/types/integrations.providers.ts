@@ -6,7 +6,7 @@ export const PROVIDER_META_LIST: ProviderMeta[] = [
     name: 'Google Gemini',
     badge: 'موصى به لواتساب',
     description: 'محرك جوجل فائق السرعة، استدعاء أدوات المتجر الحي، وأقل تكلفة استهلاك.',
-    defaultModel: 'gemini-2.5-flash',
+    defaultModel: 'gemini-3.5-flash',
     portalUrl: 'https://aistudio.google.com/apikey',
     portalLabel: 'Google AI Studio',
     accentColor: '#128C7E',

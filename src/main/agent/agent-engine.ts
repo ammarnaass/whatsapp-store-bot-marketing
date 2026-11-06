@@ -55,8 +55,10 @@ export class AIAgentEngine {
       else if (provider === 'openai') apiKey = process.env.OPENAI_API_KEY || '';
     }
 
-    let modelName = row?.model_name || 'gemini-2.5-flash';
-    if (modelName === 'gemini-3.8-flash') modelName = 'gemini-2.5-flash';
+    let modelName = row?.model_name || 'gemini-3.5-flash';
+    if (!modelName || modelName === 'gemini-2.5-flash') {
+      modelName = 'gemini-3.5-flash';
+    }
 
     return {
       personaName: row?.persona_name || 'مساعد المتجر الذكي',
@@ -227,15 +229,35 @@ ${knowledgeContext}
       while (iterations < maxIterations) {
         iterations++;
 
-        const response: any = await aiClient.models.generateContent({
-          model: config.modelName,
-          contents: conversationContents,
-          config: {
-            systemInstruction: systemPrompt,
-            tools: [{ functionDeclarations: agentToolsDefinitions }],
-            temperature: 0.3, // ثبات ودقة عالية لتجنب الهلوسة
-          },
-        });
+        let response: any;
+        try {
+          response = await aiClient.models.generateContent({
+            model: config.modelName,
+            contents: conversationContents,
+            config: {
+              systemInstruction: systemPrompt,
+              tools: [{ functionDeclarations: agentToolsDefinitions }],
+              temperature: 0.3,
+            },
+          });
+        } catch (callErr: any) {
+          const errMsg = String(callErr?.message || callErr || '');
+          if ((errMsg.includes('503') || errMsg.includes('404') || errMsg.includes('UNAVAILABLE')) && config.modelName !== 'gemini-3.5-flash') {
+            console.warn(`[AIAgentEngine] Fallback from ${config.modelName} to gemini-3.5-flash due to: ${errMsg.slice(0, 80)}`);
+            config.modelName = 'gemini-3.5-flash';
+            response = await aiClient.models.generateContent({
+              model: 'gemini-3.5-flash',
+              contents: conversationContents,
+              config: {
+                systemInstruction: systemPrompt,
+                tools: [{ functionDeclarations: agentToolsDefinitions }],
+                temperature: 0.3,
+              },
+            });
+          } else {
+            throw callErr;
+          }
+        }
 
         const candidate = response?.candidates?.[0];
         const content = candidate?.content;
@@ -328,6 +350,10 @@ ${knowledgeContext}
         reply = 'مفتاح Gemini API غير صالح. يرجى التأكد من نسخه بدقة من Google AI Studio وحفظه في الإعدادات.';
       } else if (raw.includes('RESOURCE_EXHAUSTED') || raw.includes('quota') || raw.includes('429')) {
         reply = 'تم تجاوز سقف الاستخدام لمفتاح API (Quota Exceeded) في Google AI Studio.';
+      } else if (raw.includes('503') || raw.includes('UNAVAILABLE') || raw.includes('high demand')) {
+        reply = 'خوادم Google تواجه ضغطاً مؤقتاً (503 High Demand). يرجى المحاولة بعد قليل أو استخدام Gemini 3.5 Flash.';
+      } else if (raw.includes('fetch failed') || raw.includes('ETIMEDOUT')) {
+        reply = 'تعذر الاتصال بخوادم Google بسبب مشكلة في الشبكة. يرجى التحقق من الاتصال بالإنترنت.';
       }
       return {
         replyText: reply,
