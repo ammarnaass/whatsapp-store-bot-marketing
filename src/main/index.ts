@@ -1,5 +1,13 @@
+import dns from 'dns';
+import net from 'net';
 import { app, BrowserWindow, shell } from 'electron';
 import path from 'path';
+
+// إعطاء الأولوية لـ IPv4 وتعطيل التحديد التلقائي لمنع انقطاع الاتصال بخوادم Google Gemini على لينكس (ETIMEDOUT)
+try {
+  if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
+  if ((net as any).setDefaultAutoSelectFamily) (net as any).setDefaultAutoSelectFamily(false);
+} catch {}
 import { AppDatabase } from './database/db';
 import { registerIpcHandlers } from './ipc/registry';
 import { WebhookServerService } from './services/webhook-server.service';

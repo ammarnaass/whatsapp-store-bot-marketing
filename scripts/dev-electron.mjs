@@ -35,6 +35,7 @@ async function startDev() {
   const electronEnv = {
     ...process.env,
     VITE_DEV_SERVER_URL: devUrl,
+    NODE_OPTIONS: `${process.env.NODE_OPTIONS || ''} --no-network-family-autoselection`.trim(),
   };
   delete electronEnv.ELECTRON_RUN_AS_NODE;
 

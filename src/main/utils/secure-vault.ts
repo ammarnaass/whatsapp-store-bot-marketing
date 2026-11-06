@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 
-const FALLBACK_SECRET = 'wasell_local_vault_key_' + (process.env.USER || 'default');
-const FALLBACK_KEY = crypto.createHash('sha256').update(FALLBACK_SECRET).digest();
+const VAULT_SECRET = `wasell_vault_${process.env.USER || 'app'}_${process.platform}_secret`;
+const VAULT_KEY = crypto.createHash('sha256').update(VAULT_SECRET).digest();
 
 function getSafeStorage() {
   try {
@@ -18,19 +18,8 @@ export function encryptSecret(plaintext: string): string {
   const trimmed = plaintext.trim();
   if (!trimmed) return '';
 
-  const storage = getSafeStorage();
-  try {
-    if (storage && storage.isEncryptionAvailable()) {
-      const enc = storage.encryptString(trimmed);
-      return `enc:safe:${enc.toString('base64')}`;
-    }
-  } catch (err) {
-    console.warn('[SecureVault] safeStorage encryption failed, using AES-GCM fallback:', err);
-  }
-
-  // Fallback to AES-256-GCM
   const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv('aes-256-gcm', FALLBACK_KEY, iv);
+  const cipher = crypto.createCipheriv('aes-256-gcm', VAULT_KEY, iv);
   const enc = Buffer.concat([cipher.update(trimmed, 'utf8'), cipher.final()]);
   const tag = cipher.getAuthTag();
   return `enc:aes:${iv.toString('hex')}:${tag.toString('hex')}:${enc.toString('hex')}`;
@@ -38,24 +27,9 @@ export function encryptSecret(plaintext: string): string {
 
 export function decryptSecret(ciphertext: string): string {
   if (!ciphertext || typeof ciphertext !== 'string') return '';
-  if (!ciphertext.startsWith('enc:')) return ciphertext; // plaintext
+  if (!ciphertext.startsWith('enc:')) return ciphertext;
 
-  const storage = getSafeStorage();
-
-  // 1. safeStorage format
-  if (ciphertext.startsWith('enc:safe:')) {
-    try {
-      if (storage && storage.isEncryptionAvailable()) {
-        const buf = Buffer.from(ciphertext.slice(9), 'base64');
-        return storage.decryptString(buf);
-      }
-    } catch (err) {
-      console.warn('[SecureVault] Failed to decrypt safeStorage secret:', err);
-    }
-    return '';
-  }
-
-  // 2. AES-256-GCM fallback format
+  // 1. AES-256-GCM format
   if (ciphertext.startsWith('enc:aes:')) {
     try {
       const parts = ciphertext.split(':');
@@ -63,7 +37,7 @@ export function decryptSecret(ciphertext: string): string {
         const iv = Buffer.from(parts[2], 'hex');
         const tag = Buffer.from(parts[3], 'hex');
         const data = Buffer.from(parts[4], 'hex');
-        const decipher = crypto.createDecipheriv('aes-256-gcm', FALLBACK_KEY, iv);
+        const decipher = crypto.createDecipheriv('aes-256-gcm', VAULT_KEY, iv);
         decipher.setAuthTag(tag);
         return Buffer.concat([decipher.update(data), decipher.final()]).toString('utf8');
       }
@@ -73,15 +47,25 @@ export function decryptSecret(ciphertext: string): string {
     return '';
   }
 
-  // 3. Legacy enc:base64 format
+  // 2. safeStorage format fallback
+  const storage = getSafeStorage();
+  if (ciphertext.startsWith('enc:safe:')) {
+    try {
+      if (storage && storage.isEncryptionAvailable()) {
+        const buf = Buffer.from(ciphertext.slice(9), 'base64');
+        return storage.decryptString(buf);
+      }
+    } catch {}
+    return '';
+  }
+
+  // 3. Legacy enc:base64 format fallback
   try {
     if (storage && storage.isEncryptionAvailable()) {
       const buf = Buffer.from(ciphertext.slice(4), 'base64');
       return storage.decryptString(buf);
     }
-  } catch (err) {
-    console.warn('[SecureVault] Failed to decrypt legacy safeStorage secret:', err);
-  }
+  } catch {}
 
   return '';
 }
