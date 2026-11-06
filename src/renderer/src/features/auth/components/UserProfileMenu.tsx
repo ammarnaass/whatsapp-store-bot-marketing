@@ -42,7 +42,7 @@ export const UserProfileMenu: React.FC = () => {
         title="الملف الشخصي وإعدادات الحساب"
       >
         <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-[#128C7E] to-[#075E54] text-white flex items-center justify-center font-bold text-xs shadow-xs ring-2 ring-[#128C7E]/20 shrink-0">
-          {currentUser.avatar ? (
+          {currentUser.avatar && currentUser.avatar.trim() ? (
             <img src={currentUser.avatar} alt={currentUser.name} className="w-full h-full object-cover" />
           ) : (
             getInitials(currentUser.name)
@@ -64,7 +64,7 @@ export const UserProfileMenu: React.FC = () => {
         <div className="absolute left-0 mt-2 w-64 bg-white dark:bg-[#111827] rounded-2xl shadow-2xl border border-slate-200 dark:border-[#1F293D] p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
           <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl mb-1.5 flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl overflow-hidden bg-gradient-to-br from-[#128C7E] to-[#075E54] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-              {currentUser.avatar ? (
+              {currentUser.avatar && currentUser.avatar.trim() ? (
                 <img src={currentUser.avatar} alt={currentUser.name} className="w-full h-full object-cover" />
               ) : (
                 getInitials(currentUser.name)

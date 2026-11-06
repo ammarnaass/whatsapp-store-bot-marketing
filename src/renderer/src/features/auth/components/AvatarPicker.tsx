@@ -41,7 +41,7 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({ avatar, name, onChan
       <div className="flex items-center gap-4">
         <div className="relative group">
           <div className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-[#128C7E]/15 bg-gradient-to-br from-[#128C7E] to-[#075E54] flex items-center justify-center text-white text-xl font-bold shadow-md">
-            {avatar ? (
+            {avatar && avatar.trim() ? (
               <img src={avatar} alt={name} className="w-full h-full object-cover" />
             ) : name ? (
               <span>{getInitials(name)}</span>

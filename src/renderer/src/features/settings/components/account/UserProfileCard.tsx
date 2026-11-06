@@ -23,7 +23,7 @@ export const UserProfileCard: React.FC = () => {
     setIsSaving(true);
     setStatusMsg(null);
     try {
-      const ok = await updateProfile({ name, phone, avatar: avatar || '' });
+      const ok = await updateProfile({ name, phone, avatar: avatar || undefined });
       if (newPassword) {
         if (newPassword.length < 6) {
           setStatusMsg({ text: 'كلمة المرور يجب أن تكون 6 خانات على الأقل', isError: true });
