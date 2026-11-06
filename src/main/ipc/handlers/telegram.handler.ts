@@ -12,6 +12,13 @@ export function registerTelegramHandlers(mainWindow: BrowserWindow, db: Database
     messageAdapter = new TelegramMessageAdapter(db, mainWindow);
   }
 
+  try {
+    const cfg = db.prepare('SELECT bot_token, is_active FROM telegram_config WHERE id = ?').get('default') as any;
+    if (cfg?.is_active && cfg?.bot_token && !botService.getStatus().isPolling) {
+      botService.startPolling(cfg.bot_token).catch((err) => console.warn('[Telegram] Auto-start error:', err));
+    }
+  } catch {}
+
   // 1. جلب إعدادات تليغرام الحالية
   ipcMain.handle(IPC_CHANNELS.TELEGRAM_GET_CONFIG, async () => {
     const row = db.prepare('SELECT * FROM telegram_config WHERE id = ?').get('default') as any;

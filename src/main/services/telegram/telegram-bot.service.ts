@@ -11,9 +11,7 @@ export class TelegramBotService extends EventEmitter {
   private abortController: AbortController | null = null;
 
   public static getInstance(): TelegramBotService {
-    if (!TelegramBotService.instance) {
-      TelegramBotService.instance = new TelegramBotService();
-    }
+    if (!TelegramBotService.instance) TelegramBotService.instance = new TelegramBotService();
     return TelegramBotService.instance;
   }
 
@@ -21,10 +19,7 @@ export class TelegramBotService extends EventEmitter {
     try {
       const res = await fetch(`https://api.telegram.org/bot${token.trim()}/getMe`, { method: 'GET' });
       const data = await res.json() as any;
-      if (data.ok && data.result) {
-        return { success: true, botInfo: data.result };
-      }
-      return { success: false, error: data.description || 'رمز البوت غير صالح' };
+      return data.ok && data.result ? { success: true, botInfo: data.result } : { success: false, error: data.description || 'رمز البوت غير صالح' };
     } catch (err: any) {
       return { success: false, error: err.message || 'تعذر الاتصال بخوادم تليغرام' };
     }
@@ -78,11 +73,12 @@ export class TelegramBotService extends EventEmitter {
     }
   }
 
-  public async sendMessage(chatId: string | number, text: string, parseMode?: 'Markdown' | 'HTML'): Promise<{ success: boolean; messageId?: number; error?: string }> {
+  public async sendMessage(chatId: string | number, text: string, parseMode?: 'Markdown' | 'HTML', replyMarkup?: any): Promise<{ success: boolean; messageId?: number; error?: string }> {
     if (!this.token) return { success: false, error: 'البوت غير متصل' };
     try {
       const payload: any = { chat_id: chatId, text };
       if (parseMode) payload.parse_mode = parseMode;
+      if (replyMarkup) payload.reply_markup = replyMarkup;
 
       let res = await fetch(`https://api.telegram.org/bot${this.token}/sendMessage`, {
         method: 'POST',
@@ -91,7 +87,6 @@ export class TelegramBotService extends EventEmitter {
       });
       let data = await res.json() as any;
 
-      // إعادة المحاولة بنص عادي إذا فشل التنسيق (Markdown parsing error)
       if (!data.ok && parseMode) {
         delete payload.parse_mode;
         res = await fetch(`https://api.telegram.org/bot${this.token}/sendMessage`, {
@@ -101,21 +96,23 @@ export class TelegramBotService extends EventEmitter {
         });
         data = await res.json() as any;
       }
-
-      if (data.ok) return { success: true, messageId: data.result?.message_id };
-      return { success: false, error: data.description || 'فشل إرسال الرسالة' };
+      return data.ok ? { success: true, messageId: data.result?.message_id } : { success: false, error: data.description || 'فشل إرسال الرسالة' };
     } catch (err: any) {
       return { success: false, error: err.message || 'تعذر الإرسال لتليغرام' };
     }
   }
 
+  public async answerCallbackQuery(id: string, text?: string): Promise<void> {
+    if (!this.token || !id) return;
+    try {
+      await fetch(`https://api.telegram.org/bot${this.token}/answerCallbackQuery`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ callback_query_id: id, text }),
+      });
+    } catch {}
+  }
+
   public getStatus(): TelegramStatusResult {
-    return {
-      isConnected: Boolean(this.token && this.botInfo),
-      isPolling: this.isPolling,
-      botInfo: this.botInfo,
-      error: this.lastError,
-    };
+    return { isConnected: Boolean(this.token && this.botInfo), isPolling: this.isPolling, botInfo: this.botInfo, error: this.lastError };
   }
 }
 

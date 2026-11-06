@@ -639,6 +639,9 @@ export class AppDatabase {
       this.db.prepare("UPDATE sessions SET agent_mode = 'AUTONOMOUS' WHERE agent_mode IS NULL OR agent_mode = 'DISABLED'").run();
     } catch {}
     try {
+      this.db.prepare("INSERT OR IGNORE INTO sessions (id, name, phone, status, agent_mode) VALUES ('telegram_bot', 'بوابة بوت تليغرام', 'telegram', 'CONNECTED', 'AUTONOMOUS')").run();
+    } catch {}
+    try {
       this.db.prepare("UPDATE conversations SET handler = 'agent', state = 'open' WHERE handler = 'human' AND (assignee IS NULL OR assignee = '')").run();
     } catch {}
 
