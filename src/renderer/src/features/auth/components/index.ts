@@ -9,3 +9,4 @@ export { TeamManagementTab } from './TeamManagementTab';
 export { SubAccountModal } from './SubAccountModal';
 export { SubAccountPasswordModal } from './SubAccountPasswordModal';
 export { ActiveSessionsTab } from './ActiveSessionsTab';
+export { AvatarPicker } from './AvatarPicker';

@@ -41,8 +41,12 @@ export const UserProfileMenu: React.FC = () => {
         className="flex items-center gap-2 pr-1.5 pl-2 py-1 mr-0.5 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-[#1F293D] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all cursor-pointer group"
         title="الملف الشخصي وإعدادات الحساب"
       >
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#128C7E] to-[#075E54] text-white flex items-center justify-center font-bold text-xs shadow-xs ring-2 ring-[#128C7E]/20 shrink-0">
-          {getInitials(currentUser.name)}
+        <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-[#128C7E] to-[#075E54] text-white flex items-center justify-center font-bold text-xs shadow-xs ring-2 ring-[#128C7E]/20 shrink-0">
+          {currentUser.avatar ? (
+            <img src={currentUser.avatar} alt={currentUser.name} className="w-full h-full object-cover" />
+          ) : (
+            getInitials(currentUser.name)
+          )}
         </div>
         <div className="flex flex-col text-right leading-tight hidden xl:flex">
           <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
@@ -58,17 +62,20 @@ export const UserProfileMenu: React.FC = () => {
 
       {isOpen && (
         <div className="absolute left-0 mt-2 w-64 bg-white dark:bg-[#111827] rounded-2xl shadow-2xl border border-slate-200 dark:border-[#1F293D] p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
-          <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl mb-1.5">
-            <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
-              {currentUser.name}
-            </p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
-              {currentUser.email}
-            </p>
-            <div className="mt-2 flex items-center gap-1.5">
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${roleMeta.badgeColor}`}>
-                {roleMeta.label}
-              </span>
+          <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl mb-1.5 flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl overflow-hidden bg-gradient-to-br from-[#128C7E] to-[#075E54] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+              {currentUser.avatar ? (
+                <img src={currentUser.avatar} alt={currentUser.name} className="w-full h-full object-cover" />
+              ) : (
+                getInitials(currentUser.name)
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{currentUser.name}</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{currentUser.email}</p>
+              <div className="mt-1">
+                <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${roleMeta.badgeColor}`}>{roleMeta.label}</span>
+              </div>
             </div>
           </div>
 

@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { User, Phone, Mail, Lock, CheckCircle2, AlertCircle, Save } from 'lucide-react';
+import { Phone, Mail, Lock, CheckCircle2, AlertCircle, Save, User as UserIcon } from 'lucide-react';
 import { useAuthStore } from '../../../auth/store/useAuthStore';
 import { ROLE_LABELS } from '../../../auth/types/auth.types';
 import { api } from '../../../../api-bridge';
+import { AvatarPicker } from '../../../auth/components/AvatarPicker';
 
 export const UserProfileCard: React.FC = () => {
   const { currentUser, updateProfile } = useAuthStore();
   const [name, setName] = useState(currentUser?.name || '');
   const [phone, setPhone] = useState(currentUser?.phone || '');
+  const [avatar, setAvatar] = useState<string | null>(currentUser?.avatar || null);
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [statusMsg, setStatusMsg] = useState<{ text: string; isError: boolean } | null>(null);
@@ -21,10 +23,10 @@ export const UserProfileCard: React.FC = () => {
     setIsSaving(true);
     setStatusMsg(null);
     try {
-      const ok = await updateProfile({ name, phone });
+      const ok = await updateProfile({ name, phone, avatar: avatar || '' });
       if (newPassword) {
         if (newPassword.length < 6) {
-          setStatusMsg({ text: 'كلمة المرور الجديدة يجب أن تتكون من 6 خانات على الأقل', isError: true });
+          setStatusMsg({ text: 'كلمة المرور يجب أن تكون 6 خانات على الأقل', isError: true });
           setIsSaving(false);
           return;
         }
@@ -37,9 +39,7 @@ export const UserProfileCard: React.FC = () => {
         setOldPassword('');
         setNewPassword('');
       }
-      if (ok) {
-        setStatusMsg({ text: 'تم حفظ وتحديث بيانات الملف الشخصي بنجاح', isError: false });
-      }
+      if (ok) setStatusMsg({ text: 'تم حفظ وتحديث بيانات الملف الشخصي والصورة بنجاح', isError: false });
     } catch {
       setStatusMsg({ text: 'حدث خطأ أثناء حفظ التعديلات', isError: true });
     } finally {
@@ -52,16 +52,14 @@ export const UserProfileCard: React.FC = () => {
       <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-[#1F293D]/80 mb-4">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-[#128C7E]/10 text-[#128C7E] flex items-center justify-center">
-            <User className="w-4 h-4" />
+            <UserIcon className="w-4 h-4" />
           </div>
           <div>
             <h3 className="text-xs font-black text-slate-900 dark:text-white">الملف الشخصي وبيانات الدخول</h3>
-            <p className="text-[10px] text-slate-400">تعديل الاسم ورقم واتساب المعتمد وكلمة المرور</p>
+            <p className="text-[10px] text-slate-400">تعديل الصورة والاسم ورقم واتساب المعتمد وكلمة المرور</p>
           </div>
         </div>
-        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${roleMeta?.badgeColor}`}>
-          {roleMeta?.label}
-        </span>
+        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${roleMeta?.badgeColor}`}>{roleMeta?.label}</span>
       </div>
 
       <form onSubmit={handleSaveProfile} className="space-y-3.5 text-xs">
@@ -72,16 +70,16 @@ export const UserProfileCard: React.FC = () => {
           </div>
         )}
 
+        <AvatarPicker avatar={avatar} name={name} onChange={setAvatar} disabled={isSaving} />
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">الاسم الكامل</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} required
-              className="w-full h-9 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-[#1F293D] text-slate-900 dark:text-white outline-none focus:border-[#128C7E]" />
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className="w-full h-9 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-[#1F293D] text-slate-900 dark:text-white outline-none focus:border-[#128C7E]" />
           </div>
           <div>
             <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">رقم الهاتف / واتساب</label>
-            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} dir="ltr" placeholder="+966..."
-              className="w-full h-9 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-[#1F293D] text-slate-900 dark:text-white outline-none focus:border-[#128C7E] text-right" />
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} dir="ltr" placeholder="+966..." className="w-full h-9 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-[#1F293D] text-slate-900 dark:text-white outline-none focus:border-[#128C7E] text-right" />
           </div>
         </div>
 
@@ -99,10 +97,8 @@ export const UserProfileCard: React.FC = () => {
             <span>تحديث كلمة المرور (اختياري)</span>
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} placeholder="كلمة المرور الحالية"
-              className="w-full h-9 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-[#1F293D] text-slate-900 dark:text-white outline-none focus:border-[#128C7E]" />
-            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="كلمة المرور الجديدة"
-              className="w-full h-9 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-[#1F293D] text-slate-900 dark:text-white outline-none focus:border-[#128C7E]" />
+            <input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} placeholder="كلمة المرور الحالية" className="w-full h-9 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-[#1F293D] text-slate-900 dark:text-white outline-none focus:border-[#128C7E]" />
+            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="كلمة المرور الجديدة" className="w-full h-9 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-[#1F293D] text-slate-900 dark:text-white outline-none focus:border-[#128C7E]" />
           </div>
         </div>
 
@@ -116,4 +112,3 @@ export const UserProfileCard: React.FC = () => {
     </div>
   );
 };
-

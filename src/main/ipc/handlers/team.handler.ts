@@ -6,11 +6,16 @@ import { hashPassword, verifyPassword } from '../../auth/auth-crypto';
 export function registerTeamHandlers(db: Database.Database): void {
   // 1. تعديل الملف الشخصي
   ipcMain.handle(IPC_CHANNELS.AUTH_UPDATE_PROFILE, async (_event, { userId, name, phone, avatar }) => {
-    db.prepare(`
-      UPDATE users SET name = coalesce(?, name), phone = coalesce(?, phone), avatar = coalesce(?, avatar), updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `).run(name?.trim() || null, phone?.trim() || null, avatar || null, userId);
-    return { success: true, user: db.prepare('SELECT id, email, name, role, permissions, phone, avatar, status FROM users WHERE id = ?').get(userId) };
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as any;
+    if (!user) return { success: false, error: 'المستخدم غير موجود' };
+    const newName = name !== undefined && name !== null ? name.trim() : user.name;
+    const newPhone = phone !== undefined && phone !== null ? phone.trim() : user.phone;
+    const newAvatar = avatar !== undefined ? (avatar || null) : user.avatar;
+    db.prepare('UPDATE users SET name = ?, phone = ?, avatar = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(newName, newPhone, newAvatar, userId);
+    let perms = ['*'];
+    try { perms = JSON.parse(user.permissions); } catch { perms = user.role === 'owner' ? ['*'] : ['inbox']; }
+    return { success: true, user: { id: user.id, email: user.email, name: newName, role: user.role, permissions: perms, phone: newPhone, avatar: newAvatar, status: user.status } };
   });
 
   // 2. تغيير كلمة المرور الذاتية للمستخدم
