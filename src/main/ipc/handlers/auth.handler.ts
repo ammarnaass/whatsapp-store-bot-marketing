@@ -60,11 +60,11 @@ export function registerAuthHandlers(db: Database.Database): void {
 
     if (storeName?.trim()) {
       try {
-        const row = db.prepare('SELECT value FROM settings WHERE key = ?').get('store_identity') as any;
-        const current = row ? JSON.parse(row.value) : {};
-        current.storeNameAr = storeName.trim();
-        db.prepare('INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)')
-          .run('store_identity', JSON.stringify(current));
+        const row = db.prepare("SELECT value FROM store_settings WHERE key = 'main_config'").get() as any;
+        const current = row?.value ? JSON.parse(row.value) : {};
+        current.identity = { ...current.identity, storeNameAr: storeName.trim() };
+        const json = JSON.stringify(current);
+        db.prepare("INSERT INTO store_settings (key, value, updated_at) VALUES ('main_config', ?, CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value = ?, updated_at = CURRENT_TIMESTAMP").run(json, json);
       } catch (e) {
         console.error('[AuthHandler] Error saving store name:', e);
       }
