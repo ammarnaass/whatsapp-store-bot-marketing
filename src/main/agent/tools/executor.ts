@@ -15,10 +15,10 @@ export class AgentToolExecutor {
                  min(v.price) as min_price, max(v.price) as max_price
           FROM products p
           LEFT JOIN variants v ON p.id = v.product_id
-          WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ? OR p.category LIKE ?)
+          WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ? OR p.category LIKE ? OR p.brand LIKE ? OR p.tags LIKE ? OR p.whatsapp_short_desc LIKE ?)
           GROUP BY p.id
-          LIMIT 5
-        `).all(query, query, query);
+          LIMIT 8
+        `).all(query, query, query, query, query, query);
         return { count: products.length, products };
       }
 
