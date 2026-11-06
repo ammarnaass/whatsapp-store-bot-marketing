@@ -1,16 +1,38 @@
 import { GoogleGenAI } from '@google/genai';
 import { UnifiedAIProvider, GenerateContentInput, GenerateContentOutput } from './types';
 
+function formatGeminiError(err: any): string {
+  const raw = err?.message || String(err || '');
+  if (raw.includes('API_KEY_INVALID') || raw.includes('API key not valid')) {
+    return 'مفتاح API غير صالح. يرجى التأكد من نسخه بدقة من Google AI Studio (يبدأ بـ AIzaSy...).';
+  }
+  if (raw.includes('RESOURCE_EXHAUSTED') || raw.includes('429') || raw.includes('quota')) {
+    return 'تم تجاوز حد الاستخدام المسموح به لمفتاح API (Quota Exceeded). يرجى مراجعة Google AI Studio.';
+  }
+  if (raw.includes('NOT_FOUND') || raw.includes('not found') || raw.includes('404')) {
+    return 'النموذج المحدد غير متاح. يرجى استخدام Gemini 2.5 Flash أو Gemini 2.0 Flash.';
+  }
+  if (raw.includes('fetch failed') || raw.includes('ENOTFOUND') || raw.includes('ECONNREFUSED')) {
+    return 'تعذر الاتصال بخوادم Google. يرجى التحقق من الاتصال بالإنترنت.';
+  }
+  return raw.length > 150 ? raw.slice(0, 150) + '...' : raw;
+}
+
 export class GeminiProvider implements UnifiedAIProvider {
   public id = 'gemini' as const;
   public name = 'Google Gemini';
   public defaultModel = 'gemini-2.5-flash';
 
+  private normalizeModel(modelName?: string): string {
+    if (!modelName || modelName === 'gemini-3.8-flash') return this.defaultModel;
+    return modelName;
+  }
+
   public async testConnection(apiKey: string, modelName?: string) {
     const startTime = Date.now();
     try {
-      const client = new GoogleGenAI({ apiKey });
-      const model = modelName || this.defaultModel;
+      const client = new GoogleGenAI({ apiKey: apiKey.trim() });
+      const model = this.normalizeModel(modelName);
 
       const response: any = await client.models.generateContent({
         model,
@@ -27,14 +49,15 @@ export class GeminiProvider implements UnifiedAIProvider {
       return {
         success: false,
         latencyMs: Date.now() - startTime,
-        error: err?.message || 'فشل الاتصال بـ Google Gemini API',
+        error: formatGeminiError(err),
       };
     }
   }
 
   public async generateResponse(input: GenerateContentInput): Promise<GenerateContentOutput> {
     const startTime = Date.now();
-    const client = new GoogleGenAI({ apiKey: input.apiKey });
+    const client = new GoogleGenAI({ apiKey: input.apiKey.trim() });
+    const model = this.normalizeModel(input.modelName);
 
     const contents: any[] = [];
     if (input.history && input.history.length > 0) {
@@ -51,7 +74,7 @@ export class GeminiProvider implements UnifiedAIProvider {
     });
 
     const response: any = await client.models.generateContent({
-      model: input.modelName || this.defaultModel,
+      model,
       contents,
       config: {
         systemInstruction: input.systemPrompt,
@@ -70,4 +93,3 @@ export class GeminiProvider implements UnifiedAIProvider {
     };
   }
 }
-

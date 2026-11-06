@@ -1,91 +1,35 @@
-import { ipcMain, safeStorage } from 'electron';
+import { ipcMain } from 'electron';
 import Database from 'better-sqlite3';
 import { IPC_CHANNELS } from '../../../shared/ipc-channels';
 import { AIAgentEngine } from '../../agent/agent-engine';
 import { AIProviderFactory } from '../../agent/providers/provider-factory';
+import { decryptSecret } from '../../utils/secure-vault';
+import { getAgentConfigRecord, updateAgentConfigRecord } from './agent-config.service';
 
 export function registerAgentHandlers(db: Database.Database, agent: AIAgentEngine): void {
-  // جلب إعدادات الوكيل الذكي وفك تشفير مفتاح API
+  // جلب إعدادات الوكيل الذكي وفك تشفير المفاتيح
   ipcMain.handle(IPC_CHANNELS.AGENT_GET_CONFIG, async () => {
-    const row = db.prepare('SELECT * FROM agent_config WHERE id = ?').get('default') as any;
-    if (row && row.api_key && row.api_key.startsWith('enc:')) {
-      try {
-        if (safeStorage.isEncryptionAvailable()) {
-          const encBuf = Buffer.from(row.api_key.slice(4), 'base64');
-          row.api_key = safeStorage.decryptString(encBuf);
-        }
-      } catch (err) {
-        console.warn('[IPC] Failed to decrypt API key via safeStorage:', err);
-      }
-    }
-    return row;
+    return getAgentConfigRecord(db);
   });
 
-  // تحديث إعدادات الوكيل الذكي وتشفير مفتاح API بشكل آمن
+  // تحديث إعدادات الوكيل الذكي مع دمج البيانات وحماية المفاتيح
   ipcMain.handle(IPC_CHANNELS.AGENT_UPDATE_CONFIG, async (_event, config) => {
-    let storedApiKey = config.api_key || '';
-    if (storedApiKey && !storedApiKey.startsWith('enc:')) {
-      try {
-        if (safeStorage.isEncryptionAvailable()) {
-          const enc = safeStorage.encryptString(storedApiKey);
-          storedApiKey = `enc:${enc.toString('base64')}`;
-        }
-      } catch (err) {
-        console.warn('[IPC] safeStorage encryption unavailable, storing plaintext fallback:', err);
-      }
-    }
-
-    db.prepare(`
-      UPDATE agent_config SET
-        persona_name = ?,
-        tone = ?,
-        system_instructions = ?,
-        max_discount_percent = ?,
-        max_order_amount_auto = ?,
-        daily_cost_limit = ?,
-        provider = ?,
-        model_name = ?,
-        api_key = ?,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = 'default'
-    `).run(
-      config.persona_name,
-      config.tone,
-      config.system_instructions,
-      config.max_discount_percent,
-      config.max_order_amount_auto,
-      config.daily_cost_limit,
-      config.provider || 'gemini',
-      config.model_name,
-      storedApiKey
-    );
-    return { success: true };
+    return updateAgentConfigRecord(db, config);
   });
 
-  // اختبار الاتصال الفعلي بمزود الذكاء الاصطناعي المحدد (Gemini / DeepSeek / Claude / OpenAI)
+  // اختبار الاتصال الفعلي بمزود الذكاء الاصطناعي المحدد
   ipcMain.handle(IPC_CHANNELS.AGENT_TEST_API_CONNECTION, async (_event, payload: { provider?: string; apiKey?: string; modelName?: string }) => {
     const providerId = payload?.provider || 'gemini';
     const provider = AIProviderFactory.getProvider(providerId);
 
     let keyToTest = payload?.apiKey?.trim() || '';
+    if (keyToTest.startsWith('enc:')) {
+      keyToTest = decryptSecret(keyToTest);
+    }
 
-    // إذا لم يُمرر مفتاح صريح، جلب المفتاح المخزن في قاعدة البيانات مع فك تشفيره
     if (!keyToTest) {
-      const row = db.prepare('SELECT api_key FROM agent_config WHERE id = ?').get('default') as any;
-      if (row?.api_key) {
-        if (row.api_key.startsWith('enc:')) {
-          try {
-            if (safeStorage.isEncryptionAvailable()) {
-              const encBuf = Buffer.from(row.api_key.slice(4), 'base64');
-              keyToTest = safeStorage.decryptString(encBuf);
-            }
-          } catch {
-            keyToTest = '';
-          }
-        } else {
-          keyToTest = row.api_key;
-        }
-      }
+      const cfg = getAgentConfigRecord(db);
+      keyToTest = cfg?.api_keys?.[providerId] || cfg?.api_key || '';
     }
 
     if (!keyToTest) {
@@ -102,10 +46,13 @@ export function registerAgentHandlers(db: Database.Database, agent: AIAgentEngin
       };
     }
 
-    const testRes = await provider.testConnection(keyToTest, payload?.modelName);
+    let modelName = payload?.modelName || provider.defaultModel;
+    if (modelName === 'gemini-3.8-flash') modelName = 'gemini-2.5-flash';
+
+    const testRes = await provider.testConnection(keyToTest, modelName);
     return {
       ...testRes,
-      modelName: payload?.modelName || provider.defaultModel,
+      modelName,
       provider: providerId,
     };
   });
@@ -129,8 +76,6 @@ export function registerAgentHandlers(db: Database.Database, agent: AIAgentEngin
 
   // سجل تشغيلات الوكيل
   ipcMain.handle(IPC_CHANNELS.AGENT_LIST_RUNS, async () => {
-    return db.prepare(`
-      SELECT * FROM agent_runs ORDER BY ts DESC LIMIT 50
-    `).all();
+    return db.prepare(`SELECT * FROM agent_runs ORDER BY ts DESC LIMIT 50`).all();
   });
 }

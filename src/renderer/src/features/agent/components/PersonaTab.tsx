@@ -1,5 +1,6 @@
 import React from 'react';
 import { AgentPersona } from '../types/agent.types';
+import { PERSONAS_LIST } from '../constants/personas.constants';
 
 interface PersonaTabProps {
   selectedPersona: AgentPersona;
@@ -16,29 +17,8 @@ export const PersonaTab: React.FC<PersonaTabProps> = ({
   agentName,
   onAgentNameChange,
   discountLimit,
-  onDiscountLimitChange
+  onDiscountLimitChange,
 }) => {
-  const personas = [
-    {
-      id: 'friendly_saudi' as const,
-      title: 'سعودي ودود وناصح',
-      desc: 'يرحب بـ "يا هلا ومسهلا"، أسلوب مرح ولطيف مع إيموجي خفيف، يعزز التحويل للمتاجر العصرية.',
-      badge: 'الأكثر تحويلاً'
-    },
-    {
-      id: 'formal' as const,
-      title: 'رسمي ومؤسسي',
-      desc: 'عربية فصحى مبسطة، دقيق ومختصر بدون إطالة، مناسب للشركات والخدمات الراقية.',
-      badge: 'B2B & رسمي'
-    },
-    {
-      id: 'expert_trader' as const,
-      title: 'تاجر شعبي خبير',
-      desc: 'لهجة تجارية سريعة، تفاوض عالي وإغلاق سريع، مناسب لأسواق الجملة والمنتجات السريعة.',
-      badge: 'إغلاق سريع'
-    }
-  ];
-
   return (
     <div className="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-slate-200 dark:border-[#1F293D] shadow-sm space-y-6">
       <div>
@@ -52,7 +32,7 @@ export const PersonaTab: React.FC<PersonaTabProps> = ({
 
       {/* Persona Options Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {personas.map((item) => (
+        {PERSONAS_LIST.map((item) => (
           <div
             key={item.id}
             onClick={() => onSelectPersona(item.id)}
@@ -63,16 +43,12 @@ export const PersonaTab: React.FC<PersonaTabProps> = ({
             }`}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="font-bold text-xs text-slate-900 dark:text-white">
-                {item.title}
-              </span>
+              <span className="font-bold text-xs text-slate-900 dark:text-white">{item.title}</span>
               <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-[#128C7E]/10 text-[#128C7E]">
                 {item.badge}
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              {item.desc}
-            </p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{item.desc}</p>
           </div>
         ))}
       </div>

@@ -250,6 +250,7 @@ export interface AgentConfig {
   provider: 'gemini' | 'openai' | 'ollama';
   model_name: string;
   api_key?: string; // مُخزن بأمان
+  api_keys?: Record<string, string>; // مفاتيح المزودات المتعددة
   created_at: string;
   updated_at: string;
 }

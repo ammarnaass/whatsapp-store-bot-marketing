@@ -4,6 +4,7 @@ import { agentToolsDefinitions } from './tools/definitions';
 import { AgentToolExecutor } from './tools/executor';
 import { AgentGuardrails } from './guardrails/guardrails';
 import { AIProviderFactory } from './providers/provider-factory';
+import { decryptSecret } from '../utils/secure-vault';
 
 export interface AgentProcessInput {
   conversationId: string;
@@ -35,25 +36,34 @@ export class AIAgentEngine {
    */
   private getAgentConfig() {
     const row = this.db.prepare('SELECT * FROM agent_config WHERE id = ?').get('default') as any;
-    let apiKey = row?.api_key || process.env.GEMINI_API_KEY || '';
+    const provider = row?.provider || 'gemini';
+    let apiKey = row?.api_key ? decryptSecret(row.api_key) : '';
 
-    if (apiKey.startsWith('enc:')) {
+    if (!apiKey && row?.api_keys_json) {
       try {
-        const { safeStorage } = require('electron');
-        if (safeStorage.isEncryptionAvailable()) {
-          apiKey = safeStorage.decryptString(Buffer.from(apiKey.slice(4), 'base64'));
+        const parsed = JSON.parse(row.api_keys_json);
+        if (parsed[provider]) {
+          apiKey = decryptSecret(parsed[provider]);
         }
-      } catch (err) {
-        console.warn('[AIAgentEngine] Failed to decrypt API key via safeStorage:', err);
-      }
+      } catch {}
     }
+
+    if (!apiKey) {
+      if (provider === 'gemini') apiKey = process.env.GEMINI_API_KEY || '';
+      else if (provider === 'deepseek') apiKey = process.env.DEEPSEEK_API_KEY || '';
+      else if (provider === 'claude') apiKey = process.env.ANTHROPIC_API_KEY || '';
+      else if (provider === 'openai') apiKey = process.env.OPENAI_API_KEY || '';
+    }
+
+    let modelName = row?.model_name || 'gemini-2.5-flash';
+    if (modelName === 'gemini-3.8-flash') modelName = 'gemini-2.5-flash';
 
     return {
       personaName: row?.persona_name || 'مساعد المتجر الذكي',
       tone: row?.tone || 'friendly',
       systemInstructions: row?.system_instructions || '',
-      provider: row?.provider || 'gemini',
-      modelName: row?.model_name || 'gemini-3.8-flash',
+      provider,
+      modelName,
       apiKey,
     };
   }

@@ -65,8 +65,9 @@ CREATE TABLE IF NOT EXISTS agent_config (
     max_order_amount_auto REAL DEFAULT 200.0,
     daily_cost_limit REAL DEFAULT 10.0,
     provider TEXT DEFAULT 'gemini',
-    model_name TEXT DEFAULT 'gemini-3.8-flash',
+    model_name TEXT DEFAULT 'gemini-2.5-flash',
     api_key TEXT,
+    api_keys_json TEXT DEFAULT '{}',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -78,6 +79,7 @@ CREATE TABLE IF NOT EXISTS knowledge_items (
     category TEXT DEFAULT 'general',
     source_type TEXT DEFAULT 'text_faq',
     content TEXT NOT NULL,
+    source TEXT DEFAULT 'OWNER_INPUT',
     summary TEXT,
     source_url TEXT,
     file_path TEXT,

@@ -570,8 +570,9 @@ export class AppDatabase {
         max_order_amount_auto REAL DEFAULT 200.0,
         daily_cost_limit REAL DEFAULT 10.0,
         provider TEXT DEFAULT 'gemini',
-        model_name TEXT DEFAULT 'gemini-3.8-flash',
+        model_name TEXT DEFAULT 'gemini-2.5-flash',
         api_key TEXT,
+        api_keys_json TEXT DEFAULT '{}',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
@@ -628,6 +629,13 @@ export class AppDatabase {
   }
 
   private seedInitialDataIfEmpty() {
+    try {
+      this.db.prepare("ALTER TABLE agent_config ADD COLUMN api_keys_json TEXT DEFAULT '{}'").run();
+    } catch {}
+    try {
+      this.db.prepare("UPDATE agent_config SET model_name = 'gemini-2.5-flash' WHERE model_name = 'gemini-3.8-flash'").run();
+    } catch {}
+
     // 1. التحقق من إعدادات الوكيل
     const agentConfigRow = this.db.prepare('SELECT id FROM agent_config WHERE id = ?').get('default');
     if (!agentConfigRow) {
@@ -646,7 +654,7 @@ export class AppDatabase {
         200.0,
         10.0,
         'gemini',
-        'gemini-3.8-flash'
+        'gemini-2.5-flash'
       );
       console.log('[Database] Seeded default agent_config.');
     }
