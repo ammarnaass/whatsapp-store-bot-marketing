@@ -17,10 +17,7 @@ export function useAgentIntegration() {
   const [errorToast, setErrorToast] = useState<string | null>(null);
 
   const [keysByProvider, setKeysByProvider] = useState<Record<AiProvider, string>>({
-    gemini: '',
-    deepseek: '',
-    claude: '',
-    openai: '',
+    gemini: '', deepseek: '', claude: '', openai: '',
   });
 
   const loadConfig = useCallback(async () => {
@@ -30,11 +27,8 @@ export function useAgentIntegration() {
       if (cfg) {
         const prov = (cfg.provider as AiProvider) || 'gemini';
         setSelectedProvider(prov);
-        if (cfg.model_name && cfg.model_name !== 'gemini-3.8-flash') {
-          setSelectedModel(cfg.model_name);
-        } else {
-          setSelectedModel('gemini-2.5-flash');
-        }
+        const validModel = cfg.model_name && cfg.model_name !== 'gemini-3.8-flash' ? cfg.model_name : 'gemini-2.5-flash';
+        setSelectedModel(validModel);
         if (cfg.daily_cost_limit !== undefined) setDailyCostLimit(cfg.daily_cost_limit);
         if (cfg.api_keys) setKeysByProvider((prev) => ({ ...prev, ...cfg.api_keys }));
         if (cfg.api_key) setKeysByProvider((prev) => ({ ...prev, [prov]: cfg.api_key }));
@@ -71,12 +65,23 @@ export function useAgentIntegration() {
         modelName: selectedModel,
       });
       setTestResult(res);
+      if (res.success && activeApiKey.trim()) {
+        await api.agent.updateConfig({
+          provider: selectedProvider,
+          model_name: selectedModel,
+          api_key: activeApiKey.trim(),
+          api_keys: { ...keysByProvider, [selectedProvider]: activeApiKey.trim() },
+          daily_cost_limit: dailyCostLimit,
+        });
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+      }
     } catch (err: any) {
       setTestResult({ success: false, error: err?.message || 'فشل فحص الاتصال' });
     } finally {
       setIsTesting(false);
     }
-  }, [selectedProvider, activeApiKey, selectedModel]);
+  }, [selectedProvider, activeApiKey, selectedModel, keysByProvider, dailyCostLimit]);
 
   const handleSaveConfig = useCallback(async () => {
     setIsSaving(true);

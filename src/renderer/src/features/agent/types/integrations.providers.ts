@@ -42,3 +42,4 @@ export const PROVIDER_META_LIST: ProviderMeta[] = [
     accentColor: '#10B981',
   },
 ];
+

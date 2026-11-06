@@ -97,3 +97,4 @@ export function updateAgentConfigRecord(db: Database.Database, config: any) {
 
   return { success: true };
 }
+

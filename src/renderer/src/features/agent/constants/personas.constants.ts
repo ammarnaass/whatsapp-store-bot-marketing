@@ -18,3 +18,4 @@ export const PERSONAS_LIST = [
     badge: 'إغلاق سريع',
   },
 ];
+

@@ -33,3 +33,4 @@ export const RESET_SIM_MESSAGES: SimMessage[] = [
     latency: '0.7s',
   },
 ];
+

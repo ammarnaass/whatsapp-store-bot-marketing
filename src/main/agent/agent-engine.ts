@@ -322,8 +322,15 @@ ${knowledgeContext}
       };
     } catch (err: any) {
       console.error('[AIAgentEngine] Exception during model execution:', err);
+      const raw = err?.message || String(err || '');
+      let reply = 'أهلاً بك، حدث خطأ أثناء معالجة الرد عبر الذكاء الاصطناعي.';
+      if (raw.includes('API_KEY_INVALID') || raw.includes('API key not valid')) {
+        reply = 'مفتاح Gemini API غير صالح. يرجى التأكد من نسخه بدقة من Google AI Studio وحفظه في الإعدادات.';
+      } else if (raw.includes('RESOURCE_EXHAUSTED') || raw.includes('quota') || raw.includes('429')) {
+        reply = 'تم تجاوز سقف الاستخدام لمفتاح API (Quota Exceeded) في Google AI Studio.';
+      }
       return {
-        replyText: 'أهلاً بك، تم استلام رسالتك وسنقوم بخدمتك فوراً.',
+        replyText: reply,
         toolsCalled,
         handoffTriggered: false,
         latencyMs: Date.now() - startTime,
