@@ -44,6 +44,7 @@ export interface CatalogProduct {
   category: string;
   type: 'physical' | 'digital';
   price: number;
+  currency?: string;
   oldPrice?: number;
   stock: number;
   image: string;

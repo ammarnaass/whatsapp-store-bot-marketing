@@ -24,6 +24,7 @@ export const DEFAULT_PRODUCT_FORM: ProductFormData = {
   sku: '',
   barcode: '',
   brand: '',
+  currency: 'USD',
   price: 150,
   cost_price: 90,
   compare_at_price: 0,

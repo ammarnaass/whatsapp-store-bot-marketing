@@ -55,6 +55,7 @@ function mapBackendProductToCatalogProduct(p: any): CatalogProduct {
     category: p.category || 'عام',
     type: p.type || 'physical',
     price: firstVariant?.price || 0,
+    currency: firstVariant?.currency || 'USD',
     stock: totalStock,
     image: (p.media && p.media.length > 0) ? p.media[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300',
     aiRecommended: Boolean(p.active),

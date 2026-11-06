@@ -1,6 +1,7 @@
 import React from 'react';
 import { Download, ExternalLink, KeyRound, Eye, Edit3, Trash2, ShieldCheck, Laptop } from 'lucide-react';
 import { SoftwareWithInventory } from '../types/software.types';
+import { formatCurrency } from '@shared/currencies';
 
 interface Props {
   item: SoftwareWithInventory;
@@ -54,9 +55,9 @@ export const SoftwareCard: React.FC<Props> = ({
         </h3>
 
         <div className="flex items-baseline gap-2 mt-2">
-          <span className="text-base font-black text-slate-900 dark:text-white">{item.price} {item.currency}</span>
+          <span className="text-base font-black text-slate-900 dark:text-white">{formatCurrency(item.price, item.currency)}</span>
           {item.compare_at_price && item.compare_at_price > item.price && (
-            <span className="text-xs line-through text-slate-400">{item.compare_at_price} {item.currency}</span>
+            <span className="text-xs line-through text-slate-400">{formatCurrency(item.compare_at_price, item.currency)}</span>
           )}
         </div>
       </div>

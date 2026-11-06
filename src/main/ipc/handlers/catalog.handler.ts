@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron';
 import Database from 'better-sqlite3';
 import { IPC_CHANNELS } from '../../../shared/ipc-channels';
+import { mapProductRow } from './catalog.utils';
 
 export function registerCatalogHandlers(db: Database.Database): void {
   // 1. سرد المنتجات وتفاصيل المتغيرات والأسعار والأرباح والشحن
@@ -13,16 +14,7 @@ export function registerCatalogHandlers(db: Database.Database): void {
 
     return products.map((p) => {
       const variants = db.prepare('SELECT * FROM variants WHERE product_id = ?').all(p.id) as any[];
-      return {
-        ...p,
-        media: JSON.parse(p.media || '[]'),
-        tags: JSON.parse(p.tags || '[]'),
-        active: Boolean(p.active),
-        is_featured: Boolean(p.is_featured),
-        is_tax_inclusive: Boolean(p.is_tax_inclusive ?? 1),
-        allow_backorders: Boolean(p.allow_backorders),
-        variants: variants.map((v) => ({ ...v, options: JSON.parse(v.options_json || '{}') })),
-      };
+      return mapProductRow(p, variants);
     });
   });
 
@@ -31,12 +23,7 @@ export function registerCatalogHandlers(db: Database.Database): void {
     const prod = db.prepare('SELECT * FROM products WHERE id = ?').get(id) as any;
     if (!prod) return null;
     const variants = db.prepare('SELECT * FROM variants WHERE product_id = ?').all(id) as any[];
-    return {
-      ...prod,
-      media: JSON.parse(prod.media || '[]'),
-      tags: JSON.parse(prod.tags || '[]'),
-      variants: variants.map((v) => ({ ...v, options: JSON.parse(v.options_json || '{}') })),
-    };
+    return mapProductRow(prod, variants);
   });
 
   // 3. إنشاء منتج جديد مع كامل البيانات المالية واللوجستية
@@ -52,11 +39,7 @@ export function registerCatalogHandlers(db: Database.Database): void {
           low_stock_threshold, tax_rate, is_tax_inclusive, tags,
           whatsapp_short_desc, is_featured, allow_backorders
         ) VALUES (
-          ?, ?, ?, ?, ?, ?, ?, ?,
-          ?, ?, ?, ?, ?,
-          ?, ?, ?, ?, ?, ?,
-          ?, ?, ?, ?,
-          ?, ?, ?
+          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
       `).run(
         id, data.name, data.type || 'physical', data.description || '', JSON.stringify(data.media || []), data.category || '', data.category_id || null, 1,
@@ -70,8 +53,8 @@ export function registerCatalogHandlers(db: Database.Database): void {
       const stock = Number(data.stock ?? 0);
       db.prepare(`
         INSERT INTO variants (id, product_id, sku, options_json, price, currency, stock_qty)
-        VALUES (?, ?, ?, '{}', ?, 'SAR', ?)
-      `).run(`var_${Date.now()}`, id, sku, price, stock);
+        VALUES (?, ?, ?, '{}', ?, ?, ?)
+      `).run(`var_${Date.now()}`, id, sku, price, data.currency || 'USD', stock);
     });
     createTx();
     return { success: true, id };
@@ -97,11 +80,11 @@ export function registerCatalogHandlers(db: Database.Database): void {
         data.id
       );
 
-      if (data.price !== undefined || data.stock !== undefined) {
+      if (data.price !== undefined || data.stock !== undefined || data.currency !== undefined) {
         db.prepare(`
-          UPDATE variants SET price = COALESCE(?, price), stock_qty = COALESCE(?, stock_qty)
+          UPDATE variants SET price = COALESCE(?, price), currency = COALESCE(?, currency), stock_qty = COALESCE(?, stock_qty)
           WHERE product_id = ?
-        `).run(data.price, data.stock, data.id);
+        `).run(data.price, data.currency, data.stock, data.id);
       }
     });
     updateTx();
@@ -122,7 +105,7 @@ export function registerCatalogHandlers(db: Database.Database): void {
 
   // 7. استيراد مفاتيح التراخيص
   ipcMain.handle(IPC_CHANNELS.CATALOG_IMPORT_KEYS, async (_event, { productId, keys }) => {
-    const insertKey = db.prepare('INSERT INTO license_keys (id, product_id, key_code, status) VALUES (?, ?, ?, "available")');
+    const insertKey = db.prepare("INSERT INTO license_keys (id, product_id, key_code, status) VALUES (?, ?, ?, 'available')");
     let count = 0;
     for (const key of keys) {
       if (key.trim()) {

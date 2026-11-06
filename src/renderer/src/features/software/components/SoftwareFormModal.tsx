@@ -8,7 +8,7 @@ interface Props { item: SoftwareWithInventory | null; isOpen: boolean; onClose: 
 
 const DEFAULT_FORM: FormState = {
   name: '', ver: 'v1.0.0', cat: 'نقاط بيع ومحلات', lic: 'lifetime' as SoftwareLicenseType,
-  price: 900, dl: '', site: '', img: '', inst: '1. تثبيت البرنامج.\n2. إدخال كود التفعيل الرقمي.',
+  price: 900, cur: 'USD', dl: '', site: '', img: '', inst: '1. تثبيت البرنامج.\n2. إدخال كود التفعيل الرقمي.',
   imgsRaw: '', shotsRaw: '', keysRaw: '',
 };
 
@@ -20,8 +20,8 @@ export const SoftwareFormModal: React.FC<Props> = ({ item, isOpen, onClose, onSa
     if (item) {
       setForm({
         name: item.software_name || '', ver: item.version || 'v1.0.0', cat: item.category || 'نقاط بيع ومحلات',
-        lic: item.license_type || 'lifetime', price: item.price || 0, dl: item.download_url || '', site: item.website_url || '',
-        img: item.cover_image || '', inst: item.activation_instructions || '',
+        lic: item.license_type || 'lifetime', price: item.price || 0, cur: item.currency || 'USD',
+        dl: item.download_url || '', site: item.website_url || '', img: item.cover_image || '', inst: item.activation_instructions || '',
         imgsRaw: (item.activation_guide_images || []).join('\n'), shotsRaw: (item.screenshots || []).join('\n'), keysRaw: '',
       });
     } else { setForm(DEFAULT_FORM); }
@@ -35,7 +35,7 @@ export const SoftwareFormModal: React.FC<Props> = ({ item, isOpen, onClose, onSa
     setLoading(true);
     const payload = {
       software_name: form.name, version: form.ver, category: form.cat, license_type: form.lic, price: form.price,
-      download_url: form.dl, website_url: form.site, cover_image: form.img, activation_instructions: form.inst,
+      currency: form.cur || 'USD', download_url: form.dl, website_url: form.site, cover_image: form.img, activation_instructions: form.inst,
       activation_guide_images: form.imgsRaw.split('\n').map((s) => s.trim()).filter(Boolean),
       screenshots: form.shotsRaw.split('\n').map((s) => s.trim()).filter(Boolean),
       initialKeys: form.keysRaw.split('\n').map((s) => s.trim()).filter(Boolean),

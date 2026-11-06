@@ -3,6 +3,7 @@ import { Sparkles, Smartphone, Package, Edit2, Trash2 } from 'lucide-react';
 import { CatalogProduct } from '../types/products.types';
 import { EmptyState } from '../../data-management';
 import { CategoryBadge } from '../../categories';
+import { formatCurrency } from '@shared/currencies';
 
 interface ProductsGridProps {
   products: CatalogProduct[];
@@ -49,7 +50,7 @@ export const ProductsGrid: React.FC<ProductsGridProps> = ({
 
             <div className="pt-3 border-t border-slate-100 dark:border-[#1F293D] flex items-center justify-between">
               <div>
-                <span className="text-sm font-black text-[#128C7E]">${prod.price}</span>
+                <span className="text-sm font-black text-[#128C7E]">{formatCurrency(prod.price, prod.currency)}</span>
                 <span className="text-[10px] text-slate-400 block">المخزون: {prod.stock}</span>
               </div>
               <div className="flex items-center gap-1">

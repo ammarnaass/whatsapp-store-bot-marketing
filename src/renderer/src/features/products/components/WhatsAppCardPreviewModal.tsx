@@ -1,6 +1,7 @@
 import React from 'react';
 import { Smartphone, X } from 'lucide-react';
 import { CatalogProduct } from '../types/products.types';
+import { formatCurrency } from '@shared/currencies';
 
 interface WhatsAppCardPreviewModalProps {
   product: CatalogProduct | null;
@@ -49,9 +50,9 @@ export const WhatsAppCardPreviewModal: React.FC<WhatsAppCardPreviewModalProps> =
                 {product.description}
               </p>
               <div className="pt-1 flex items-baseline gap-2">
-                <span className="text-base font-black text-[#128C7E]">{product.price} ر.س</span>
+                <span className="text-base font-black text-[#128C7E]">{formatCurrency(product.price, (product as any).currency)}</span>
                 {product.oldPrice && (
-                  <span className="text-xs line-through text-slate-400">{product.oldPrice} ر.س</span>
+                  <span className="text-xs line-through text-slate-400">{formatCurrency(product.oldPrice, (product as any).currency)}</span>
                 )}
               </div>
             </div>

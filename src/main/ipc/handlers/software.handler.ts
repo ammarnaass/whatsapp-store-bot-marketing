@@ -3,8 +3,7 @@ import Database from 'better-sqlite3';
 import { IPC_CHANNELS } from '../../../shared/ipc-channels';
 
 const mapSoft = (r: any) => (!r ? null : {
-  ...r,
-  is_active: Boolean(r.is_active),
+  ...r, is_active: Boolean(r.is_active),
   screenshots: JSON.parse(r.screenshots || '[]'),
   activation_guide_images: JSON.parse(r.activation_guide_images || '[]'),
 });
@@ -12,12 +11,11 @@ const mapSoft = (r: any) => (!r ? null : {
 export function registerSoftwareHandlers(db: Database.Database): void {
   // 1. استعراض قائمة البرمجيات والتراخيص
   ipcMain.handle(IPC_CHANNELS.SOFTWARE_LIST, async (_e, params?: { category?: string; query?: string }) => {
+    const kCount = (st: string) => `(SELECT count(*) FROM license_keys k WHERE k.product_id = s.product_id AND k.status = '${st}')`;
     let sql = `
       SELECT s.*, p.name as product_name, p.active as product_active, v.sku,
-        (SELECT count(*) FROM license_keys k WHERE k.product_id = s.product_id AND k.status = 'available') as availableKeysCount,
-        (SELECT count(*) FROM license_keys k WHERE k.product_id = s.product_id AND k.status = 'sold') as soldKeysCount
-      FROM software_items s LEFT JOIN products p ON s.product_id = p.id LEFT JOIN variants v ON s.product_id = v.product_id
-      WHERE 1=1
+        ${kCount('available')} as availableKeysCount, ${kCount('sold')} as soldKeysCount
+      FROM software_items s LEFT JOIN products p ON s.product_id = p.id LEFT JOIN variants v ON s.product_id = v.product_id WHERE 1=1
     `;
     const args: any[] = [];
     if (params?.category && params.category !== 'all') { sql += ' AND s.category = ?'; args.push(params.category); }
@@ -31,10 +29,10 @@ export function registerSoftwareHandlers(db: Database.Database): void {
 
   // 2. جلب تفاصيل برنامج محدد
   ipcMain.handle(IPC_CHANNELS.SOFTWARE_GET, async (_e, { id }: { id: string }) => {
+    const q = 'SELECT count(*) FROM license_keys k WHERE k.product_id = s.product_id';
     return mapSoft(db.prepare(`
       SELECT s.*, p.name as product_name, p.active as product_active, v.sku,
-        (SELECT count(*) FROM license_keys k WHERE k.product_id = s.product_id AND k.status = 'available') as availableKeysCount,
-        (SELECT count(*) FROM license_keys k WHERE k.product_id = s.product_id AND k.status = 'sold') as soldKeysCount
+        (${q} AND k.status = 'available') as availableKeysCount, (${q} AND k.status = 'sold') as soldKeysCount
       FROM software_items s LEFT JOIN products p ON s.product_id = p.id LEFT JOIN variants v ON s.product_id = v.product_id WHERE s.id = ?
     `).get(id));
   });
@@ -49,11 +47,11 @@ export function registerSoftwareHandlers(db: Database.Database): void {
       db.prepare(`INSERT INTO products (id, name, type, description, media, category, category_id, active, cost_price, compare_at_price, tags, is_featured) VALUES (?, ?, 'digital', ?, ?, 'برمجيات وتراخيص', 'cat_digital', 1, ?, ?, ?, 1)`)
         .run(prodId, data.software_name, data.activation_instructions || '', JSON.stringify([data.cover_image || '']), data.cost_price || 0, data.compare_at_price || 0, JSON.stringify([data.category || 'برمجيات']));
       db.prepare(`INSERT INTO variants (id, product_id, sku, options_json, price, currency, stock_qty) VALUES (?, ?, ?, '{}', ?, ?, ?)`)
-        .run(`var_${softId}`, prodId, `SKU-SW-${Math.floor(1000 + Math.random() * 9000)}`, data.price || 0, data.currency || 'SAR', initialKeys.length);
+        .run(`var_${softId}`, prodId, `SKU-SW-${Math.floor(1000 + Math.random() * 9000)}`, data.price || 0, data.currency || 'USD', initialKeys.length);
       db.prepare(`
         INSERT INTO software_items (id, product_id, software_name, version, category, website_url, download_url, license_type, price, compare_at_price, currency, cover_image, screenshots, activation_guide_images, activation_instructions, system_requirements, demo_url, support_contact, is_active)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
-      `).run(softId, prodId, data.software_name, data.version || 'v1.0.0', data.category || 'عام', data.website_url || '', data.download_url || '', data.license_type || 'lifetime', data.price || 0, data.compare_at_price || 0, data.currency || 'SAR', data.cover_image || '', JSON.stringify(data.screenshots || []), JSON.stringify(data.activation_guide_images || []), data.activation_instructions || '', data.system_requirements || '', data.demo_url || '', data.support_contact || '');
+      `).run(softId, prodId, data.software_name, data.version || 'v1.0.0', data.category || 'عام', data.website_url || '', data.download_url || '', data.license_type || 'lifetime', data.price || 0, data.compare_at_price || 0, data.currency || 'USD', data.cover_image || '', JSON.stringify(data.screenshots || []), JSON.stringify(data.activation_guide_images || []), data.activation_instructions || '', data.system_requirements || '', data.demo_url || '', data.support_contact || '');
       const insKey = db.prepare("INSERT INTO license_keys (id, product_id, key_code, status) VALUES (?, ?, ?, 'available')");
       initialKeys.forEach((key, idx) => insKey.run(`key_${softId}_${idx}`, prodId, key.trim()));
     })();
@@ -62,16 +60,29 @@ export function registerSoftwareHandlers(db: Database.Database): void {
 
   // 4. تعديل بيانات البرنامج
   ipcMain.handle(IPC_CHANNELS.SOFTWARE_UPDATE, async (_e, { id, data }: { id: string; data: any }) => {
-    db.prepare(`
-      UPDATE software_items SET
-        software_name = COALESCE(?, software_name), version = COALESCE(?, version), category = COALESCE(?, category),
-        website_url = COALESCE(?, website_url), download_url = COALESCE(?, download_url), license_type = COALESCE(?, license_type),
-        price = COALESCE(?, price), compare_at_price = COALESCE(?, compare_at_price), cover_image = COALESCE(?, cover_image),
-        screenshots = COALESCE(?, screenshots), activation_guide_images = COALESCE(?, activation_guide_images),
-        activation_instructions = COALESCE(?, activation_instructions), system_requirements = COALESCE(?, system_requirements),
-        demo_url = COALESCE(?, demo_url), support_contact = COALESCE(?, support_contact), updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `).run(data.software_name, data.version, data.category, data.website_url, data.download_url, data.license_type, data.price, data.compare_at_price, data.cover_image, data.screenshots ? JSON.stringify(data.screenshots) : null, data.activation_guide_images ? JSON.stringify(data.activation_guide_images) : null, data.activation_instructions, data.system_requirements, data.demo_url, data.support_contact, id);
+    db.transaction(() => {
+      db.prepare(`
+        UPDATE software_items SET
+          software_name = COALESCE(?, software_name), version = COALESCE(?, version), category = COALESCE(?, category),
+          website_url = COALESCE(?, website_url), download_url = COALESCE(?, download_url), license_type = COALESCE(?, license_type),
+          price = COALESCE(?, price), compare_at_price = COALESCE(?, compare_at_price), currency = COALESCE(?, currency),
+          cover_image = COALESCE(?, cover_image), screenshots = COALESCE(?, screenshots),
+          activation_guide_images = COALESCE(?, activation_guide_images), activation_instructions = COALESCE(?, activation_instructions),
+          system_requirements = COALESCE(?, system_requirements), demo_url = COALESCE(?, demo_url), support_contact = COALESCE(?, support_contact), updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(
+        data.software_name, data.version, data.category, data.website_url, data.download_url, data.license_type,
+        data.price, data.compare_at_price, data.currency, data.cover_image, data.screenshots ? JSON.stringify(data.screenshots) : null,
+        data.activation_guide_images ? JSON.stringify(data.activation_guide_images) : null, data.activation_instructions, data.system_requirements,
+        data.demo_url, data.support_contact, id
+      );
+      if (data.price !== undefined || data.currency !== undefined) {
+        const item = db.prepare('SELECT product_id FROM software_items WHERE id = ?').get(id) as any;
+        if (item?.product_id) {
+          db.prepare('UPDATE variants SET price = COALESCE(?, price), currency = COALESCE(?, currency) WHERE product_id = ?').run(data.price, data.currency, item.product_id);
+        }
+      }
+    })();
     return { success: true };
   });
 
@@ -80,9 +91,7 @@ export function registerSoftwareHandlers(db: Database.Database): void {
     const row = db.prepare('SELECT product_id FROM software_items WHERE id = ?').get(id) as any;
     db.prepare('DELETE FROM software_items WHERE id = ?').run(id);
     if (row?.product_id) {
-      db.prepare('DELETE FROM products WHERE id = ?').run(row.product_id);
-      db.prepare('DELETE FROM variants WHERE product_id = ?').run(row.product_id);
-      db.prepare('DELETE FROM license_keys WHERE product_id = ?').run(row.product_id);
+      ['products', 'variants', 'license_keys'].forEach((t) => db.prepare(`DELETE FROM ${t} WHERE id = ? OR product_id = ?`).run(row.product_id, row.product_id));
     }
     return { success: true };
   });

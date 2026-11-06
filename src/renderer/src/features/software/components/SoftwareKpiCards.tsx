@@ -1,6 +1,7 @@
 import React from 'react';
 import { AppWindow, KeyRound, CheckCircle2, DollarSign } from 'lucide-react';
 import { SoftwareKpis } from '../types/software.types';
+import { formatCurrency } from '@shared/currencies';
 
 interface Props {
   kpis: SoftwareKpis;
@@ -43,7 +44,7 @@ export const SoftwareKpiCards: React.FC<Props> = ({ kpis }) => {
         <div>
           <p className="text-[11px] font-bold text-slate-400">عائدات مبيعات التراخيص</p>
           <p className="text-xl font-extrabold text-amber-600 dark:text-amber-400 mt-0.5">
-            {kpis.totalRevenue.toLocaleString()} ر.س
+            {formatCurrency(kpis.totalRevenue, 'USD')}
           </p>
         </div>
         <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center">

@@ -1,9 +1,10 @@
 import React from 'react';
 import { SoftwareLicenseType } from '../types/software.types';
+import { SUPPORTED_CURRENCIES } from '@shared/currencies';
 
 export interface FormState {
   name: string; ver: string; cat: string; lic: SoftwareLicenseType; price: number;
-  dl: string; site: string; img: string; inst: string; imgsRaw: string; shotsRaw: string; keysRaw: string;
+  cur: string; dl: string; site: string; img: string; inst: string; imgsRaw: string; shotsRaw: string; keysRaw: string;
 }
 
 export const SoftwareFormFields: React.FC<{
@@ -22,7 +23,7 @@ export const SoftwareFormFields: React.FC<{
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         <div>
           <label className="block font-bold mb-1">التصنيف</label>
           <select value={form.cat} onChange={(e) => setForm({ ...form, cat: e.target.value })} className="w-full h-8 px-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
@@ -41,8 +42,18 @@ export const SoftwareFormFields: React.FC<{
           </select>
         </div>
         <div>
-          <label className="block font-bold mb-1">السعر (ر.س)</label>
-          <input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className="w-full h-8 px-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-bold" />
+          <label className="block font-bold mb-1">السعر</label>
+          <input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className="w-full h-8 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-bold" />
+        </div>
+        <div>
+          <label className="block font-bold mb-1">العملة</label>
+          <select value={form.cur || 'USD'} onChange={(e) => setForm({ ...form, cur: e.target.value })} className="w-full h-8 px-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold">
+            {SUPPORTED_CURRENCIES.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.flag} {c.code} ({c.symbol})
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

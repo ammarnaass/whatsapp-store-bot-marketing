@@ -1,6 +1,7 @@
 import React from 'react';
-import { DollarSign, Clock, MessageSquare, Globe2 } from 'lucide-react';
+import { Globe2 } from 'lucide-react';
 import { StoreIdentity } from '../../types/settings.types';
+import { SUPPORTED_CURRENCIES } from '@shared/currencies';
 
 interface RegionalLocaleCardProps {
   identity: StoreIdentity;
@@ -31,13 +32,11 @@ export const RegionalLocaleCard: React.FC<RegionalLocaleCardProps> = ({ identity
               onChange={(e) => onChange({ ...identity, currency: e.target.value })}
               className="w-full h-9 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-[#1F293D] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-[#128C7E] cursor-pointer"
             >
-              <option value="SAR">ريال سعودي (SAR - ر.س)</option>
-              <option value="AED">درهم إماراتي (AED - د.إ)</option>
-              <option value="KWD">دينار كويتي (KWD - د.ك)</option>
-              <option value="QAR">ريال قطري (QAR - ر.ق)</option>
-              <option value="BHD">دينار بحريني (BHD - د.ب)</option>
-              <option value="OMR">ريال عماني (OMR - ر.ع)</option>
-              <option value="USD">دولار أمريكي (USD - $)</option>
+              {SUPPORTED_CURRENCIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.flag} {c.name} ({c.code} - {c.symbol})
+                </option>
+              ))}
             </select>
           </div>
 

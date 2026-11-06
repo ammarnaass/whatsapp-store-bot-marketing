@@ -19,6 +19,7 @@ export interface ProductFormData {
   barcode?: string;
   brand?: string;
   price: number;
+  currency?: string;
   cost_price: number;
   compare_at_price?: number;
   tax_rate: number;
