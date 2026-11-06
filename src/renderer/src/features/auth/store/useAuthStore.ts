@@ -30,9 +30,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setAccountModalOpen: (open) => set({ isAccountModalOpen: open }),
   clearError: () => set({ error: null }),
   initAuth: async () => {
+    if (get().isAuthenticated && get().currentUser) return;
     set({ isLoading: true, error: null });
     try {
-      const usersCheck = await api.auth.checkHasUsers();
+      const timeout = (ms: number) => new Promise<any>((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
+      const usersCheck = await Promise.race([api.auth.checkHasUsers(), timeout(4000)]);
       if (!usersCheck?.hasUsers) {
         set({ isFirstTimeSetup: true, isAuthenticated: false, currentUser: null, sessionToken: null, isLoading: false });
         return;
@@ -42,12 +44,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ isFirstTimeSetup: false, isAuthenticated: false, currentUser: null, sessionToken: null, isLoading: false });
         return;
       }
-      const res = await api.auth.validateSession({ sessionToken: token });
-      if (res.valid && res.user && res.user.status !== 'suspended') {
+      const res = await Promise.race([api.auth.validateSession({ sessionToken: token }), timeout(4000)]);
+      if (res?.valid && res?.user && res.user.status !== 'suspended') {
         set({ currentUser: res.user, sessionToken: token, isAuthenticated: true, isFirstTimeSetup: false, isLoading: false });
       } else {
-        localStorage.removeItem(TOKEN_KEY);
-        sessionStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(TOKEN_KEY); sessionStorage.removeItem(TOKEN_KEY);
         set({ currentUser: null, sessionToken: null, isAuthenticated: false, isFirstTimeSetup: false, isLoading: false });
       }
     } catch {

@@ -11,32 +11,38 @@ interface UseAppLifecycleProps {
 
 export function useAppLifecycle({
   handleToggleSidebar,
-  isSidebarCollapsed,
   setIsSidebarCollapsed,
 }: UseAppLifecycleProps) {
   const [sessionStatus, setSessionStatus] = useState<string>('CONNECTED');
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
+  // 1. مزامنة البيانات من الـ API بمجرد توثيق الجلسة
   useEffect(() => {
     if (isAuthenticated) {
       useDataStore.getState().hydrateFromApi();
     }
   }, [isAuthenticated]);
 
+  // 2. التحقق من صلاحية الجلسة والحساب مرة واحدة فقط عند إقلاع التطبيق
   useEffect(() => {
-    // 1. بدء فحص المصادقة والجلسة الأولية
     useAuthStore.getState().initAuth();
+  }, []);
 
-    // 2. الاستماع لوصول الرسائل الحية عبر Webhook
+  // 3. الاستماع لأحداث جلسة واتساب والرسائل الحية الواردة
+  useEffect(() => {
     const unsubMsg = api.chat.onMessageReceived((data) => {
       useDataStore.getState().handleLiveMessageReceived(data);
     });
-
-    // 3. متابعة حالة جلسة واتساب
     api.session.getStatus().then((res) => setSessionStatus(res.status));
-    const unsub = api.session.onStatusChanged((data) => setSessionStatus(data.status));
+    const unsubStatus = api.session.onStatusChanged((data) => setSessionStatus(data.status));
+    return () => {
+      unsubStatus();
+      unsubMsg();
+    };
+  }, []);
 
-    // 4. اختصار F11 لملء الشاشة، و Ctrl+B لطي القائمة الجانبية
+  // 4. اختصارات لوحة المفاتيح والتحجيم التلقائي للشاشة
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'F11') {
         e.preventDefault();
@@ -46,23 +52,18 @@ export function useAppLifecycle({
         handleToggleSidebar();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-
-    // 5. التكيف التلقائي عند تغيير حجم الشاشة
     const handleResize = () => {
-      if (window.innerWidth < 1024 && !isSidebarCollapsed) {
-        setIsSidebarCollapsed(true);
+      if (window.innerWidth < 1024) {
+        setIsSidebarCollapsed((prev) => (prev ? prev : true));
       }
     };
+    window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('resize', handleResize);
-
     return () => {
-      unsub();
-      unsubMsg();
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('resize', handleResize);
     };
-  }, [isSidebarCollapsed]);
+  }, [handleToggleSidebar, setIsSidebarCollapsed]);
 
   return { sessionStatus, setSessionStatus };
 }
