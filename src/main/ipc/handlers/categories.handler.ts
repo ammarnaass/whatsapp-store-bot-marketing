@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron';
 import Database from 'better-sqlite3';
 import { IPC_CHANNELS } from '../../../shared/ipc-channels';
+import { sanitizeCategorySlug } from './categories.utils';
 
 export function registerCategoriesHandlers(db: Database.Database): void {
   // 1. سرد الفئات مع أعداد المنتجات المرتبطة
@@ -27,86 +28,87 @@ export function registerCategoriesHandlers(db: Database.Database): void {
 
   // 3. إنشاء فئة جديدة
   ipcMain.handle(IPC_CHANNELS.CATEGORIES_CREATE, async (_event, data) => {
-    const id = `cat_${Date.now()}`;
-    const slug = (data.slug?.trim() || `category-${Date.now()}`).toLowerCase().replace(/[^a-z0-9_-]/g, '-');
-    const maxOrderRow = db.prepare('SELECT MAX(sort_order) as maxOrder FROM categories').get() as any;
-    const sortOrder = Number(data.sort_order ?? (maxOrderRow?.maxOrder ? maxOrderRow.maxOrder + 1 : 1));
+    try {
+      if (!data?.name?.trim()) return { success: false, error: 'اسم الفئة مطلوب' };
+      const id = data.id || `cat_${Date.now()}`;
+      const slug = sanitizeCategorySlug(db, data.slug, data.name);
+      const maxOrderRow = db.prepare('SELECT MAX(sort_order) as maxOrder FROM categories').get() as any;
+      const sortOrder = Number(data.sort_order ?? (maxOrderRow?.maxOrder ? maxOrderRow.maxOrder + 1 : 1));
 
-    db.prepare(`
-      INSERT INTO categories (id, name, slug, description, icon, color, parent_id, sort_order, active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      id,
-      data.name.trim(),
-      slug,
-      data.description?.trim() || null,
-      data.icon || 'Folder',
-      data.color || '#128C7E',
-      data.parent_id || null,
-      sortOrder,
-      data.active !== false ? 1 : 0
-    );
+      db.prepare(`
+        INSERT INTO categories (id, name, slug, description, icon, color, parent_id, sort_order, active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        id, data.name.trim(), slug, data.description?.trim() || null,
+        data.icon || 'Folder', data.color || '#128C7E', data.parent_id || null,
+        sortOrder, data.active !== false ? 1 : 0
+      );
 
-    return { success: true, id };
+      return { success: true, id };
+    } catch (err: any) {
+      console.error('[CategoriesHandler] Create error:', err);
+      return { success: false, error: err?.message || 'فشل إضافة الفئة' };
+    }
   });
 
   // 4. تعديل بيانات الفئة
   ipcMain.handle(IPC_CHANNELS.CATEGORIES_UPDATE, async (_event, data) => {
-    const slug = (data.slug?.trim() || `category-${Date.now()}`).toLowerCase().replace(/[^a-z0-9_-]/g, '-');
-    const existing = db.prepare('SELECT name FROM categories WHERE id = ?').get(data.id) as any;
+    try {
+      if (!data?.id || !data?.name?.trim()) return { success: false, error: 'بيانات الفئة غير مكتملة' };
+      const slug = sanitizeCategorySlug(db, data.slug, data.name, data.id);
+      const existing = db.prepare('SELECT name FROM categories WHERE id = ?').get(data.id) as any;
 
-    const tx = db.transaction(() => {
-      db.prepare(`
-        UPDATE categories SET
-          name = ?, slug = ?, description = ?, icon = ?, color = ?,
-          parent_id = ?, sort_order = ?, active = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `).run(
-        data.name.trim(),
-        slug,
-        data.description?.trim() || null,
-        data.icon || 'Folder',
-        data.color || '#128C7E',
-        data.parent_id || null,
-        Number(data.sort_order ?? 0),
-        data.active !== false ? 1 : 0,
-        data.id
-      );
+      const tx = db.transaction(() => {
+        db.prepare(`
+          UPDATE categories SET
+            name = ?, slug = ?, description = ?, icon = ?, color = ?,
+            parent_id = ?, sort_order = ?, active = ?, updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `).run(
+          data.name.trim(), slug, data.description?.trim() || null,
+          data.icon || 'Folder', data.color || '#128C7E', data.parent_id || null,
+          Number(data.sort_order ?? 0), data.active !== false ? 1 : 0, data.id
+        );
 
-      // إذا تغيّر اسم الفئة، حدّث اسم الفئة بالمنتجات المرتبطة
-      if (existing && existing.name !== data.name.trim()) {
-        db.prepare('UPDATE products SET category = ? WHERE category_id = ?').run(data.name.trim(), data.id);
-      }
-    });
+        if (existing && existing.name !== data.name.trim()) {
+          db.prepare('UPDATE products SET category = ? WHERE category_id = ?').run(data.name.trim(), data.id);
+        }
+      });
 
-    tx();
-    return { success: true };
+      tx();
+      return { success: true };
+    } catch (err: any) {
+      console.error('[CategoriesHandler] Update error:', err);
+      return { success: false, error: err?.message || 'فشل تحديث الفئة' };
+    }
   });
 
   // 5. حذف فئة مع معالجة المنتجات المرتبطة
   ipcMain.handle(IPC_CHANNELS.CATEGORIES_DELETE, async (_event, { id, reassignToId }) => {
-    const tx = db.transaction(() => {
-      if (reassignToId && reassignToId !== id) {
-        const targetCat = db.prepare('SELECT name FROM categories WHERE id = ?').get(reassignToId) as any;
-        db.prepare('UPDATE products SET category_id = ?, category = ? WHERE category_id = ? OR category = (SELECT name FROM categories WHERE id = ?)')
-          .run(reassignToId, targetCat?.name || '', id, id);
-      } else {
-        db.prepare('UPDATE products SET category_id = NULL WHERE category_id = ?').run(id);
-      }
-      db.prepare('DELETE FROM categories WHERE id = ?').run(id);
-    });
-
-    tx();
-    return { success: true };
+    try {
+      const tx = db.transaction(() => {
+        if (reassignToId && reassignToId !== id) {
+          const targetCat = db.prepare('SELECT name FROM categories WHERE id = ?').get(reassignToId) as any;
+          db.prepare('UPDATE products SET category_id = ?, category = ? WHERE category_id = ? OR category = (SELECT name FROM categories WHERE id = ?)')
+            .run(reassignToId, targetCat?.name || '', id, id);
+        } else {
+          db.prepare('UPDATE products SET category_id = NULL WHERE category_id = ?').run(id);
+        }
+        db.prepare('DELETE FROM categories WHERE id = ?').run(id);
+      });
+      tx();
+      return { success: true };
+    } catch (err: any) {
+      console.error('[CategoriesHandler] Delete error:', err);
+      return { success: false, error: err?.message };
+    }
   });
 
   // 6. إعادة ترتيب الفئات
   ipcMain.handle(IPC_CHANNELS.CATEGORIES_REORDER, async (_event, { ids }: { ids: string[] }) => {
     const tx = db.transaction(() => {
       const stmt = db.prepare('UPDATE categories SET sort_order = ? WHERE id = ?');
-      ids.forEach((id, index) => {
-        stmt.run(index + 1, id);
-      });
+      ids.forEach((id, index) => { stmt.run(index + 1, id); });
     });
     tx();
     return { success: true };

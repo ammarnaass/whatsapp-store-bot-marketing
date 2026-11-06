@@ -19,6 +19,8 @@ function getLive(): IElectronAPI {
 export const api: IElectronAPI = {
   get session() { return getLive().session; },
   get catalog() { return getLive().catalog; },
+  get categories() { return getLive().categories; },
+  get collections() { return getLive().collections; },
   get inventory() { return getLive().inventory; },
   get chat() { return getLive().chat; },
   get orders() { return getLive().orders; },
