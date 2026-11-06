@@ -53,3 +53,4 @@ export async function processImageToAvatarDataUrl(
     reader.readAsDataURL(file);
   });
 }
+

@@ -100,3 +100,4 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({ avatar, name, onChan
     </div>
   );
 };
+
