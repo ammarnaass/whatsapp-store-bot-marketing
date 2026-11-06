@@ -55,9 +55,9 @@ export class AIAgentEngine {
       else if (provider === 'openai') apiKey = process.env.OPENAI_API_KEY || '';
     }
 
-    let modelName = row?.model_name || 'gemini-3.5-flash';
-    if (!modelName || modelName === 'gemini-2.5-flash') {
-      modelName = 'gemini-3.5-flash';
+    let modelName = row?.model_name || 'gemini-3.5-flash-lite';
+    if (!modelName || modelName === 'gemini-2.5-flash' || modelName === 'gemini-3-flash') {
+      modelName = 'gemini-3.5-flash-lite';
     }
 
     return {
@@ -242,11 +242,13 @@ ${knowledgeContext}
           });
         } catch (callErr: any) {
           const errMsg = String(callErr?.message || callErr || '');
-          if ((errMsg.includes('503') || errMsg.includes('404') || errMsg.includes('UNAVAILABLE')) && config.modelName !== 'gemini-3.5-flash') {
-            console.warn(`[AIAgentEngine] Fallback from ${config.modelName} to gemini-3.5-flash due to: ${errMsg.slice(0, 80)}`);
-            config.modelName = 'gemini-3.5-flash';
+          const isRetryable = errMsg.includes('503') || errMsg.includes('404') || errMsg.includes('429') || errMsg.includes('UNAVAILABLE') || errMsg.includes('quota');
+          const fallbackModel = config.modelName === 'gemini-3.5-flash-lite' ? 'gemini-3.1-flash-lite' : 'gemini-3.5-flash-lite';
+          if (isRetryable && config.modelName !== fallbackModel) {
+            console.warn(`[AIAgentEngine] Automatic fallback from ${config.modelName} to ${fallbackModel} due to: ${errMsg.slice(0, 80)}`);
+            config.modelName = fallbackModel;
             response = await aiClient.models.generateContent({
-              model: 'gemini-3.5-flash',
+              model: fallbackModel,
               contents: conversationContents,
               config: {
                 systemInstruction: systemPrompt,

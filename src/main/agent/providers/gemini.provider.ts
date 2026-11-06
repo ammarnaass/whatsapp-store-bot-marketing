@@ -24,10 +24,12 @@ function formatGeminiError(err: any): string {
 export class GeminiProvider implements UnifiedAIProvider {
   public id = 'gemini' as const;
   public name = 'Google Gemini';
-  public defaultModel = 'gemini-3.5-flash';
+  public defaultModel = 'gemini-3.5-flash-lite';
 
   private normalizeModel(modelName?: string): string {
-    if (!modelName || modelName === 'gemini-2.5-flash') return this.defaultModel;
+    if (!modelName || modelName === 'gemini-2.5-flash' || modelName === 'gemini-3-flash') {
+      return this.defaultModel;
+    }
     return modelName;
   }
 
