@@ -2,8 +2,12 @@ import { ipcMain } from 'electron';
 import Database from 'better-sqlite3';
 import { IPC_CHANNELS } from '../../../shared/ipc-channels';
 import { OpenWAManager } from '../../services/openwa-manager.service';
+import { registerShippingMethodsHandlers } from './shipping-methods.handler';
 
 export function registerShippingHandlers(db: Database.Database, openwa: OpenWAManager): void {
+  // تسجيل معالجات مناطق وطرق الشحن والتسعير
+  registerShippingMethodsHandlers(db);
+
   // 1. سرد الشحنات مع تفاصيل الطلب والعميل
   ipcMain.handle(IPC_CHANNELS.SHIPPING_LIST_SHIPMENTS, async () => {
     const list = db.prepare(`
@@ -42,7 +46,6 @@ export function registerShippingHandlers(db: Database.Database, openwa: OpenWAMa
 
     createTx();
 
-    // إشعار فوري للعميل عبر واتساب
     if (data.customerPhone) {
       const msg = `أهلاً بك! تم إصدار بوليصة الشحن لطلبك #${data.orderId} عبر (${carrier}).\n📦 رقم التتبع: ${trackingNo}\n🔗 رابط التتبع المباشر: ${trackingUrl}`;
       openwa.sendTextMessage(data.customerPhone, msg).catch(console.error);
@@ -88,26 +91,4 @@ export function registerShippingHandlers(db: Database.Database, openwa: OpenWAMa
 
     return { success: true };
   });
-
-  // 4. مناطق الشحن والتعرفة
-  ipcMain.handle(IPC_CHANNELS.SHIPPING_LIST_ZONES, async () => {
-    const zones = db.prepare('SELECT * FROM shipping_zones ORDER BY fee ASC').all() as any[];
-    return zones.map((z) => ({ ...z, cities: JSON.parse(z.cities_json || '[]') }));
-  });
-
-  ipcMain.handle(IPC_CHANNELS.SHIPPING_SAVE_ZONE, async (_event, data) => {
-    const id = data.id || `zone_${Date.now()}`;
-    db.prepare(`
-      INSERT INTO shipping_zones (id, name, cities_json, fee, free_over)
-      VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET name = ?, cities_json = ?, fee = ?, free_over = ?
-    `).run(id, data.name, JSON.stringify(data.cities || []), data.fee || 0, data.freeOver || null, data.name, JSON.stringify(data.cities || []), data.fee || 0, data.freeOver || null);
-    return { success: true, id };
-  });
-
-  ipcMain.handle(IPC_CHANNELS.SHIPPING_DELETE_ZONE, async (_event, { id }) => {
-    db.prepare('DELETE FROM shipping_zones WHERE id = ?').run(id);
-    return { success: true };
-  });
 }
-

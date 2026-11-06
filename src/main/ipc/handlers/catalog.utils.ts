@@ -11,3 +11,4 @@ export function mapProductRow(p: any, variants: any[] = []) {
     variants: variants.map((v) => ({ ...v, options: JSON.parse(v.options_json || '{}') })),
   };
 }
+

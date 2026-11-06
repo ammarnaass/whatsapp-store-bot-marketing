@@ -6,4 +6,8 @@ export * from './ShipmentsTable';
 export * from './CreateShipmentModal';
 export * from './WaybillPrintModal';
 export * from './ShippingZonesModal';
-
+export * from './ShippingNavTabs';
+export * from './zones/ShippingZoneCard';
+export * from './zones/ShippingZoneFormModal';
+export * from './zones/ZoneMethodsModal';
+export * from './zones/ShippingZonesTab';

@@ -71,3 +71,4 @@ export function useSoftware(onToast?: (msg: string) => void) {
     editingItem, setEditingItem, refresh: loadData, handleDelete, handleAddKeys,
   };
 }
+

@@ -69,6 +69,10 @@ export const IPC_CHANNELS = {
   SHIPPING_LIST_ZONES: 'shipping:list-zones',
   SHIPPING_SAVE_ZONE: 'shipping:save-zone',
   SHIPPING_DELETE_ZONE: 'shipping:delete-zone',
+  SHIPPING_LIST_METHODS: 'shipping:list-methods',
+  SHIPPING_SAVE_METHOD: 'shipping:save-method',
+  SHIPPING_DELETE_METHOD: 'shipping:delete-method',
+  SHIPPING_TOGGLE_METHOD: 'shipping:toggle-method',
   SHIPPING_GET_KPIS: 'shipping:get-kpis',
 
   // Marketing Campaigns

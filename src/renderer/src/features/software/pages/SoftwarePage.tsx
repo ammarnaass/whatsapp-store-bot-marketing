@@ -77,3 +77,4 @@ export const SoftwarePage: React.FC = () => {
     </div>
   );
 };
+

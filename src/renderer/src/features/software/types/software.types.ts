@@ -30,3 +30,4 @@ export interface SoftwareFormState {
   support_contact: string;
   initialKeysText?: string;
 }
+

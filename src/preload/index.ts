@@ -89,6 +89,10 @@ const api: IElectronAPI = {
     listZones: () => ipcRenderer.invoke(IPC_CHANNELS.SHIPPING_LIST_ZONES),
     saveZone: (data) => ipcRenderer.invoke(IPC_CHANNELS.SHIPPING_SAVE_ZONE, data),
     deleteZone: (params) => ipcRenderer.invoke(IPC_CHANNELS.SHIPPING_DELETE_ZONE, params),
+    listMethods: (params) => ipcRenderer.invoke(IPC_CHANNELS.SHIPPING_LIST_METHODS, params),
+    saveMethod: (data) => ipcRenderer.invoke(IPC_CHANNELS.SHIPPING_SAVE_METHOD, data),
+    deleteMethod: (params) => ipcRenderer.invoke(IPC_CHANNELS.SHIPPING_DELETE_METHOD, params),
+    toggleMethod: (params) => ipcRenderer.invoke(IPC_CHANNELS.SHIPPING_TOGGLE_METHOD, params),
   },
 
   customers: {

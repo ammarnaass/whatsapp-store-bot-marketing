@@ -183,13 +183,33 @@ export interface LicenseKey {
   sold_at?: string;
 }
 
-// 7. الشحن ومناطق التوصيل
+// 7. الشحن ومناطق التوصيل (WooCommerce-Style)
+export interface ShippingMethod {
+  id: string;
+  zone_id: string;
+  name: string;
+  carrier_code: string;
+  cost: number;
+  currency: string;
+  free_over?: number | null;
+  estimated_delivery?: string;
+  cod_available?: boolean;
+  cod_fee?: number;
+  tracking_url_template?: string;
+  is_active: boolean;
+  created_at?: string;
+}
+
 export interface ShippingZone {
   id: string;
   name: string;
+  country_code?: string;
+  country_name?: string;
   cities: string[];
-  fee: number;
-  free_over?: number;
+  fee?: number;
+  free_over?: number | null;
+  is_active?: boolean;
+  methods?: ShippingMethod[];
 }
 
 // 8. الطلبات والدفع

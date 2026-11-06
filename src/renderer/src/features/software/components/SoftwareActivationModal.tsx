@@ -103,3 +103,4 @@ export const SoftwareActivationModal: React.FC<Props> = ({ item, isOpen, onClose
     </div>
   );
 };
+

@@ -56,3 +56,4 @@ export function formatCurrency(amount: number, code = 'SAR'): string {
   });
   return `${formattedNum} ${info.symbol}`;
 }
+

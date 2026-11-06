@@ -116,8 +116,12 @@ export interface IElectronAPI {
     createShipment: (data: { orderId: string; carrier?: string; trackingNo?: string; trackingUrl?: string; customerPhone?: string; address?: any }) => Promise<{ success: boolean; id: string; trackingNo: string; trackingUrl: string }>;
     updateStatus: (params: { shipmentId: string; status: string }) => Promise<{ success: boolean }>;
     listZones: () => Promise<any[]>;
-    saveZone: (data: { id?: string; name: string; cities: string[]; fee: number; freeOver?: number }) => Promise<{ success: boolean; id: string }>;
+    saveZone: (data: { id?: string; name: string; country_code?: string; country_name?: string; cities: string[]; fee?: number; freeOver?: number; is_active?: boolean }) => Promise<{ success: boolean; id: string }>;
     deleteZone: (params: { id: string }) => Promise<{ success: boolean }>;
+    listMethods: (params: { zoneId: string }) => Promise<any[]>;
+    saveMethod: (data: any) => Promise<{ success: boolean; id: string }>;
+    deleteMethod: (params: { id: string }) => Promise<{ success: boolean }>;
+    toggleMethod: (params: { id: string; is_active: boolean }) => Promise<{ success: boolean }>;
   };
 
   // Customers & CRM

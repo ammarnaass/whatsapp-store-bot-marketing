@@ -39,12 +39,34 @@ export interface Shipment {
   items?: ShipmentItem[];
 }
 
+export interface ShippingMethod {
+  id: string;
+  zone_id: string;
+  name: string;
+  carrier_code: string;
+  cost: number;
+  currency: string;
+  free_over?: number | null;
+  estimated_delivery?: string;
+  cod_available?: boolean;
+  cod_fee?: number;
+  tracking_url_template?: string;
+  is_active: boolean;
+  created_at?: string;
+}
+
 export interface ShippingZone {
   id: string;
   name: string;
+  country_code: string;
+  country_name: string;
   cities: string[];
-  fee: number;
+  fee?: number;
   free_over?: number | null;
+  is_active: boolean;
+  methods?: ShippingMethod[];
+  active_methods_count?: number;
+  total_methods_count?: number;
 }
 
 export interface LogisticsKPIs {
@@ -60,4 +82,3 @@ export interface ShipmentFilterState {
   status: string;
   carrier: string;
 }
-

@@ -81,6 +81,10 @@ export const cleanFallbackApi: IElectronAPI = {
     listZones: async () => [],
     saveZone: async (d) => ({ success: true, id: d.id || `zone_${Date.now()}` }),
     deleteZone: async () => ({ success: true }),
+    listMethods: async () => [],
+    saveMethod: async (d) => ({ success: true, id: d.id || `sm_${Date.now()}` }),
+    deleteMethod: async () => ({ success: true }),
+    toggleMethod: async () => ({ success: true }),
   },
   customers: {
     list: async () => [],

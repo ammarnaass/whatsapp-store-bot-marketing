@@ -238,14 +238,36 @@ CREATE TABLE IF NOT EXISTS license_keys (
     sold_at DATETIME
 );
 
--- 13. مناطق الشحن
+-- 13. مناطق ودول الشحن (WooCommerce-Style Zones)
 CREATE TABLE IF NOT EXISTS shipping_zones (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
+    country_code TEXT NOT NULL DEFAULT 'SA',
+    country_name TEXT NOT NULL DEFAULT 'المملكة العربية السعودية',
     cities_json TEXT NOT NULL DEFAULT '[]',
     fee REAL NOT NULL DEFAULT 0.0,
-    free_over REAL
+    free_over REAL,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 13.1 شركات وطرق الشحن والتسعير داخل كل دولة
+CREATE TABLE IF NOT EXISTS shipping_methods (
+    id TEXT PRIMARY KEY,
+    zone_id TEXT NOT NULL REFERENCES shipping_zones(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    carrier_code TEXT DEFAULT 'custom',
+    cost REAL NOT NULL DEFAULT 0.0,
+    currency TEXT NOT NULL DEFAULT 'SAR',
+    free_over REAL,
+    estimated_delivery TEXT,
+    cod_available INTEGER DEFAULT 1,
+    cod_fee REAL DEFAULT 0.0,
+    tracking_url_template TEXT,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_shipping_methods_zone ON shipping_methods(zone_id);
 
 -- 14. الطلبات
 CREATE TABLE IF NOT EXISTS orders (

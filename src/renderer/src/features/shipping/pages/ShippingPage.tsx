@@ -9,31 +9,17 @@ import {
   ShipmentsTable,
   CreateShipmentModal,
   WaybillPrintModal,
-  ShippingZonesModal,
+  ShippingNavTabs,
+  ShippingTab,
+  ShippingZonesTab,
 } from '../components';
 
 export const ShippingPage: React.FC = () => {
-  const {
-    filteredShipments,
-    zones,
-    orders,
-    isLoading,
-    filters,
-    setFilters,
-    kpis,
-    refresh,
-  } = useShipping();
+  const { filteredShipments, zones, orders, isLoading, filters, setFilters, kpis, refresh } = useShipping();
+  const { createShipment, updateStatus, sendTrackingWhatsApp } = useShippingMutations(refresh);
 
-  const {
-    createShipment,
-    updateStatus,
-    saveZone,
-    deleteZone,
-    sendTrackingWhatsApp,
-  } = useShippingMutations(refresh);
-
+  const [activeTab, setActiveTab] = useState<ShippingTab>('zones');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isZonesOpen, setIsZonesOpen] = useState(false);
   const [selectedShipmentForPrint, setSelectedShipmentForPrint] = useState<Shipment | null>(null);
 
   return (
@@ -43,20 +29,32 @@ export const ShippingPage: React.FC = () => {
         isLoading={isLoading}
         onRefresh={refresh}
         onOpenCreateModal={() => setIsCreateOpen(true)}
-        onOpenZonesModal={() => setIsZonesOpen(true)}
+        onOpenZonesModal={() => setActiveTab('zones')}
       />
 
       <ShippingKpis kpis={kpis} />
 
-      <ShipmentsFilterBar filters={filters} onChange={setFilters} />
-
-      <ShipmentsTable
-        shipments={filteredShipments}
-        isLoading={isLoading}
-        onPrintWaybill={(shipment) => setSelectedShipmentForPrint(shipment)}
-        onUpdateStatus={updateStatus}
-        onSendWhatsApp={sendTrackingWhatsApp}
+      <ShippingNavTabs
+        activeTab={activeTab}
+        onChangeTab={setActiveTab}
+        zonesCount={zones.length}
+        shipmentsCount={filteredShipments.length}
       />
+
+      {activeTab === 'zones' ? (
+        <ShippingZonesTab />
+      ) : (
+        <>
+          <ShipmentsFilterBar filters={filters} onChange={setFilters} />
+          <ShipmentsTable
+            shipments={filteredShipments}
+            isLoading={isLoading}
+            onPrintWaybill={(shipment) => setSelectedShipmentForPrint(shipment)}
+            onUpdateStatus={updateStatus}
+            onSendWhatsApp={sendTrackingWhatsApp}
+          />
+        </>
+      )}
 
       <CreateShipmentModal
         isOpen={isCreateOpen}
@@ -69,17 +67,6 @@ export const ShippingPage: React.FC = () => {
         shipment={selectedShipmentForPrint}
         onClose={() => setSelectedShipmentForPrint(null)}
       />
-
-      <ShippingZonesModal
-        isOpen={isZonesOpen}
-        zones={zones}
-        onClose={() => setIsZonesOpen(false)}
-        onSaveZone={saveZone}
-        onDeleteZone={deleteZone}
-      />
     </div>
   );
 };
-
-export default ShippingPage;
-

@@ -52,7 +52,7 @@ export const ShippingHeader: React.FC<ShippingHeaderProps> = ({
           className="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium rounded-xl text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition shadow-sm"
         >
           <MapPin className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-          <span>مناطق الشحن والتعرفة</span>
+          <span>مناطق ودول الشحن</span>
         </button>
 
         <button
