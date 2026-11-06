@@ -26,8 +26,13 @@ export function registerTelegramHandlers(mainWindow: BrowserWindow, db: Database
     return {
       ...row,
       is_active: Boolean(row.is_active),
-      auto_reply: Boolean(row.auto_reply),
+      auto_reply: row.auto_reply !== 0,
       webhook_mode: Boolean(row.webhook_mode),
+      show_catalog: row.show_catalog !== 0,
+      catalog_limit: row.catalog_limit ?? 8,
+      catalog_category_filter: row.catalog_category_filter || 'all',
+      welcome_message: row.welcome_message || '',
+      show_quick_buttons: row.show_quick_buttons !== 0,
     };
   });
 
@@ -36,64 +41,70 @@ export function registerTelegramHandlers(mainWindow: BrowserWindow, db: Database
     db.prepare(`
       UPDATE telegram_config SET
         bot_token = ?, bot_username = ?, bot_first_name = ?,
-        auto_reply = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+        auto_reply = ?, is_active = ?,
+        show_catalog = ?, catalog_limit = ?, catalog_category_filter = ?,
+        welcome_message = ?, show_quick_buttons = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = 'default'
     `).run(
       data.bot_token?.trim() || null,
       data.bot_username?.trim() || null,
       data.bot_first_name?.trim() || null,
-      data.auto_reply ? 1 : 0,
-      data.is_active ? 1 : 0
+      data.auto_reply === false ? 0 : 1,
+      data.is_active ? 1 : 0,
+      data.show_catalog === false ? 0 : 1,
+      Number(data.catalog_limit) || 8,
+      data.catalog_category_filter || 'all',
+      data.welcome_message || null,
+      data.show_quick_buttons === false ? 0 : 1
     );
     return { success: true };
   });
 
-  // 3. فحص التوكن المباشر
-  ipcMain.handle(IPC_CHANNELS.TELEGRAM_TEST_TOKEN, async (_event, { token }: { token: string }) => {
-    return botService.testToken(token);
+  // 3. حذف وإلغاء مفتاح الـ API للتوكن
+  ipcMain.handle(IPC_CHANNELS.TELEGRAM_DELETE_TOKEN, async () => {
+    botService.stopPolling();
+    db.prepare(`
+      UPDATE telegram_config SET
+        bot_token = NULL, bot_username = NULL, bot_first_name = NULL,
+        is_active = 0, last_sync_at = NULL, updated_at = CURRENT_TIMESTAMP
+      WHERE id = 'default'
+    `).run();
+    return { success: true };
   });
 
-  // 4. بدء تشغيل البوت والاستقصاء الفوري
+  // 4. فحص التوكن المباشر
+  ipcMain.handle(IPC_CHANNELS.TELEGRAM_TEST_TOKEN, async (_e, { token }: { token: string }) => botService.testToken(token));
+
+  // 5. بدء تشغيل البوت والاستقصاء الفوري
   ipcMain.handle(IPC_CHANNELS.TELEGRAM_START, async (_event, { token }: { token?: string }) => {
-    let effectiveToken = token?.trim();
-    if (!effectiveToken) {
-      const cfg = db.prepare('SELECT bot_token FROM telegram_config WHERE id = ?').get('default') as any;
-      effectiveToken = cfg?.bot_token;
-    }
+    let effectiveToken = token?.trim() || (db.prepare('SELECT bot_token FROM telegram_config WHERE id = ?').get('default') as any)?.bot_token;
     if (!effectiveToken) return { success: false, error: 'لم يتم إدخال رمز البوت (Token)' };
 
     const res = await botService.startPolling(effectiveToken);
     if (res.success) {
       const info = botService.getStatus().botInfo;
-      db.prepare(`
-        UPDATE telegram_config SET
-          is_active = 1, bot_username = ?, bot_first_name = ?, last_sync_at = CURRENT_TIMESTAMP
-        WHERE id = 'default'
-      `).run(info?.username || null, info?.first_name || null);
+      db.prepare(`UPDATE telegram_config SET is_active = 1, bot_username = ?, bot_first_name = ?, last_sync_at = CURRENT_TIMESTAMP WHERE id = 'default'`)
+        .run(info?.username || null, info?.first_name || null);
     }
     return res;
   });
 
-  // 5. إيقاف البوت
+  // 6. إيقاف البوت
   ipcMain.handle(IPC_CHANNELS.TELEGRAM_STOP, async () => {
     botService.stopPolling();
-    db.prepare('UPDATE telegram_config SET is_active = 0 WHERE id = \'default\'').run();
+    db.prepare("UPDATE telegram_config SET is_active = 0 WHERE id = 'default'").run();
     return { success: true };
   });
 
-  // 6. استعلام الحالة اللحظية للبوت
+  // 7. استعلام الحالة اللحظية للبوت
   ipcMain.handle(IPC_CHANNELS.TELEGRAM_GET_STATUS, async () => {
     const status = botService.getStatus();
     const row = db.prepare('SELECT last_sync_at FROM telegram_config WHERE id = ?').get('default') as any;
-    return {
-      ...status,
-      lastSyncAt: row?.last_sync_at || null,
-    };
+    return { ...status, lastSyncAt: row?.last_sync_at || null };
   });
 
-  // 7. إرسال رسالة يدوية أو تجريبية
+  // 8. إرسال رسالة يدوية أو تجريبية
   ipcMain.handle(IPC_CHANNELS.TELEGRAM_SEND_MESSAGE, async (_event, { chatId, text, parseMode }) => {
     return botService.sendMessage(chatId, text, parseMode);
   });
 }
-

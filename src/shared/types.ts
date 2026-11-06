@@ -397,6 +397,11 @@ export interface TelegramConfig {
   auto_reply: boolean;
   webhook_mode: boolean;
   webhook_url?: string;
+  show_catalog?: boolean;
+  catalog_limit?: number;
+  catalog_category_filter?: string;
+  welcome_message?: string;
+  show_quick_buttons?: boolean;
   last_sync_at?: string;
   created_at?: string;
   updated_at?: string;

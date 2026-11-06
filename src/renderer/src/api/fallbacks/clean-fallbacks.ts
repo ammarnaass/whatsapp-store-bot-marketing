@@ -193,8 +193,9 @@ export const cleanFallbackApi: IElectronAPI = {
     deleteBackup: async () => ({ success: true }),
   },
   telegram: {
-    getConfig: async () => ({ id: 'default', bot_token: '', is_active: false, auto_reply: true, webhook_mode: false }),
+    getConfig: async () => ({ id: 'default', bot_token: '', is_active: false, auto_reply: true, webhook_mode: false, show_catalog: true, catalog_limit: 8, catalog_category_filter: 'all', welcome_message: '', show_quick_buttons: true }),
     saveConfig: async () => ({ success: true }),
+    deleteToken: async () => ({ success: true }),
     testToken: async (token) => ({ success: Boolean(token), botInfo: { id: 123456789, is_bot: true, first_name: 'Wasell Bot', username: 'wasell_demo_bot' } }),
     start: async () => ({ success: true }),
     stop: async () => ({ success: true }),

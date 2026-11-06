@@ -227,6 +227,7 @@ export interface IElectronAPI {
   telegram: {
     getConfig: () => Promise<TelegramConfig | null>;
     saveConfig: (data: Partial<TelegramConfig>) => Promise<{ success: boolean }>;
+    deleteToken: () => Promise<{ success: boolean }>;
     testToken: (token: string) => Promise<{ success: boolean; botInfo?: TelegramBotInfo; error?: string }>;
     start: (token?: string) => Promise<{ success: boolean; error?: string }>;
     stop: () => Promise<{ success: boolean }>;

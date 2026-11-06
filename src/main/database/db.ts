@@ -321,11 +321,33 @@ export class AppDatabase {
           auto_reply INTEGER DEFAULT 1,
           webhook_mode INTEGER DEFAULT 0,
           webhook_url TEXT,
+          show_catalog INTEGER DEFAULT 1,
+          catalog_limit INTEGER DEFAULT 8,
+          catalog_category_filter TEXT DEFAULT 'all',
+          welcome_message TEXT,
+          show_quick_buttons INTEGER DEFAULT 1,
           last_sync_at DATETIME,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
       `);
+
+      // ترحيل أعمدة إعدادات الكتالوج والردود لبوابة تليغرام
+      const tgCols = new Set((this.db.prepare('PRAGMA table_info(telegram_config)').all() as any[]).map((c) => c.name));
+      const newTgCols = [
+        ['show_catalog', 'INTEGER DEFAULT 1'],
+        ['catalog_limit', 'INTEGER DEFAULT 8'],
+        ['catalog_category_filter', "TEXT DEFAULT 'all'"],
+        ['welcome_message', 'TEXT DEFAULT NULL'],
+        ['show_quick_buttons', 'INTEGER DEFAULT 1']
+      ];
+      for (const [colName, colDef] of newTgCols) {
+        if (!tgCols.has(colName)) {
+          this.db.exec(`ALTER TABLE telegram_config ADD COLUMN ${colName} ${colDef}`);
+          console.log(`[Database] Migrated: added telegram_config.${colName}`);
+        }
+      }
+
       this.db.prepare(`
         INSERT OR IGNORE INTO telegram_config (id, is_active, auto_reply, webhook_mode)
         VALUES ('default', 0, 1, 0)

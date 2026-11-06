@@ -11,6 +11,11 @@ export const telegramService = {
     return window.electronAPI.telegram.saveConfig(data);
   },
 
+  async deleteToken(): Promise<{ success: boolean }> {
+    if (!window.electronAPI?.telegram?.deleteToken) return { success: false };
+    return window.electronAPI.telegram.deleteToken();
+  },
+
   async testToken(token: string): Promise<{ success: boolean; botInfo?: TelegramBotInfo; error?: string }> {
     if (!window.electronAPI?.telegram?.testToken) return { success: false, error: 'الخدمة غير متاحة' };
     return window.electronAPI.telegram.testToken(token);

@@ -6,24 +6,35 @@ import { IPC_CHANNELS } from '../../../shared/ipc-channels';
 
 export class TelegramMessageAdapter {
   constructor(private db: Database.Database, private mainWindow?: BrowserWindow) {
-    const bot = TelegramBotService.getInstance();
-    bot.on('update', (update: any) => this.handleUpdate(update));
+    TelegramBotService.getInstance().on('update', (u: any) => this.handleUpdate(u));
   }
 
-  private buildCatalogMessage(): { text: string; keyboard: any } {
-    const products = this.db.prepare(`
-      SELECT p.name, min(v.price) as min_price, v.currency
-      FROM products p LEFT JOIN variants v ON p.id = v.product_id
-      WHERE p.active = 1 GROUP BY p.id ORDER BY p.id DESC LIMIT 8
-    `).all() as any[];
+  private buildCatalogMessage(forceShow = false): { text: string; keyboard?: any } {
+    const cfg = this.db.prepare('SELECT show_catalog, catalog_limit, catalog_category_filter, welcome_message, show_quick_buttons FROM telegram_config WHERE id = ?').get('default') as any;
+    const showCat = forceShow || cfg?.show_catalog !== 0;
+    const hasButtons = cfg?.show_quick_buttons !== 0;
+    const keyboard = hasButtons ? { inline_keyboard: [[{ text: '🛍️ الكتالوج والمنتجات', callback_data: 'catalog' }]] } : undefined;
 
-    let text = `🛍️ **كتالوج ومنتجات متجرنا الرسمية:**\n\n`;
-    products.forEach((p, i) => { text += `${i + 1}. **${p.name}**\n   💰 السعر: ${p.min_price} ${p.currency || 'ر.س'}\n\n`; });
-    text += `💬 اكتب اسم أي منتج أو استفسار وسأجيبك فوراً!`;
+    if (!showCat) {
+      const text = cfg?.welcome_message || 'مرحباً بك في متجرنا! يسعدنا تواصلك معنا، تفضل بطرح أي سؤال وسأساعدك فوراً.';
+      return { text, keyboard };
+    }
 
-    const keyboard = {
-      inline_keyboard: [[{ text: '🛍️ تحديث الكتالوج', callback_data: 'catalog' }]],
-    };
+    const limit = Number(cfg?.catalog_limit) || 8;
+    const cat = cfg?.catalog_category_filter || 'all';
+    let sql = 'SELECT p.name, min(v.price) as min_price, v.currency FROM products p LEFT JOIN variants v ON p.id = v.product_id WHERE p.active = 1';
+    const params: any[] = [];
+    if (cat === 'electronics') sql += ' AND (p.category_id IN ("cat_electronics","cat_smartphones") OR p.category LIKE "%إلكترون%")';
+    else if (cat === 'digital') sql += ' AND (p.category_id IN ("cat_digital","cat_cards") OR p.category LIKE "%رقمي%" OR p.category LIKE "%بطاق%")';
+    else if (cat !== 'all') { sql += ' AND (p.category_id = ? OR p.category = ?)'; params.push(cat, cat); }
+    sql += ' GROUP BY p.id ORDER BY p.id DESC LIMIT ?';
+    params.push(limit);
+
+    const prods = this.db.prepare(sql).all(...params) as any[];
+    let text = cfg?.welcome_message ? `${cfg.welcome_message}\n\n` : '';
+    text += '🛍️ **كتالوج ومنتجات متجرنا الرسمية:**\n\n';
+    prods.forEach((p, i) => { text += `${i + 1}. **${p.name}**\n   💰 السعر: ${p.min_price || 0} ${p.currency || 'ر.س'}\n\n`; });
+    text += '💬 اكتب اسم أي منتج أو استفسار وسأجيبك فوراً!';
     return { text, keyboard };
   }
 
@@ -33,12 +44,11 @@ export class TelegramMessageAdapter {
       await bot.answerCallbackQuery(update.callback_query.id);
       const chatId = update.callback_query.message?.chat?.id;
       if (chatId && update.callback_query.data === 'catalog') {
-        const { text, keyboard } = this.buildCatalogMessage();
+        const { text, keyboard } = this.buildCatalogMessage(true);
         await bot.sendMessage(chatId, text, 'Markdown', keyboard);
       }
       return;
     }
-
     const msg = update.message;
     if (!msg || !msg.text || msg.from?.is_bot) return;
 
@@ -48,59 +58,33 @@ export class TelegramMessageAdapter {
     const messageId = `msg_tg_${msg.message_id}_${Date.now()}`;
     const nowIso = new Date().toISOString();
 
-    this.db.prepare(`
-      INSERT INTO contacts (id, phone, name, source, tags, created_at)
-      VALUES (?, ?, ?, 'telegram', '["تليغرام"]', CURRENT_TIMESTAMP)
-      ON CONFLICT(id) DO UPDATE SET name = excluded.name
-    `).run(contactId, contactId, name);
-
-    this.db.prepare(`
-      INSERT INTO conversations (id, session_id, contact_id, handler, state, unread_count, last_message_at, created_at)
-      VALUES (?, 'telegram_bot', ?, 'agent', 'open', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-      ON CONFLICT(id) DO UPDATE SET last_message_at = CURRENT_TIMESTAMP, unread_count = unread_count + 1
-    `).run(conversationId, contactId);
-
-    this.db.prepare(`
-      INSERT INTO messages (id, conversation_id, direction, type, body, status, ts)
-      VALUES (?, ?, 'INBOUND', 'text', ?, 'READ', ?)
-    `).run(messageId, conversationId, msg.text, nowIso);
-
+    this.db.prepare("INSERT INTO contacts (id, phone, name, source, tags, created_at) VALUES (?, ?, ?, 'telegram', '[\"تليغرام\"]', CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET name = excluded.name").run(contactId, contactId, name);
+    this.db.prepare("INSERT INTO conversations (id, session_id, contact_id, handler, state, unread_count, last_message_at, created_at) VALUES (?, 'telegram_bot', ?, 'agent', 'open', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET last_message_at = CURRENT_TIMESTAMP, unread_count = unread_count + 1").run(conversationId, contactId);
+    this.db.prepare("INSERT INTO messages (id, conversation_id, direction, type, body, status, ts) VALUES (?, ?, 'INBOUND', 'text', ?, 'READ', ?)").run(messageId, conversationId, msg.text, nowIso);
     this.broadcastMessage({ id: messageId, conversationId, direction: 'INBOUND', type: 'text', body: msg.text, status: 'READ', ts: nowIso, channel: 'telegram' });
 
     const trimmed = msg.text.trim().toLowerCase();
     if (trimmed === '/start' || trimmed === '/catalog' || trimmed === '/products') {
-      const { text, keyboard } = this.buildCatalogMessage();
+      const { text, keyboard } = this.buildCatalogMessage(trimmed !== '/start');
       const sendRes = await bot.sendMessage(msg.chat.id, text, 'Markdown', keyboard);
       if (sendRes.success) this.saveOutbound(conversationId, text);
       return;
     }
 
     const config = this.db.prepare('SELECT auto_reply FROM telegram_config WHERE id = ?').get('default') as any;
-    if (config?.auto_reply) {
-      await this.handleAiAutoReply(conversationId, contactId, msg.chat.id, msg.text);
-    }
+    if (config?.auto_reply) await this.handleAiAutoReply(conversationId, contactId, msg.chat.id, msg.text);
   }
 
   private async handleAiAutoReply(conversationId: string, contactPhone: string, chatId: number, text: string): Promise<void> {
     try {
-      const recent = this.db.prepare(`
-        SELECT direction, body FROM messages WHERE conversation_id = ? ORDER BY ts DESC LIMIT 10
-      `).all(conversationId) as any[];
-      const history = recent.reverse().map((m: any) => ({
-        role: m.direction === 'INBOUND' ? ('user' as const) : ('assistant' as const),
-        text: m.body || '',
-      }));
-
-      const agent = AIAgentEngine.getInstance();
-      const output = await agent.processMessage({ conversationId, contactPhone, messageText: text, history });
+      const recent = this.db.prepare('SELECT direction, body FROM messages WHERE conversation_id = ? ORDER BY ts DESC LIMIT 10').all(conversationId) as any[];
+      const history = recent.reverse().map((m: any) => ({ role: m.direction === 'INBOUND' ? ('user' as const) : ('assistant' as const), text: m.body || '' }));
+      const output = await AIAgentEngine.getInstance().processMessage({ conversationId, contactPhone, messageText: text, history });
       if (output?.replyText) {
-        const bot = TelegramBotService.getInstance();
-        const sendRes = await bot.sendMessage(chatId, output.replyText);
+        const sendRes = await TelegramBotService.getInstance().sendMessage(chatId, output.replyText);
         if (sendRes.success) this.saveOutbound(conversationId, output.replyText);
       }
-    } catch (err) {
-      console.error('[TelegramMessageAdapter] AI Auto-reply error:', err);
-    }
+    } catch (err) { console.error('[TelegramMessageAdapter] Auto-reply error:', err); }
   }
 
   private saveOutbound(conversationId: string, text: string): void {

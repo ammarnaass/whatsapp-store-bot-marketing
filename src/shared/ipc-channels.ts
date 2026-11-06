@@ -135,6 +135,7 @@ export const IPC_CHANNELS = {
   // Telegram Bot Gateway
   TELEGRAM_GET_CONFIG: 'telegram:get-config',
   TELEGRAM_SAVE_CONFIG: 'telegram:save-config',
+  TELEGRAM_DELETE_TOKEN: 'telegram:delete-token',
   TELEGRAM_TEST_TOKEN: 'telegram:test-token',
   TELEGRAM_START: 'telegram:start',
   TELEGRAM_STOP: 'telegram:stop',

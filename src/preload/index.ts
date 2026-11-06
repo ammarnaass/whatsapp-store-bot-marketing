@@ -184,6 +184,7 @@ const api: IElectronAPI = {
   telegram: {
     getConfig: () => ipcRenderer.invoke(IPC_CHANNELS.TELEGRAM_GET_CONFIG),
     saveConfig: (data) => ipcRenderer.invoke(IPC_CHANNELS.TELEGRAM_SAVE_CONFIG, data),
+    deleteToken: () => ipcRenderer.invoke(IPC_CHANNELS.TELEGRAM_DELETE_TOKEN),
     testToken: (token) => ipcRenderer.invoke(IPC_CHANNELS.TELEGRAM_TEST_TOKEN, { token }),
     start: (token) => ipcRenderer.invoke(IPC_CHANNELS.TELEGRAM_START, { token }),
     stop: () => ipcRenderer.invoke(IPC_CHANNELS.TELEGRAM_STOP),
