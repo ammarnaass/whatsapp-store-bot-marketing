@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, MessageSquare, ShoppingBag, Package, Boxes, Truck,
-  Megaphone, Bot, Users, BarChart2, Settings, Network, Send,
+  Megaphone, Bot, Users, BarChart2, Settings, Network, Send, AppWindow,
 } from 'lucide-react';
 import { SidebarNavItem, SidebarNavGroup } from './types';
 
@@ -32,6 +32,12 @@ export const SIDEBAR_NAV_GROUPS: SidebarNavGroup[] = [
         icon: Package, iconBgLight: 'bg-indigo-50 text-indigo-600',
         iconBgDark: 'dark:bg-indigo-950/40 dark:text-indigo-400',
         iconColorLight: 'text-indigo-600', iconColorDark: 'dark:text-indigo-400',
+      },
+      {
+        id: 'software', label: 'البرمجيات والتراخيص', description: 'برامج نقاط البيع، الروضات والتفعيلات',
+        icon: AppWindow, iconBgLight: 'bg-blue-50 text-blue-600',
+        iconBgDark: 'dark:bg-blue-950/40 dark:text-blue-400',
+        iconColorLight: 'text-blue-600', iconColorDark: 'dark:text-blue-400',
       },
       {
         id: 'inventory', label: 'المخزون والتوريد', description: 'الجرد والمفاتيح الرقمية',

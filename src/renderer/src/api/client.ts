@@ -35,6 +35,7 @@ export const api: IElectronAPI = {
   get analytics() { return getLive().analytics; },
   get settings() { return getLive().settings; },
   get telegram() { return getLive().telegram; },
+  get software() { return getLive().software; },
   get channels() { return getLive().channels; },
   get window() { return getLive().window; },
 };

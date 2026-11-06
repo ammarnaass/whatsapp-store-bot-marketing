@@ -34,9 +34,20 @@ export class AgentToolExecutor {
           FROM variants WHERE product_id = ?
         `).all(args.productId);
 
+        const software = this.db.prepare('SELECT * FROM software_items WHERE product_id = ?').get(args.productId) as any;
+
         return {
           ...product,
           media: JSON.parse(product.media || '[]'),
+          software: software ? {
+            name: software.software_name,
+            version: software.version,
+            website_url: software.website_url,
+            download_url: software.download_url,
+            license_type: software.license_type,
+            activation_instructions: software.activation_instructions,
+            system_requirements: software.system_requirements,
+          } : undefined,
           variants: variants.map((v: any) => ({
             ...v,
             options: JSON.parse(v.options_json || '{}'),

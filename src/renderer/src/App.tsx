@@ -12,6 +12,7 @@ import { AnalyticsPage } from './features/analytics';
 import { SettingsPage } from './features/settings';
 import { ChannelsPage } from './features/channels';
 import { TelegramPage } from './features/telegram';
+import { SoftwarePage } from './features/software';
 import { SetupWizardModal } from './features/onboarding';
 import { NotificationDrawer, NotificationToastContainer, useNotificationEvents } from './features/notifications';
 import { useTheme } from './features/theme';
@@ -132,6 +133,7 @@ export const App: React.FC = () => {
             {currentTab === 'inbox' && <InboxView />}
             {currentTab === 'orders' && <OrdersPage />}
             {currentTab === 'products' && <ProductsPage />}
+            {currentTab === 'software' && <SoftwarePage />}
             {currentTab === 'inventory' && <InventoryPage />}
             {currentTab === 'shipping' && <ShippingPage />}
             {currentTab === 'marketing' && <MarketingPage />}

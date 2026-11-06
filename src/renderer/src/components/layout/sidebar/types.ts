@@ -5,6 +5,7 @@ export type TabType =
   | 'inbox'
   | 'orders'
   | 'products'
+  | 'software'
   | 'inventory'
   | 'shipping'
   | 'marketing'

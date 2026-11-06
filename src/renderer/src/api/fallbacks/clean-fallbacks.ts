@@ -203,6 +203,15 @@ export const cleanFallbackApi: IElectronAPI = {
     sendMessage: async () => ({ success: true, messageId: Date.now() }),
     onMessageReceived: () => () => {},
   },
+  software: {
+    list: async () => [],
+    get: async () => null,
+    create: async () => ({ success: true, id: `soft_${Date.now()}` }),
+    update: async () => ({ success: true }),
+    delete: async () => ({ success: true }),
+    addKeys: async () => ({ success: true, count: 0 }),
+    getKeys: async () => [],
+  },
   channels: {
     getConfig: async () => ({
       phoneNumberId: '',

@@ -23,6 +23,7 @@ import { registerBackupHandlers } from './handlers/backup.handler';
 import { registerWindowHandlers } from './handlers/window.handler';
 import { registerAuthHandlers } from './handlers/auth.handler';
 import { registerTelegramHandlers } from './handlers/telegram.handler';
+import { registerSoftwareHandlers } from './handlers/software.handler';
 import { registerChannelsHandlers } from './handlers/channels.handler';
 
 /**
@@ -52,6 +53,7 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
   registerBackupHandlers(db);
   registerAuthHandlers(db);
   registerTelegramHandlers(mainWindow, db);
+  registerSoftwareHandlers(db);
   registerChannelsHandlers(db);
   registerWindowHandlers(mainWindow);
 }

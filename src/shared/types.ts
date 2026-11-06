@@ -387,6 +387,40 @@ export interface DashboardKPIs {
   lowStockItemsCount: number;
 }
 
+// 18. حلول وتراخيص البرمجيات (Software & Licenses Hub)
+export type SoftwareLicenseType = 'lifetime' | 'yearly' | 'monthly' | 'trial';
+
+export interface SoftwareItem {
+  id: string;
+  product_id?: string;
+  software_name: string;
+  version?: string;
+  category: string;
+  website_url?: string;
+  download_url?: string;
+  license_type: SoftwareLicenseType;
+  price: number;
+  compare_at_price?: number;
+  currency: string;
+  cover_image?: string;
+  screenshots: string[];
+  activation_guide_images: string[];
+  activation_instructions?: string;
+  system_requirements?: string;
+  demo_url?: string;
+  support_contact?: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface SoftwareWithInventory extends SoftwareItem {
+  availableKeysCount: number;
+  soldKeysCount: number;
+  sku?: string;
+  productActive?: boolean;
+}
+
 // 17. إعدادات وبوابة بوت تليغرام (Telegram Bot Gateway)
 export interface TelegramConfig {
   id: string;

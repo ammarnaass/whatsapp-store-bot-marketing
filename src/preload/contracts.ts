@@ -20,6 +20,8 @@ import {
   TelegramBotInfo,
   TelegramStatusResult,
   TelegramSendOptions,
+  SoftwareItem,
+  SoftwareWithInventory,
 } from '../shared/types';
 
 export interface IElectronAPI {
@@ -234,6 +236,17 @@ export interface IElectronAPI {
     getStatus: () => Promise<TelegramStatusResult>;
     sendMessage: (options: TelegramSendOptions) => Promise<{ success: boolean; messageId?: number; error?: string }>;
     onMessageReceived: (callback: (data: any) => void) => () => void;
+  };
+
+  // Software Solutions & Licenses
+  software: {
+    list: (params?: { category?: string; query?: string }) => Promise<SoftwareWithInventory[]>;
+    get: (id: string) => Promise<SoftwareWithInventory | null>;
+    create: (data: Partial<SoftwareItem> & { initialKeys?: string[] }) => Promise<{ success: boolean; id?: string; error?: string }>;
+    update: (id: string, data: Partial<SoftwareItem>) => Promise<{ success: boolean; error?: string }>;
+    delete: (id: string) => Promise<{ success: boolean; error?: string }>;
+    addKeys: (params: { softwareId: string; keys: string[] }) => Promise<{ success: boolean; count: number; error?: string }>;
+    getKeys: (softwareId: string) => Promise<any[]>;
   };
 
   // Channels & WhatsApp Cloud API

@@ -373,6 +373,35 @@ export class AppDatabase {
         VALUES ('default', 'wasell_webhook_token_2026', 'http://127.0.0.1:3005/webhook/whatsapp', 'openwa_gateway', 0)
       `).run();
 
+      // تهيئة جدول حلول وتراخيص البرمجيات (Software & Licenses Hub)
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS software_items (
+          id TEXT PRIMARY KEY,
+          product_id TEXT REFERENCES products(id) ON DELETE CASCADE,
+          software_name TEXT NOT NULL,
+          version TEXT,
+          category TEXT,
+          website_url TEXT,
+          download_url TEXT,
+          license_type TEXT DEFAULT 'lifetime',
+          price REAL DEFAULT 0,
+          compare_at_price REAL DEFAULT 0,
+          currency TEXT DEFAULT 'SAR',
+          cover_image TEXT,
+          screenshots TEXT DEFAULT '[]',
+          activation_guide_images TEXT DEFAULT '[]',
+          activation_instructions TEXT,
+          system_requirements TEXT,
+          demo_url TEXT,
+          support_contact TEXT,
+          is_active INTEGER DEFAULT 1,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_software_product_id ON software_items(product_id);
+      `);
+      this.seedSoftwareIfEmpty();
+
       // تهيئة مناطق الشحن الافتراضية إذا كان الجدول فارغاً
       const zonesCount = (this.db.prepare('SELECT count(*) as count FROM shipping_zones').get() as any)?.count || 0;
       if (zonesCount === 0) {
@@ -815,6 +844,99 @@ export class AppDatabase {
       insertKey.run('key_3', 'prod_2', 'SWPRO-2026-T55P-L03W', 'available');
 
       console.log('[Database] Seeded initial physical and digital products.');
+    }
+  }
+
+  private seedSoftwareIfEmpty(): void {
+    try {
+      const count = (this.db.prepare('SELECT count(*) as count FROM software_items').get() as any)?.count || 0;
+      if (count > 0) return;
+
+      const insertProd = this.db.prepare(`
+        INSERT OR IGNORE INTO products (
+          id, name, type, description, media, category, category_id, active, cost_price, compare_at_price, tags, is_featured
+        ) VALUES (?, ?, 'digital', ?, ?, 'برمجيات وتراخيص', 'cat_digital', 1, ?, ?, '["برمجيات","تراخيص","نقاط بيع"]', 1)
+      `);
+
+      const insertVar = this.db.prepare(`
+        INSERT OR IGNORE INTO variants (id, product_id, sku, options_json, price, currency, stock_qty)
+        VALUES (?, ?, ?, '{}', ?, 'SAR', ?)
+      `);
+
+      const insertSoft = this.db.prepare(`
+        INSERT INTO software_items (
+          id, product_id, software_name, version, category, website_url, download_url,
+          license_type, price, compare_at_price, currency, cover_image, screenshots,
+          activation_guide_images, activation_instructions, system_requirements, demo_url, support_contact
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SAR', ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      const insertKey = this.db.prepare(`
+        INSERT INTO license_keys (id, product_id, key_code, status) VALUES (?, ?, ?, 'available')
+      `);
+
+      // 1. برنامج تسيير نقاط البيع والمحلات (POS Pro Cashier)
+      insertProd.run(
+        'prod_soft_pos',
+        'برنامج تسيير نقاط البيع والمحلات POS Pro Cashier (ترخيص دائم مدى الحياة)',
+        'نظام سحابي وهجين متكامل لإدارة الكاشير، الفواتير الإلكترونية، وإدارة المبيعات للمحلات، السوبرماركت والمطاعم والكافيهات.',
+        JSON.stringify(['https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=800']),
+        600, 1500
+      );
+      insertVar.run('var_soft_pos', 'prod_soft_pos', 'SKU-POS-PRO', 1200, 5);
+      insertSoft.run(
+        'soft_pos', 'prod_soft_pos', 'برنامج تسيير نقاط البيع والمحلات (POS Pro)', 'v3.4.0', 'نقاط بيع ومحلات',
+        'https://pospro.wasell.store', 'https://download.wasell.store/pos-setup-v3.4.exe',
+        'lifetime', 1200, 1500,
+        'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=800',
+        JSON.stringify([
+          'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?w=800',
+          'https://images.unsplash.com/photo-1556742111-a301076d9d18?w=800'
+        ]),
+        JSON.stringify([
+          'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800'
+        ]),
+        '1. قم بتثبيت البرنامج من رابط التحميل المباشر.\n2. افتح البرنامج واضغط على زر (تفعيل النسخة الرسمية).\n3. أدخل مفتاح الترخيص المستلم واضغط على "تأكيد التفعيل".',
+        'Windows 10/11 (64-bit), 4GB RAM, 500MB Storage',
+        'https://demo.wasell.store/pos-preview',
+        '+966500000000'
+      );
+      for (let i = 1; i <= 5; i++) {
+        insertKey.run(`key_pos_${i}`, 'prod_soft_pos', `POSPRO-2026-KEY-${i}09X-LIFETIME`);
+      }
+
+      // 2. برنامج تسيير الروضات والمدارس الخاصة (RawdaCare Manager)
+      insertProd.run(
+        'prod_soft_rawda',
+        'برنامج تسيير الروضات ومراكز الطفولة RawdaCare Manager (اشتراك سنوي)',
+        'نظام متكامل لإدارة شؤون أطفال الروضات، الاشتراكات الشهرية، حضور الأطفال، سجلات أولياء الأمور وتنبيهات الواتساب.',
+        JSON.stringify(['https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800']),
+        400, 1000
+      );
+      insertVar.run('var_soft_rawda', 'prod_soft_rawda', 'SKU-RAWDA-CARE', 850, 4);
+      insertSoft.run(
+        'soft_rawda', 'prod_soft_rawda', 'برنامج تسيير الروضات والمدارس (RawdaCare)', 'v2.1.0', 'روضات ومدارس',
+        'https://rawdacare.wasell.store', 'https://download.wasell.store/rawda-manager-setup.exe',
+        'yearly', 850, 1000,
+        'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800',
+        JSON.stringify([
+          'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800'
+        ]),
+        JSON.stringify([
+          'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800'
+        ]),
+        '1. افتح البرنامج وتوجه إلى (إعدادات النظام -> ترخيص الروضة).\n2. الصق مفتاح التفعيل الرسمي واضغط تنشيط السيريال.\n3. سيتم تفعيل باقة الاشتراك السنوي فوراً.',
+        'Windows 10/11 أو macOS، يدعم العمل الشبكي لأكثر من جهاز',
+        'https://demo.wasell.store/rawda-preview',
+        '+966500000000'
+      );
+      for (let i = 1; i <= 4; i++) {
+        insertKey.run(`key_rawda_${i}`, 'prod_soft_rawda', `RAWDA-ANNUAL-2026-${i}77K-VALID`);
+      }
+
+      console.log('[Database] Seeded initial software solutions (POS Pro & RawdaCare) with activation keys.');
+    } catch (err: any) {
+      console.warn('[Database] Seed software error:', err.message);
     }
   }
 }

@@ -143,6 +143,15 @@ export const IPC_CHANNELS = {
   TELEGRAM_SEND_MESSAGE: 'telegram:send-message',
   TELEGRAM_MESSAGE_RECEIVED_EVENT: 'telegram:message-received-event',
 
+  // Software Solutions & Licenses Hub
+  SOFTWARE_LIST: 'software:list',
+  SOFTWARE_GET: 'software:get',
+  SOFTWARE_CREATE: 'software:create',
+  SOFTWARE_UPDATE: 'software:update',
+  SOFTWARE_DELETE: 'software:delete',
+  SOFTWARE_ADD_KEYS: 'software:add-keys',
+  SOFTWARE_GET_KEYS: 'software:get-keys',
+
   // Customers & Analytics
   CUSTOMERS_LIST: 'customers:list',
   CUSTOMERS_GET: 'customers:get',

@@ -197,6 +197,16 @@ const api: IElectronAPI = {
     },
   },
 
+  software: {
+    list: (params) => ipcRenderer.invoke(IPC_CHANNELS.SOFTWARE_LIST, params),
+    get: (id) => ipcRenderer.invoke(IPC_CHANNELS.SOFTWARE_GET, { id }),
+    create: (data) => ipcRenderer.invoke(IPC_CHANNELS.SOFTWARE_CREATE, data),
+    update: (id, data) => ipcRenderer.invoke(IPC_CHANNELS.SOFTWARE_UPDATE, { id, data }),
+    delete: (id) => ipcRenderer.invoke(IPC_CHANNELS.SOFTWARE_DELETE, { id }),
+    addKeys: (params) => ipcRenderer.invoke(IPC_CHANNELS.SOFTWARE_ADD_KEYS, params),
+    getKeys: (softwareId) => ipcRenderer.invoke(IPC_CHANNELS.SOFTWARE_GET_KEYS, { softwareId }),
+  },
+
   channels: {
     getConfig: () => ipcRenderer.invoke(IPC_CHANNELS.CHANNELS_GET_CONFIG),
     saveConfig: (config) => ipcRenderer.invoke(IPC_CHANNELS.CHANNELS_SAVE_CONFIG, config),
