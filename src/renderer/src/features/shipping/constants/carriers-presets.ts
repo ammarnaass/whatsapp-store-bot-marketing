@@ -50,3 +50,4 @@ export const SUPPORTED_SHIPPING_COUNTRIES: SupportedCountry[] = [
   { code: 'JO', name: 'المملكة الأردنية', flag: '🇯🇴', defaultCurrency: 'JOD' },
   { code: 'GLOBAL', name: 'شحن دولي لكافة دول العالم', flag: '🌐', defaultCurrency: 'USD' },
 ];
+

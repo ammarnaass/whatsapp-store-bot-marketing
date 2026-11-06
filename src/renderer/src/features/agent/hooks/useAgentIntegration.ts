@@ -6,7 +6,7 @@ import { PROVIDER_META_LIST } from '../types/integrations.providers';
 
 export function useAgentIntegration() {
   const [selectedProvider, setSelectedProvider] = useState<AiProvider>('gemini');
-  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
+  const [selectedModel, setSelectedModel] = useState('gemini-3.5-flash-lite');
   const [dailyCostLimit, setDailyCostLimit] = useState(10);
   const [showApiKey, setShowApiKey] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,7 +27,7 @@ export function useAgentIntegration() {
       if (cfg) {
         const prov = (cfg.provider as AiProvider) || 'gemini';
         setSelectedProvider(prov);
-        const validModel = cfg.model_name && cfg.model_name !== 'gemini-3.8-flash' ? cfg.model_name : 'gemini-2.5-flash';
+        const validModel = cfg.model_name || 'gemini-3.5-flash-lite';
         setSelectedModel(validModel);
         if (cfg.daily_cost_limit !== undefined) setDailyCostLimit(cfg.daily_cost_limit);
         if (cfg.api_keys) setKeysByProvider((prev) => ({ ...prev, ...cfg.api_keys }));

@@ -42,3 +42,4 @@ export const shippingService = {
     return api.shipping.toggleMethod({ id, is_active: isActive });
   },
 };
+

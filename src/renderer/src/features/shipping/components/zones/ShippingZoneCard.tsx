@@ -78,3 +78,4 @@ export const ShippingZoneCard: React.FC<Props> = ({ zone, onManageMethods, onEdi
     </div>
   );
 };
+
