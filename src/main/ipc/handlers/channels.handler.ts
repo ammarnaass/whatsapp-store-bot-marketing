@@ -73,3 +73,4 @@ export function registerChannelsHandlers(db: Database.Database): void {
     }));
   });
 }
+
