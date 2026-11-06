@@ -162,8 +162,11 @@ export interface IElectronAPI {
     updateProfile: (data: { userId: string; name?: string; phone?: string; avatar?: string }) => Promise<{ success: boolean; user?: any; error?: string }>;
     changePassword: (data: { userId: string; oldPassword: string; newPassword: string }) => Promise<{ success: boolean; error?: string }>;
     listUsers: () => Promise<any[]>;
-    createUser: (data: { email: string; name: string; password: string; role?: string; phone?: string }) => Promise<{ success: boolean; id?: string; error?: string }>;
+    createUser: (data: { email: string; name: string; password: string; role?: string; permissions?: string[]; phone?: string; creatorId?: string }) => Promise<{ success: boolean; id?: string; error?: string }>;
+    updateUser?: (data: { userId: string; name?: string; role?: string; permissions?: string[]; phone?: string; status?: string }) => Promise<{ success: boolean; error?: string }>;
     deleteUser: (params: { userId: string }) => Promise<{ success: boolean; error?: string }>;
+    toggleUserStatus?: (params: { userId: string; status: 'active' | 'suspended' }) => Promise<{ success: boolean; status?: string; error?: string }>;
+    adminResetPassword?: (params: { userId: string; newPassword: string }) => Promise<{ success: boolean; error?: string }>;
     validateSession: (params: { sessionToken: string }) => Promise<{ valid: boolean; user?: any; sessionToken?: string; error?: string }>;
     logout: (params: { sessionToken?: string }) => Promise<{ success: boolean }>;
     checkHasUsers: () => Promise<{ hasUsers: boolean; count: number }>;

@@ -397,9 +397,11 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL,
     salt TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'owner',
+    permissions TEXT DEFAULT '["*"]',
     phone TEXT,
     avatar TEXT,
     status TEXT NOT NULL DEFAULT 'active',
+    created_by TEXT REFERENCES users(id),
     last_login_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP

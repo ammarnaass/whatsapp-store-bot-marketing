@@ -426,13 +426,15 @@ export interface TelegramSendOptions {
 }
 
 // 18. جلسات المستخدمين والمصادقة (User Sessions & Authentication)
-export type UserRole = 'owner' | 'admin' | 'sales' | 'support';
+export type UserRole = 'owner' | 'admin' | 'sales' | 'inventory' | 'support';
 
 export interface User {
   id: string;
   email: string;
   name: string;
   role: UserRole;
+  permissions?: string[];
+  created_by?: string;
   phone?: string;
   avatar?: string;
   status: 'active' | 'suspended';

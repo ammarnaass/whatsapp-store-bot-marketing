@@ -1,9 +1,7 @@
 import { create } from 'zustand';
 import { api } from '../../../api-bridge';
 import { User } from '../types/auth.types';
-
-const SESSION_TOKEN_KEY = 'wasell_session_token_v1';
-
+const TOKEN_KEY = 'wasell_session_token_v1';
 interface AuthState {
   currentUser: User | null;
   sessionToken: string | null;
@@ -19,8 +17,8 @@ interface AuthState {
   register: (data: { email: string; name: string; password: string; phone?: string; storeName?: string }) => Promise<boolean>;
   logout: () => Promise<void>;
   updateProfile: (data: { name?: string; phone?: string; avatar?: string }) => Promise<boolean>;
+  hasPermission: (slug: string) => boolean;
 }
-
 export const useAuthStore = create<AuthState>((set, get) => ({
   currentUser: null,
   sessionToken: null,
@@ -29,10 +27,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isFirstTimeSetup: false,
   error: null,
   isAccountModalOpen: false,
-
   setAccountModalOpen: (open) => set({ isAccountModalOpen: open }),
   clearError: () => set({ error: null }),
-
   initAuth: async () => {
     set({ isLoading: true, error: null });
     try {
@@ -41,38 +37,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ isFirstTimeSetup: true, isAuthenticated: false, currentUser: null, sessionToken: null, isLoading: false });
         return;
       }
-
-      const token = localStorage.getItem(SESSION_TOKEN_KEY) || sessionStorage.getItem(SESSION_TOKEN_KEY);
+      const token = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
       if (!token) {
         set({ isFirstTimeSetup: false, isAuthenticated: false, currentUser: null, sessionToken: null, isLoading: false });
         return;
       }
-
       const res = await api.auth.validateSession({ sessionToken: token });
       if (res.valid && res.user && res.user.status !== 'suspended') {
         set({ currentUser: res.user, sessionToken: token, isAuthenticated: true, isFirstTimeSetup: false, isLoading: false });
       } else {
-        localStorage.removeItem(SESSION_TOKEN_KEY);
-        sessionStorage.removeItem(SESSION_TOKEN_KEY);
+        localStorage.removeItem(TOKEN_KEY);
+        sessionStorage.removeItem(TOKEN_KEY);
         set({ currentUser: null, sessionToken: null, isAuthenticated: false, isFirstTimeSetup: false, isLoading: false });
       }
     } catch {
       set({ currentUser: null, sessionToken: null, isAuthenticated: false, isLoading: false });
     }
   },
-
   login: async (email, password, rememberMe = true) => {
     set({ isLoading: true, error: null });
     try {
       const res = await api.auth.login({ email, password, rememberMe });
       if (res.success && res.user && res.sessionToken) {
-        if (rememberMe) {
-          localStorage.setItem(SESSION_TOKEN_KEY, res.sessionToken);
-          sessionStorage.removeItem(SESSION_TOKEN_KEY);
-        } else {
-          sessionStorage.setItem(SESSION_TOKEN_KEY, res.sessionToken);
-          localStorage.removeItem(SESSION_TOKEN_KEY);
-        }
+        const store = rememberMe ? localStorage : sessionStorage;
+        (rememberMe ? sessionStorage : localStorage).removeItem(TOKEN_KEY);
+        store.setItem(TOKEN_KEY, res.sessionToken);
         set({ currentUser: res.user, sessionToken: res.sessionToken, isAuthenticated: true, isFirstTimeSetup: false, isLoading: false });
         return true;
       }
@@ -83,13 +72,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return false;
     }
   },
-
   register: async (data) => {
     set({ isLoading: true, error: null });
     try {
       const res = await api.auth.register(data);
       if (res.success && res.user && res.sessionToken) {
-        localStorage.setItem(SESSION_TOKEN_KEY, res.sessionToken);
+        localStorage.setItem(TOKEN_KEY, res.sessionToken);
         set({ currentUser: res.user, sessionToken: res.sessionToken, isAuthenticated: true, isFirstTimeSetup: false, isLoading: false });
         return true;
       }
@@ -100,19 +88,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return false;
     }
   },
-
   logout: async () => {
     const token = get().sessionToken;
-    try {
-      if (token) await api.auth.logout({ sessionToken: token });
-    } catch {
-      // تجاهل الأخطاء أثناء تسجيل الخروج لضمان تنظيف الواجهة
-    }
-    localStorage.removeItem(SESSION_TOKEN_KEY);
-    sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    try { if (token) await api.auth.logout({ sessionToken: token }); } catch {}
+    localStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
     set({ currentUser: null, sessionToken: null, isAuthenticated: false });
   },
-
   updateProfile: async (data) => {
     const user = get().currentUser;
     if (!user) return false;
@@ -123,8 +105,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return true;
       }
       return false;
-    } catch {
-      return false;
-    }
+    } catch { return false; }
+  },
+  hasPermission: (slug: string) => {
+    const user = get().currentUser;
+    if (!user) return false;
+    if (user.role === 'owner') return true;
+    const perms = user.permissions || [];
+    if (perms.includes('*')) return true;
+    return perms.includes(slug);
   },
 }));

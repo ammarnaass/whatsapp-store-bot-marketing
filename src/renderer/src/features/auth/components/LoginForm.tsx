@@ -1,12 +1,8 @@
 import React, { useState } from 'react';
-import { Mail, Lock, Eye, EyeOff, LogIn, Sparkles, Loader2, CheckSquare, Square } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, LogIn, Loader2, CheckSquare, Square, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 
-interface LoginFormProps {
-  onSwitchToRegister: () => void;
-}
-
-export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
+export const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
@@ -35,7 +31,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="admin@wasell.store"
+            placeholder="name@store.com"
             required
             className="w-full h-10 pr-10 pl-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-[#1F293D] rounded-xl text-xs font-medium focus:outline-none focus:border-[#128C7E] focus:ring-2 focus:ring-[#128C7E]/15 text-slate-900 dark:text-white"
             dir="ltr"
@@ -85,25 +81,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
         <span>تسجيل الدخول للمنظومة</span>
       </button>
 
-      <button
-        type="button"
-        onClick={() => login('admin@wasell.store', 'admin123', rememberMe)}
-        disabled={isLoading}
-        className="w-full h-9 rounded-xl bg-emerald-50 dark:bg-[#128C7E]/15 hover:bg-emerald-100 dark:hover:bg-[#128C7E]/25 text-[#075E54] dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-      >
-        <Sparkles className="w-3.5 h-3.5 text-[#128C7E] dark:text-emerald-400" />
-        <span>دخول سريع كمدير المتجر التجريبي</span>
-      </button>
-
-      <div className="pt-1 text-center text-xs text-slate-500 dark:text-slate-400">
-        ليس لديك حساب تاجر؟{' '}
-        <button
-          type="button"
-          onClick={onSwitchToRegister}
-          className="text-[#128C7E] dark:text-emerald-400 font-bold hover:underline cursor-pointer"
-        >
-          إنشاء حساب جديد
-        </button>
+      <div className="pt-2 flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
+        <ShieldCheck className="w-3.5 h-3.5 text-[#128C7E]" />
+        <span>بوابة دخول الموظفين والإدارة. يتم إصدار الحسابات من المدير فقط.</span>
       </div>
     </form>
   );

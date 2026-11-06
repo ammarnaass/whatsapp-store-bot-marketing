@@ -114,23 +114,22 @@ export class AppDatabase {
         CREATE INDEX IF NOT EXISTS idx_user_sessions_user ON user_sessions(user_id, is_active);
       `);
 
-      const userCount = (this.db.prepare('SELECT count(*) as count FROM users').get() as any)?.count || 0;
-      if (userCount === 0) {
-        const { hash, salt } = hashPassword('admin123');
-        this.db.prepare(`
-          INSERT INTO users (id, email, name, password_hash, salt, role, phone, status)
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
-        `).run(
-          'usr_default_owner',
-          'admin@wasell.store',
-          'عبدالعزيز التميمي (مدير المتجر)',
-          hash,
-          salt,
-          'owner',
-          '+213555220620'
-        );
-        console.log('[Database] Seeded initial admin owner user: admin@wasell.store');
+      // ترقية جدول المستخدمين لإضافة الصلاحيات ومنشئ الحساب الفرعي
+      const userCols = new Set((this.db.prepare('PRAGMA table_info(users)').all() as any[]).map((c) => c.name));
+      if (!userCols.has('permissions')) {
+        this.db.exec("ALTER TABLE users ADD COLUMN permissions TEXT DEFAULT '[\"*\"]'");
+        console.log('[Database] Migrated: added users.permissions');
       }
+      if (!userCols.has('created_by')) {
+        this.db.exec('ALTER TABLE users ADD COLUMN created_by TEXT REFERENCES users(id)');
+        console.log('[Database] Migrated: added users.created_by');
+      }
+
+      // إزالة المستخدم الوهمي الافتراضي لتمكين معالج إنشاء حساب المالك الحقيقي
+      this.db.exec(`
+        DELETE FROM user_sessions WHERE user_id = 'usr_default_owner';
+        DELETE FROM users WHERE id = 'usr_default_owner' AND email = 'admin@wasell.store';
+      `);
 
       const info = this.db.prepare('PRAGMA table_info(contacts)').all() as any[];
       const cols = new Set(info.map((c) => c.name));

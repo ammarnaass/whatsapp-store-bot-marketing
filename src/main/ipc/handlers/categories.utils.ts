@@ -33,3 +33,4 @@ export function sanitizeCategorySlug(
 
   return slug;
 }
+

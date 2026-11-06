@@ -1,8 +1,11 @@
 export { LoginForm } from './LoginForm';
 export { RegisterForm } from './RegisterForm';
+export { OwnerSetupWizard } from './OwnerSetupWizard';
 export { AuthScreen } from './AuthScreen';
 export { UserProfileMenu } from './UserProfileMenu';
 export { AccountManagementModal } from './AccountManagementModal';
 export { ProfileSettingsTab } from './ProfileSettingsTab';
 export { TeamManagementTab } from './TeamManagementTab';
+export { SubAccountModal } from './SubAccountModal';
+export { SubAccountPasswordModal } from './SubAccountPasswordModal';
 export { ActiveSessionsTab } from './ActiveSessionsTab';
