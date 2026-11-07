@@ -61,3 +61,4 @@ export const ALGERIA_WILAYAS: StateInfo[] = [
   { code: '57', name: 'المغير (El M\'Ghair)', region: 'الجنوب' },
   { code: '58', name: 'المنيعة (El Meniaa)', region: 'الجنوب' },
 ];
+

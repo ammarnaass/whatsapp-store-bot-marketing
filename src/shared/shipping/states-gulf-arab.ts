@@ -54,3 +54,4 @@ export const TUNISIA_GOVERNORATES: StateInfo[] = [
   { code: 'TN-52', name: 'المنستير (Monastir)', region: 'الساحل' },
   { code: 'TN-41', name: 'القيروان (Kairouan)', region: 'الوسط' },
 ];
+

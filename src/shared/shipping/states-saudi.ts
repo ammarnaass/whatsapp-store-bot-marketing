@@ -16,3 +16,4 @@ export const SAUDI_REGIONS: StateInfo[] = [
   { code: 'SA-BAH', name: 'منطقة الباحة (الباحة، بلجرشي، المندق)', region: 'الجنوبية' },
   { code: 'SA-JOU', name: 'منطقة الجوف (سكاكا، القريات، طبرجل)', region: 'الشمالية' },
 ];
+
