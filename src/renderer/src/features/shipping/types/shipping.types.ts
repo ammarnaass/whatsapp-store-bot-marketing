@@ -45,6 +45,8 @@ export interface ShippingMethod {
   name: string;
   carrier_code: string;
   cost: number;
+  desk_cost?: number | null;
+  delivery_type?: 'home' | 'desk' | 'both';
   currency: string;
   free_over?: number | null;
   estimated_delivery?: string;
@@ -60,6 +62,8 @@ export interface ShippingZone {
   name: string;
   country_code: string;
   country_name: string;
+  scope_type?: 'all_states' | 'specific_states' | 'specific_cities';
+  states?: string[];
   cities: string[];
   fee?: number;
   free_over?: number | null;

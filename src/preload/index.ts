@@ -93,6 +93,7 @@ const api: IElectronAPI = {
     saveMethod: (data) => ipcRenderer.invoke(IPC_CHANNELS.SHIPPING_SAVE_METHOD, data),
     deleteMethod: (params) => ipcRenderer.invoke(IPC_CHANNELS.SHIPPING_DELETE_METHOD, params),
     toggleMethod: (params) => ipcRenderer.invoke(IPC_CHANNELS.SHIPPING_TOGGLE_METHOD, params),
+    calculateRates: (input) => ipcRenderer.invoke(IPC_CHANNELS.SHIPPING_CALCULATE_RATES, input),
   },
 
   customers: {

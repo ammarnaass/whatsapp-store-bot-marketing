@@ -73,6 +73,7 @@ export const IPC_CHANNELS = {
   SHIPPING_SAVE_METHOD: 'shipping:save-method',
   SHIPPING_DELETE_METHOD: 'shipping:delete-method',
   SHIPPING_TOGGLE_METHOD: 'shipping:toggle-method',
+  SHIPPING_CALCULATE_RATES: 'shipping:calculate-rates',
   SHIPPING_GET_KPIS: 'shipping:get-kpis',
 
   // Marketing Campaigns

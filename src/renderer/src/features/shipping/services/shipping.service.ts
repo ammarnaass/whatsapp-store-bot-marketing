@@ -41,5 +41,9 @@ export const shippingService = {
   toggleMethod: async (id: string, isActive: boolean): Promise<{ success: boolean }> => {
     return api.shipping.toggleMethod({ id, is_active: isActive });
   },
+
+  calculateRates: async (input: { countryCode: string; stateCode?: string; cityName?: string; deliveryType?: 'home' | 'desk'; subtotal?: number }) => {
+    return api.shipping.calculateRates(input);
+  },
 };
 

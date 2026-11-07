@@ -406,7 +406,9 @@ export class AppDatabase {
       try { this.db.exec("ALTER TABLE shipping_zones ADD COLUMN country_code TEXT DEFAULT 'SA'"); } catch {}
       try { this.db.exec("ALTER TABLE shipping_zones ADD COLUMN country_name TEXT DEFAULT 'المملكة العربية السعودية'"); } catch {}
       try { this.db.exec("ALTER TABLE shipping_zones ADD COLUMN is_active INTEGER DEFAULT 1"); } catch {}
-      try { this.db.exec("ALTER TABLE shipping_zones ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP"); } catch {}
+      try { this.db.exec("ALTER TABLE shipping_zones ADD COLUMN created_at DATETIME"); } catch {}
+      try { this.db.exec("ALTER TABLE shipping_zones ADD COLUMN scope_type TEXT DEFAULT 'all_states'"); } catch {}
+      try { this.db.exec("ALTER TABLE shipping_zones ADD COLUMN states_json TEXT DEFAULT '[]'"); } catch {}
 
       this.db.exec(`
         CREATE TABLE IF NOT EXISTS shipping_methods (
@@ -415,6 +417,8 @@ export class AppDatabase {
           name TEXT NOT NULL,
           carrier_code TEXT DEFAULT 'custom',
           cost REAL NOT NULL DEFAULT 0.0,
+          desk_cost REAL,
+          delivery_type TEXT DEFAULT 'both',
           currency TEXT NOT NULL DEFAULT 'SAR',
           free_over REAL,
           estimated_delivery TEXT,
@@ -426,6 +430,13 @@ export class AppDatabase {
         );
         CREATE INDEX IF NOT EXISTS idx_shipping_methods_zone ON shipping_methods(zone_id);
       `);
+
+      try { this.db.exec("ALTER TABLE shipping_methods ADD COLUMN delivery_type TEXT DEFAULT 'both'"); } catch {}
+      try { this.db.exec("ALTER TABLE shipping_methods ADD COLUMN desk_cost REAL"); } catch {}
+      try {
+        this.db.exec("UPDATE shipping_methods SET delivery_type = 'both' WHERE delivery_type IS NULL");
+        this.db.exec("UPDATE shipping_methods SET desk_cost = ROUND(cost * 0.7, 0) WHERE desk_cost IS NULL AND cost > 0");
+      } catch {}
 
       this.seedShippingIfEmpty();
 
@@ -961,40 +972,46 @@ export class AppDatabase {
       const zonesCount = (this.db.prepare('SELECT count(*) as count FROM shipping_zones').get() as any)?.count || 0;
       if (zonesCount === 0) {
         const insertZone = this.db.prepare(`
-          INSERT INTO shipping_zones (id, name, country_code, country_name, cities_json, fee, free_over, is_active)
-          VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+          INSERT INTO shipping_zones (id, name, country_code, country_name, scope_type, states_json, cities_json, fee, free_over, is_active)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
         `);
-        insertZone.run('zone_sa_central', 'المملكة العربية السعودية (المنطقة الوسطى)', 'SA', 'المملكة العربية السعودية', JSON.stringify(['الرياض', 'الخرج', 'بريدة', 'عنيزة']), 25, 200);
-        insertZone.run('zone_sa_coastal', 'المملكة العربية السعودية (الغربية والشرقية)', 'SA', 'المملكة العربية السعودية', JSON.stringify(['جدة', 'مكة المكرمة', 'المدينة المنورة', 'الدمام', 'الخبر']), 28, 250);
-        insertZone.run('zone_algeria', 'الجمهورية الجزائرية (كافة الولايات)', 'DZ', 'الجزائر', JSON.stringify(['الجزائر العاصمة', 'وهران', 'قسنطينة', 'سطيف', 'عنابة', 'بليدة']), 600, 8000);
-        insertZone.run('zone_uae', 'الإمارات العربية المتحدة (دبي وأبوظبي)', 'AE', 'الإمارات العربية المتحدة', JSON.stringify(['دبي', 'أبوظبي', 'الشارقة', 'عجمان']), 25, 250);
-        insertZone.run('zone_global', 'الشحن الدولي (سائر دول العالم)', 'GLOBAL', 'شحن دولي', JSON.stringify([]), 35, 300);
+        insertZone.run('zone_sa_central', 'المملكة العربية السعودية (الوسطى والشرقية)', 'SA', 'المملكة العربية السعودية', 'specific_states', JSON.stringify(['01', '04', '06']), JSON.stringify(['الرياض', 'الخرج', 'بريدة', 'الدمام', 'الخبر']), 25, 200);
+        insertZone.run('zone_sa_west', 'المملكة العربية السعودية (الغربية والشمالية)', 'SA', 'المملكة العربية السعودية', 'specific_states', JSON.stringify(['02', '03', '07', '08']), JSON.stringify(['جدة', 'مكة المكرمة', 'المدينة المنورة', 'تبوك']), 28, 250);
+        insertZone.run('zone_dz_north', 'الجزائر (الولايات الشمالية والوسطى)', 'DZ', 'الجزائر', 'specific_states', JSON.stringify(['16', '09', '35', '42', '31', '25', '19', '15', '06', '23']), JSON.stringify(['الجزائر العاصمة', 'وهران', 'قسنطينة', 'سطيف', 'عنابة', 'بليدة']), 600, 8000);
+        insertZone.run('zone_dz_south', 'الجزائر (ولايات الجنوب والصحراء)', 'DZ', 'الجزائر', 'specific_states', JSON.stringify(['30', '47', '39', '11', '01', '03', '33', '52', '58']), JSON.stringify(['ورقلة', 'غرداية', 'الوادي', 'تمنراست', 'أدرار']), 950, 12000);
+        insertZone.run('zone_uae', 'الإمارات العربية المتحدة (كافة الإمارات)', 'AE', 'الإمارات العربية المتحدة', 'all_states', JSON.stringify([]), JSON.stringify(['دبي', 'أبوظبي', 'الشارقة', 'عجمان']), 25, 250);
+        insertZone.run('zone_global', 'الشحن الدولي (سائر دول العالم)', 'GLOBAL', 'شحن دولي', 'all_states', JSON.stringify([]), JSON.stringify([]), 35, 300);
       }
 
       const methodsCount = (this.db.prepare('SELECT count(*) as count FROM shipping_methods').get() as any)?.count || 0;
       if (methodsCount === 0) {
         const insertMethod = this.db.prepare(`
-          INSERT INTO shipping_methods (id, zone_id, name, carrier_code, cost, currency, free_over, estimated_delivery, cod_available, cod_fee, tracking_url_template, is_active)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+          INSERT INTO shipping_methods (id, zone_id, name, carrier_code, cost, desk_cost, delivery_type, currency, free_over, estimated_delivery, cod_available, cod_fee, tracking_url_template, is_active)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
         `);
 
-        const saZones = this.db.prepare("SELECT id FROM shipping_zones WHERE country_code = 'SA' OR id LIKE '%central%' OR id LIKE '%sa%'").all() as any[];
+        const saZones = this.db.prepare("SELECT id FROM shipping_zones WHERE country_code = 'SA' OR id LIKE '%sa%'").all() as any[];
         for (const z of saZones) {
-          insertMethod.run(`sm_smsa_${z.id}`, z.id, 'سمسا إكسبريس (SMSA Express)', 'smsa', 28, 'SAR', 250, '24 إلى 48 ساعة', 1, 10, 'https://www.smsaexpress.com/tracking?track={tracking_no}');
-          insertMethod.run(`sm_aramex_${z.id}`, z.id, 'أرامكس (Aramex Priority)', 'aramex', 30, 'SAR', 300, '1-3 أيام عمل', 1, 12, 'https://www.aramex.com/track/results?shipmentNumber={tracking_no}');
-          insertMethod.run(`sm_spl_${z.id}`, z.id, 'البريد السعودي (سبل SPL)', 'spl', 22, 'SAR', 200, '3-5 أيام عمل', 0, 0, 'https://splonline.com.sa/ar/track?tracking_no={tracking_no}');
+          insertMethod.run(`sm_smsa_${z.id}`, z.id, 'سمسا إكسبريس (SMSA Express)', 'smsa', 28, 20, 'both', 'SAR', 250, '24 إلى 48 ساعة', 1, 10, 'https://www.smsaexpress.com/tracking?track={tracking_no}');
+          insertMethod.run(`sm_aramex_${z.id}`, z.id, 'أرامكس (Aramex Priority)', 'aramex', 30, 22, 'both', 'SAR', 300, '1-3 أيام عمل', 1, 12, 'https://www.aramex.com/track/results?shipmentNumber={tracking_no}');
+          insertMethod.run(`sm_spl_${z.id}`, z.id, 'البريد السعودي (سبل SPL)', 'spl', 22, 15, 'both', 'SAR', 200, '3-5 أيام عمل', 0, 0, 'https://splonline.com.sa/ar/track?tracking_no={tracking_no}');
         }
 
-        const dzZone = this.db.prepare("SELECT id FROM shipping_zones WHERE country_code = 'DZ'").get() as any;
-        if (dzZone) {
-          insertMethod.run(`sm_yalidine_${dzZone.id}`, dzZone.id, 'ياليدين إكسبريس (Yalidine Express)', 'yalidine', 600, 'DZD', 8000, '24 إلى 48 ساعة', 1, 100, 'https://yalidine.com/tracking/?tracking={tracking_no}');
-          insertMethod.run(`sm_procolis_${dzZone.id}`, dzZone.id, 'بروكوليس للتوصيل السريع (Procolis)', 'procolis', 550, 'DZD', 7000, '48 ساعة', 1, 50, 'https://procolis.com/track/{tracking_no}');
-          insertMethod.run(`sm_fleet_dz_${dzZone.id}`, dzZone.id, 'توصيل خاص (الأسطول المحلي)', 'fleet', 400, 'DZD', 5000, 'نفس اليوم (العاصمة وضواحيها)', 1, 0, '');
+        const dzNorth = this.db.prepare("SELECT id FROM shipping_zones WHERE id = 'zone_dz_north' OR country_code = 'DZ'").get() as any;
+        if (dzNorth) {
+          insertMethod.run(`sm_yalidine_${dzNorth.id}`, dzNorth.id, 'ياليدين إكسبريس (Yalidine Express)', 'yalidine', 600, 400, 'both', 'DZD', 8000, '24 إلى 48 ساعة', 1, 100, 'https://yalidine.com/tracking/?tracking={tracking_no}');
+          insertMethod.run(`sm_procolis_${dzNorth.id}`, dzNorth.id, 'بروكوليس للتوصيل السريع (Procolis)', 'procolis', 550, 350, 'both', 'DZD', 7000, '48 ساعة', 1, 50, 'https://procolis.com/track/{tracking_no}');
+          insertMethod.run(`sm_fleet_dz_${dzNorth.id}`, dzNorth.id, 'توصيل خاص (الأسطول المحلي)', 'fleet', 450, null, 'home', 'DZD', 5000, 'نفس اليوم (العاصمة وضواحيها)', 1, 0, '');
+        }
+
+        const dzSouth = this.db.prepare("SELECT id FROM shipping_zones WHERE id = 'zone_dz_south'").get() as any;
+        if (dzSouth) {
+          insertMethod.run(`sm_yalidine_${dzSouth.id}`, dzSouth.id, 'ياليدين إكسبريس (Yalidine Express)', 'yalidine', 950, 650, 'both', 'DZD', 12000, '3 إلى 5 أيام', 1, 150, 'https://yalidine.com/tracking/?tracking={tracking_no}');
         }
 
         const globZone = this.db.prepare("SELECT id FROM shipping_zones WHERE country_code = 'GLOBAL' OR id LIKE '%global%'").get() as any;
         if (globZone) {
-          insertMethod.run(`sm_dhl_${globZone.id}`, globZone.id, 'دي إتش إل إكسبريس (DHL Express Worldwide)', 'dhl', 35, 'USD', null, '3-5 أيام عمل', 0, 0, 'https://www.dhl.com/en/express/tracking.html?AWB={tracking_no}');
+          insertMethod.run(`sm_dhl_${globZone.id}`, globZone.id, 'دي إتش إل إكسبريس (DHL Express Worldwide)', 'dhl', 35, null, 'home', 'USD', null, '3-5 أيام عمل', 0, 0, 'https://www.dhl.com/en/express/tracking.html?AWB={tracking_no}');
         }
 
         console.log('[Database] Seeded initial shipping carriers & methods for all zones.');

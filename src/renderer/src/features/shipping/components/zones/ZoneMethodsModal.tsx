@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, Truck, AlertCircle } from 'lucide-react';
 import { ShippingZone, ShippingMethod } from '../../types/shipping.types';
-import { SUPPORTED_SHIPPING_COUNTRIES } from '../../constants/carriers-presets';
+import { getCountryByCode } from '@shared/shipping/countries.data';
 import { CarrierMethodRow } from './CarrierMethodRow';
 import { AddCarrierForm } from './AddCarrierForm';
 
@@ -24,8 +24,8 @@ export const ZoneMethodsModal: React.FC<Props> = ({
 }) => {
   if (!isOpen || !zone) return null;
 
-  const country = SUPPORTED_SHIPPING_COUNTRIES.find((c) => c.code === zone.country_code);
-  const flag = country?.flag || '🌐';
+  const country = getCountryByCode(zone.country_code);
+  const flag = country.flag || '🌐';
   const methods = zone.methods || [];
 
   return (
@@ -43,7 +43,7 @@ export const ZoneMethodsModal: React.FC<Props> = ({
                 </span>
               </h3>
               <p className="text-[11px] text-slate-400">
-                الدولة: {zone.country_name} • المدن: {zone.cities && zone.cities.length > 0 ? zone.cities.join('، ') : 'كافة المدن'}
+                الدولة: {country.name} • النطاق: {zone.scope_type === 'specific_states' ? `${zone.states?.length || 0} ولاية` : zone.scope_type === 'specific_cities' ? `${zone.cities?.length || 0} مدينة` : 'كافة أرجاء الدولة'}
               </p>
             </div>
           </div>

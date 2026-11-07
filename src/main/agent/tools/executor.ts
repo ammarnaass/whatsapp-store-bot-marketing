@@ -1,5 +1,6 @@
 import { AppDatabase } from '../../database/db';
 import { AgentGuardrails } from '../guardrails/guardrails';
+import { calculateShippingRates } from '../../../shared/shipping/calculator';
 
 export class AgentToolExecutor {
   private static db = AppDatabase.getInstance().db;
@@ -71,27 +72,52 @@ export class AgentToolExecutor {
       }
 
       case 'get_shipping_quote': {
-        const city = args.city || '';
-        const zones = this.db.prepare('SELECT * FROM shipping_zones').all() as any[];
+        const zones = this.db.prepare('SELECT * FROM shipping_zones WHERE is_active = 1').all() as any[];
+        const methods = this.db.prepare('SELECT * FROM shipping_methods WHERE is_active = 1').all() as any[];
 
-        for (const zone of zones) {
-          const cities = JSON.parse(zone.cities_json || '[]');
-          if (cities.some((c: string) => city.includes(c) || c.includes(city))) {
-            return {
-              zone_name: zone.name,
-              fee: zone.fee,
-              free_over: zone.free_over,
-              estimated_days: '2-4 أيام عمل',
-            };
+        let countryCode = (args.country || '').trim().toUpperCase();
+        if (countryCode.includes('SA') || /سعود/i.test(args.country || '')) countryCode = 'SA';
+        else if (countryCode.includes('DZ') || /جزائر/i.test(args.country || '')) countryCode = 'DZ';
+        else if (countryCode.includes('AE') || /إمارات|دبي/i.test(args.country || '')) countryCode = 'AE';
+        else if (countryCode.includes('EG') || /مصر/i.test(args.country || '')) countryCode = 'EG';
+        else if (!countryCode) {
+          const locText = `${args.state || ''} ${args.city || ''}`;
+          if (/رياض|جدة|مكة|مدينة|دمام|خبر|قصيم/i.test(locText)) countryCode = 'SA';
+          else if (/جزائر|وهران|قسنطينة|سطيف|عنابة|بليدة|باتنة|تلمسان|ورقلة|أدرار/i.test(locText)) countryCode = 'DZ';
+          else {
+            const firstZone = zones[0];
+            countryCode = firstZone ? firstZone.country_code : 'DZ';
           }
         }
 
-        // تكلفة افتراضية لباقي المدن
+        const rates = calculateShippingRates(zones, methods, {
+          countryCode,
+          cityName: args.city,
+          stateCode: args.state,
+          deliveryType: args.delivery_type === 'desk' ? 'desk' : 'home',
+        });
+
+        if (rates.length > 0) {
+          return {
+            matched_zone: rates[0].zoneName,
+            country: countryCode,
+            options: rates.map((r) => ({
+              carrier: r.carrierName,
+              cost: r.cost,
+              currency: r.currency,
+              mode: r.deliveryType === 'desk' ? 'استلام مكتبي (Stop Desk)' : 'توصيل للمنزل',
+              estimated_days: r.estimatedDays,
+              cod_available: r.codAvailable,
+              is_free: r.isFreeShipping,
+            })),
+          };
+        }
+
         return {
-          zone_name: 'شحن قياسي لكافة المدن',
-          fee: 8.0,
-          free_over: 70.0,
-          estimated_days: '3-5 أيام عمل',
+          matched_zone: 'شحن افتراضي',
+          fee: 600,
+          currency: 'DZD',
+          estimated_days: '2-4 أيام عمل',
         };
       }
 

@@ -57,16 +57,27 @@ export const agentToolsDefinitions: FunctionDeclaration[] = [
   },
   {
     name: 'get_shipping_quote',
-    description: 'احتساب تكلفة الشحن ومطابقة المدينة مع مناطق التوصيل المحددة في المتجر.',
+    description: 'احتساب تكلفة الشحن ومطابقة الدولة والولاية/المحافظة والمدينة مع شركات وأسعار التوصيل (منزلي أو مكتبي Stop Desk).',
     parameters: {
       type: Type.OBJECT,
       properties: {
         city: {
           type: Type.STRING,
-          description: 'اسم المدينة (مثال: الرياض، جدة، الدمام)',
+          description: 'اسم المدينة أو البلدية',
+        },
+        state: {
+          type: Type.STRING,
+          description: 'اسم أو رقم الولاية أو المحافظة (مثال: وهران، 16، الرياض، مكة)',
+        },
+        country: {
+          type: Type.STRING,
+          description: 'رمز أو اسم الدولة (مثال: DZ، SA، الجزائر، السعودية)',
+        },
+        delivery_type: {
+          type: Type.STRING,
+          description: 'نوع التوصيل: home (للمنزل) أو desk (استلام من المكتب Stop Desk)',
         },
       },
-      required: ['city'],
     },
   },
   {
